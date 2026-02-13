@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V23 - Firebase Conectado</title>
+    <title>Gestão Motorista V23 - Firebase Corrigido</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL --- */
         :root {
@@ -440,9 +440,10 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        // Importando da versão ESTÁVEL (10.13.1) - CORRIGIDO PARA EVITAR TELA BRANCA
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // SUA CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
@@ -462,20 +463,20 @@
         window.auth = auth;
         window.db = db;
 
-        // --- FUNÇÃO DE SINCRONIZAÇÃO (SALVAR NO FIREBASE) ---
+        // --- FUNÇÃO DE SINCRONIZAÇÃO (SALVAR NA NUVEM) ---
         window.syncToCloud = async function() {
             const user = auth.currentUser;
-            if (!user) return;
+            if (!user) return; // Se não estiver logado, não faz nada
             
-            // Pega o estado atual do histórico local para salvar na nuvem
+            // Pega os dados atuais da memória do app
             const currentData = JSON.parse(localStorage.getItem('app_motorista_v22')) || [];
             
             try {
-                // Salva dentro da coleção 'users' -> documento 'UID' -> campo 'history'
+                // Salva no Firestore
                 await setDoc(doc(db, "users", user.uid), { history: currentData }, { merge: true });
-                console.log("Dados sincronizados com a nuvem.");
+                console.log("Sincronizado com a nuvem!");
             } catch (error) {
-                console.error("Erro na sincronização:", error);
+                console.error("Erro ao sincronizar:", error);
             }
         };
 
@@ -509,21 +510,20 @@
                 console.error(error);
                 let msg = "Erro ao entrar.";
                 if(error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos.";
-                if(error.code === 'auth/email-already-in-use') msg = "Este e-mail já está cadastrado.";
-                if(error.code === 'auth/weak-password') msg = "A senha deve ter pelo menos 6 caracteres.";
+                if(error.code === 'auth/email-already-in-use') msg = "Este e-mail já existe.";
                 alert(msg);
                 btn.disabled = false;
                 btn.innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR";
             }
         }
 
-        // MONITORAR ESTADO DO LOGIN E CARREGAR DADOS
+        // MONITORAR LOGIN E CARREGAR DADOS AUTOMATICAMENTE
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('view-dashboard').classList.remove('hidden');
 
-                // --- CARREGAMENTO INICIAL DO FIREBASE ---
+                // TENTA BUSCAR DADOS DA NUVEM
                 try {
                     const docRef = doc(db, "users", user.uid);
                     const docSnap = await getDoc(docRef);
@@ -531,17 +531,15 @@
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data().history;
                         if (cloudData && Array.isArray(cloudData)) {
-                            // Atualiza o LocalStorage com o que veio da nuvem
                             localStorage.setItem('app_motorista_v22', JSON.stringify(cloudData));
-                            
-                            // Atualiza a UI se as funções já estiverem carregadas
+                            console.log("Dados carregados da nuvem.");
+                            // Atualiza a tela
                             if(window.renderDashboard) window.renderDashboard();
                             if(window.renderHistory) window.renderHistory();
-                            console.log("Histórico carregado da nuvem.");
                         }
                     }
                 } catch (e) {
-                    console.error("Erro ao recuperar dados iniciais:", e);
+                    console.error("Erro ao carregar dados:", e);
                 }
 
             } else {
@@ -718,6 +716,9 @@
 
         // --- DASHBOARD ---
         function renderDashboard() {
+            // Expondo para o módulo global poder chamar
+            window.renderDashboard = renderDashboard;
+            
             const db = getDB();
             const m = viewDate.getMonth();
             const y = viewDate.getFullYear();
@@ -757,11 +758,12 @@
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev/tKm : 0);
         }
-        // Expor para o módulo
-        window.renderDashboard = renderDashboard;
 
         // --- HISTÓRICO ---
         function renderHistory() {
+            // Expondo para o módulo global poder chamar
+            window.renderHistory = renderHistory;
+
             const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
             const groups = {};
             db.forEach((item, index) => {
@@ -801,8 +803,6 @@
                 list.appendChild(folder); list.appendChild(itemsDiv);
             });
         }
-        // Expor para o módulo
-        window.renderHistory = renderHistory;
 
         // --- DETALHES DO DIA ---
         function openDayDetail(index) {
@@ -842,13 +842,13 @@
         function confirmDelete() {
             if(itemToDeleteIndex !== null) {
                 const db = getDB(); db.splice(itemToDeleteIndex, 1); saveDB(db);
-                // GATILHO DE SINCRONIZAÇÃO AO DELETAR
+                // GATILHO DE SINCRONIZAÇÃO AQUI
                 if(window.syncToCloud) window.syncToCloud();
-                
+
                 closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail();
             }
         }
-
+        
         function startWizard(indexToEdit = null) {
             window.history.pushState({modal: 'wizard'}, "", "");
             const config = JSON.parse(localStorage.getItem('rent_config'));
@@ -875,19 +875,17 @@
             else tempData[s.id] = skip ? 0 : (parseFloat(el.value)||0);
             if(currentStep < steps.length - 1) { currentStep++; renderStep(); } else saveEntry();
         }
-        
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
             tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
             if(editingIndex!==null) db[editingIndex]=tempData; else { tempData.timestamp=Date.now(); if(tempData.rentPaid===undefined)tempData.rentPaid=0; db.unshift(tempData); }
             saveDB(db); 
             
-            // GATILHO DE SINCRONIZAÇÃO AO FINALIZAR
+            // GATILHO DE SINCRONIZAÇÃO AQUI
             if(window.syncToCloud) window.syncToCloud();
 
             toggleWizard(false); renderDashboard(); renderHistory(); openDayDetail(editingIndex!==null?editingIndex:0);
         }
-        
         function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
         function toggleWizard(show) { const el = document.getElementById('wizard-overlay'); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); }
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
