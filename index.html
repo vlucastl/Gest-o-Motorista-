@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V23 - Firebase Corrigido</title>
+    <title>Gestão Motorista V23 - Compat Mode</title>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+
     <style>
-        /* --- CONFIGURAÇÃO VISUAL --- */
+        /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -220,7 +224,7 @@
         <div class="summary-grid">
             <div class="card-rent-config" onclick="openRentConfig()">
                 <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color; font-size:12px; display:block;">🟣 PLANO DE ALUGUEL</span>
+                    <span style="font-weight:bold; color:var(--rent-color); font-size:12px; display:block;">🟣 PLANO DE ALUGUEL</span>
                     <span style="color:#aaa; font-size:11px;">Toque para definir folgas</span>
                 </div>
                 <div class="rent-info-right">
@@ -439,13 +443,8 @@
         </button>
     </div>
 
-    <script type="module">
-        // Importando da versão ESTÁVEL (10.13.1) - CORRIGIDO PARA EVITAR TELA BRANCA
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-
-        // SUA CONFIGURAÇÃO DO FIREBASE
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
             authDomain: "uber-gestao.firebaseapp.com",
@@ -455,33 +454,29 @@
             appId: "1:615548282513:web:89db20f983e7d4eea5c130"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // INICIALIZAÇÃO (MODO COMPAT - Seguro para WebViews)
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // Disponibiliza Auth e DB para todo o app
-        window.auth = auth;
-        window.db = db;
-
-        // --- FUNÇÃO DE SINCRONIZAÇÃO (SALVAR NA NUVEM) ---
-        window.syncToCloud = async function() {
+        // --- FUNÇÃO DE SINCRONIZAÇÃO ---
+        window.syncToCloud = function() {
             const user = auth.currentUser;
-            if (!user) return; // Se não estiver logado, não faz nada
+            if (!user) return;
             
-            // Pega os dados atuais da memória do app
             const currentData = JSON.parse(localStorage.getItem('app_motorista_v22')) || [];
             
-            try {
-                // Salva no Firestore
-                await setDoc(doc(db, "users", user.uid), { history: currentData }, { merge: true });
-                console.log("Sincronizado com a nuvem!");
-            } catch (error) {
-                console.error("Erro ao sincronizar:", error);
-            }
+            db.collection("users").doc(user.uid).set({ 
+                history: currentData 
+            }, { merge: true })
+            .then(() => console.log("Dados sincronizados!"))
+            .catch((error) => console.error("Erro ao sincronizar:", error));
         };
 
-        // FUNÇÃO DE LOGIN / CADASTRO
-        window.handleAuthAction = async function() {
+        // --- AUTHENTICATION ---
+        window.handleAuthAction = function() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
             const btn = document.getElementById('btn-main-action');
@@ -491,60 +486,59 @@
             btn.innerText = "Carregando...";
             btn.disabled = true;
 
-            try {
-                if (window.isRegisterMode) {
-                    // CADASTRAR
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                    // Cria documento inicial
-                    await setDoc(doc(db, "users", userCredential.user.uid), { 
-                        email: email, 
+            if (window.isRegisterMode) {
+                // CADASTRAR
+                auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    return db.collection("users").doc(userCredential.user.uid).set({
+                        email: email,
                         criadoEm: new Date().toISOString(),
-                        history: [] 
+                        history: []
                     });
-                    alert("Conta criada com sucesso! Bem-vindo.");
-                } else {
-                    // ENTRAR
-                    await signInWithEmailAndPassword(auth, email, pass);
-                }
-            } catch (error) {
-                console.error(error);
-                let msg = "Erro ao entrar.";
-                if(error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos.";
-                if(error.code === 'auth/email-already-in-use') msg = "Este e-mail já existe.";
-                alert(msg);
-                btn.disabled = false;
-                btn.innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR";
+                })
+                .then(() => {
+                    alert("Conta criada!");
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert("Erro ao criar conta: " + error.message);
+                    btn.disabled = false;
+                    btn.innerText = "CRIAR CONTA";
+                });
+            } else {
+                // ENTRAR
+                auth.signInWithEmailAndPassword(email, pass)
+                .catch((error) => {
+                    console.error(error);
+                    alert("Erro ao entrar: " + error.message);
+                    btn.disabled = false;
+                    btn.innerText = "ENTRAR";
+                });
             }
-        }
+        };
 
-        // MONITORAR LOGIN E CARREGAR DADOS AUTOMATICAMENTE
-        onAuthStateChanged(auth, async (user) => {
+        // --- MONITORAR LOGIN ---
+        auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('view-dashboard').classList.remove('hidden');
-
-                // TENTA BUSCAR DADOS DA NUVEM
-                try {
-                    const docRef = doc(db, "users", user.uid);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        const cloudData = docSnap.data().history;
+                
+                // Carregar dados da nuvem
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const cloudData = doc.data().history;
                         if (cloudData && Array.isArray(cloudData)) {
                             localStorage.setItem('app_motorista_v22', JSON.stringify(cloudData));
-                            console.log("Dados carregados da nuvem.");
-                            // Atualiza a tela
                             if(window.renderDashboard) window.renderDashboard();
                             if(window.renderHistory) window.renderHistory();
                         }
                     }
-                } catch (e) {
-                    console.error("Erro ao carregar dados:", e);
-                }
-
+                });
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('view-dashboard').classList.add('hidden');
+                document.getElementById('btn-main-action').disabled = false;
+                document.getElementById('btn-main-action').innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR";
             }
         });
     </script>
@@ -567,7 +561,7 @@
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
-        window.isRegisterMode = false; // Controle global do modo de login
+        window.isRegisterMode = false;
 
         window.onload = function() { 
             window.history.pushState({page: 'home'}, "", ""); 
@@ -604,7 +598,6 @@
         function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
         function migrateOldData() { const old = localStorage.getItem('app_motorista_v21'); if(old && !localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY, old); }
 
-        // --- ALUGUEL ---
         function openRentConfig() {
             window.history.pushState({modal: 'rent'}, "", "");
             document.getElementById('modal-rent').classList.remove('hidden');
@@ -700,7 +693,6 @@
         function saveRentConfig() {
             const valStr = document.getElementById('input-total-rent').value;
             const total = parseFloat(valStr) || 0;
-            
             localStorage.setItem('rent_config', JSON.stringify({ total: total, offDays: tempOffDays }));
             alert("Planejamento Salvo!");
             closeRentConfig();
@@ -716,9 +708,7 @@
 
         // --- DASHBOARD ---
         function renderDashboard() {
-            // Expondo para o módulo global poder chamar
             window.renderDashboard = renderDashboard;
-            
             const db = getDB();
             const m = viewDate.getMonth();
             const y = viewDate.getFullYear();
@@ -761,9 +751,7 @@
 
         // --- HISTÓRICO ---
         function renderHistory() {
-            // Expondo para o módulo global poder chamar
             window.renderHistory = renderHistory;
-
             const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
             const groups = {};
             db.forEach((item, index) => {
@@ -804,7 +792,6 @@
             });
         }
 
-        // --- DETALHES DO DIA ---
         function openDayDetail(index) {
             window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
             const d = getDB()[index]; if(!d) return;
@@ -835,16 +822,13 @@
         }
         function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
 
-        // --- WIZARD / DELETE / ETC ---
         function askDelete(index) { itemToDeleteIndex = index; document.getElementById('modal-delete').classList.remove('hidden'); }
         function closeDeleteModal() { itemToDeleteIndex = null; document.getElementById('modal-delete').classList.add('hidden'); }
         
         function confirmDelete() {
             if(itemToDeleteIndex !== null) {
                 const db = getDB(); db.splice(itemToDeleteIndex, 1); saveDB(db);
-                // GATILHO DE SINCRONIZAÇÃO AQUI
                 if(window.syncToCloud) window.syncToCloud();
-
                 closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail();
             }
         }
@@ -880,10 +864,7 @@
             tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
             if(editingIndex!==null) db[editingIndex]=tempData; else { tempData.timestamp=Date.now(); if(tempData.rentPaid===undefined)tempData.rentPaid=0; db.unshift(tempData); }
             saveDB(db); 
-            
-            // GATILHO DE SINCRONIZAÇÃO AQUI
             if(window.syncToCloud) window.syncToCloud();
-
             toggleWizard(false); renderDashboard(); renderHistory(); openDayDetail(editingIndex!==null?editingIndex:0);
         }
         function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
