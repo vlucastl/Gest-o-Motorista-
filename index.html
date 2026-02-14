@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V28 - Final (Dinâmico)</title>
+    <title>Gestão Motorista V28 - Final</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
@@ -514,8 +514,6 @@
 
             const db = getDB();
             const today = new Date();
-            // Data de hoje sem horas (meia-noite) para comparação correta
-            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div');
@@ -523,16 +521,14 @@
                 dayDiv.innerText = i;
                 
                 const currentDate = new Date(y, m, i);
-                // "Passado" é apenas o que veio ANTES de hoje
-                const isStrictlyPast = currentDate < todayMidnight;
+                const isPast = currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
                 
-                if (isStrictlyPast) {
+                if (isPast) {
                     const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
                     const hasRecord = db.some(item => item.date === checkDateStr);
                     if (hasRecord) dayDiv.classList.add('past-working');
                     else dayDiv.classList.add('past-missing');
                 } else {
-                    // Hoje e Futuro são editáveis
                     dayDiv.classList.add(tempOffDays.includes(i) ? 'off' : 'working');
                     if (currentDate.getDate() === today.getDate() && m === today.getMonth()) dayDiv.classList.add('today');
                     dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
@@ -561,50 +557,51 @@
             document.getElementById('rent-debug-days').innerText = result.daysLeft;
         }
 
-        // --- NOVA LÓGICA DINÂMICA (SUBSTITUÍDA) ---
+        // --- FUNÇÃO CORRIGIDA DE ALUGUEL ---
         function calculateTargetLogic(totalRent, offDaysArray) {
+            if(totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
+            
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
-            const todayDate = now.getDate();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-            // 1. Calcular o ACUMULADO (Pago até o momento)
+            const today = now.getDate();
+            
+            // Verifica no DB quanto ja foi pago e se HOJE ja foi pago
             const db = getDB();
             let paidSoFar = 0;
+            let hasEntryToday = false;
 
             db.forEach(item => {
-                let m = item.month;
-                let y = item.year;
-                if(m === undefined) { 
+                let m = item.month, y = item.year, d = 0;
+                // Fallback para garantir leitura correta da data
+                if (m === undefined || y === undefined) {
                     const p = item.date.split('/'); 
-                    m = parseInt(p[1])-1; y = parseInt(p[2]); 
+                    d = parseInt(p[0]); m = parseInt(p[1])-1; y = parseInt(p[2]);
+                } else {
+                    d = parseInt(item.date.split('/')[0]);
                 }
+
                 if(m === currentMonth && y === currentYear) {
-                    paidSoFar += (parseFloat(item.rentPaid) || 0);
+                    paidSoFar += (item.rentPaid || 0);
+                    if(d === today) hasEntryToday = true;
                 }
             });
 
-            // 2. Saldo Devedor
             const remainingToPay = Math.max(0, totalRent - paidSoFar);
-
-            // 3. Calcular Dias Úteis Restantes (INCLUINDO HOJE)
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            // --- CORREÇÃO CRÍTICA AQUI ---
+            // Se já tem registro hoje, o divisor começa a contar de AMANHÃ.
+            // Se não tem, conta HOJE.
+            const startDay = hasEntryToday ? today + 1 : today;
+            
             let futureWorkDays = 0;
-            for(let d = todayDate; d <= daysInMonth; d++) {
-                if(!offDaysArray.includes(d)) {
-                    futureWorkDays++;
-                }
+            for(let d = startDay; d <= daysInMonth; d++) {
+                if(!offDaysArray.includes(d)) futureWorkDays++;
             }
-
-            // 4. Divisão Final
-            let target = 0;
-            if (futureWorkDays > 0) {
-                target = remainingToPay / futureWorkDays;
-            } else if (remainingToPay > 0) {
-                target = remainingToPay;
-            }
-
-            return { target, remaining: remainingToPay, daysLeft: futureWorkDays };
+            
+            const target = futureWorkDays > 0 ? remainingToPay / futureWorkDays : remainingToPay;
+            return { target: target, remaining: remainingToPay, daysLeft: futureWorkDays };
         }
 
         function saveRentConfig() {
@@ -623,7 +620,7 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // --- DASHBOARD: CORRIGIDO COM LÓGICA DO HISTÓRICO ---
+        // --- DASHBOARD ---
         function renderDashboard() {
             window.renderDashboard = renderDashboard;
             const db = getDB();
@@ -641,21 +638,14 @@
 
             let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
 
-            // --- AQUI ESTÁ A CORREÇÃO CRÍTICA ---
-            // Usamos a mesma lógica de fallback do histórico para somar
             data.forEach(item => {
-                // Soma Financeira Simples
                 tFuel += Number(item.fuel || 0);
                 tFood += Number(item.food || 0);
                 tRent += Number(item.rentPaid || 0);
                 tRev += Number(item.uber || 0) + Number(item.pop || 0);
                 tKm += Number(item.km || 0);
 
-                // Lógica de Horas IDÊNTICA ao Histórico (com fallback)
-                // 1. Tenta pegar o número direto (ex: 5.5)
                 let h = Number(item.hours);
-                
-                // 2. Se for inválido ou zero, tenta calcular do texto (ex: "05:30")
                 if (isNaN(h) || h === 0) {
                     if (item.hoursFormatted) {
                         const [hh, mm] = item.hoursFormatted.split(':').map(Number);
@@ -670,7 +660,6 @@
             tExp = tFuel + tFood + tRent;
             const profit = tRev - tExp;
 
-            // Atualiza Cards
             document.getElementById('dash-profit').innerText = formatMoney(profit);
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
             document.getElementById('dash-exp').innerText = formatMoney(tExp);
@@ -678,8 +667,6 @@
             document.getElementById('dash-food-val').innerText = formatMoney(tFood);
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
             document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
-            
-            // Atualiza Performance do Mês
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             
             const hourlyVal = tHours > 0 ? (profit / tHours) : 0; 
@@ -688,7 +675,6 @@
             const kmVal = tKm > 0 ? (tRev / tKm) : 0;
             document.getElementById('dash-km-val').innerText = formatMoney(kmVal);
 
-            // Meta Aluguel
             const config = JSON.parse(localStorage.getItem('rent_config'));
             const totalRent = config ? Number(config.total) : 0;
             const dashTargetEl = document.getElementById('dash-rent-target');
@@ -770,8 +756,8 @@
             const res = config ? calculateTargetLogic(config.total, config.offDays||[]) : { target: 0, remaining: 0, daysLeft: 0 };
             document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
             
-            const displayDays = Math.max(0, res.daysLeft - 1);
-            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${displayDays} dias restantes`;
+            const displayDays = Math.max(0, res.daysLeft - 1); // UX visual adjustment
+            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
 
             document.getElementById('view-day-detail').classList.remove('hidden');
         }
