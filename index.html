@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V24 - Final</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js" defer></script>
-
+    <title>Gestão Motorista V25 - Anti-Crash</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
@@ -445,121 +440,6 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO DO FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
-            authDomain: "uber-gestao.firebaseapp.com",
-            projectId: "uber-gestao",
-            storageBucket: "uber-gestao.firebasestorage.app",
-            messagingSenderId: "615548282513",
-            appId: "1:615548282513:web:89db20f983e7d4eea5c130"
-        };
-
-        // INICIALIZAÇÃO SEGURA: Espera o Firebase carregar
-        window.onload = function() {
-            try {
-                if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                    initAppLogic();
-                } else if(typeof firebase !== 'undefined') {
-                    initAppLogic();
-                } else {
-                    // Fallback se demorar muito (raro com DEFER)
-                    setTimeout(() => { if(typeof firebase !== 'undefined') { firebase.initializeApp(firebaseConfig); initAppLogic(); } }, 1000);
-                }
-            } catch(e) { console.error("Erro Firebase:", e); }
-            
-            // Inicia navegação básica
-            window.history.pushState({page: 'home'}, "", ""); 
-            window.onpopstate = function(event) { handleBackButton(); };
-            migrateOldData(); renderDashboard();
-        };
-
-        let auth, db;
-        
-        function initAppLogic() {
-            auth = firebase.auth();
-            db = firebase.firestore();
-
-            // --- MONITORAR LOGIN ---
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('view-dashboard').classList.remove('hidden');
-                    
-                    // Carregar dados da nuvem
-                    db.collection("users").doc(user.uid).get().then((doc) => {
-                        if (doc.exists) {
-                            const cloudData = doc.data().history;
-                            if (cloudData && Array.isArray(cloudData)) {
-                                localStorage.setItem('app_motorista_v22', JSON.stringify(cloudData));
-                                if(window.renderDashboard) window.renderDashboard();
-                                if(window.renderHistory) window.renderHistory();
-                            }
-                        }
-                    });
-                } else {
-                    document.getElementById('login-screen').style.display = 'flex';
-                    document.getElementById('view-dashboard').classList.add('hidden');
-                    document.getElementById('btn-main-action').disabled = false;
-                    document.getElementById('btn-main-action').innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR";
-                }
-            });
-        }
-
-        // --- FUNÇÃO DE SINCRONIZAÇÃO ---
-        window.syncToCloud = function() {
-            if(!auth || !auth.currentUser) return;
-            const user = auth.currentUser;
-            const currentData = JSON.parse(localStorage.getItem('app_motorista_v22')) || [];
-            
-            db.collection("users").doc(user.uid).set({ 
-                history: currentData 
-            }, { merge: true })
-            .then(() => console.log("Dados sincronizados!"))
-            .catch((error) => console.error("Erro ao sincronizar:", error));
-        };
-
-        // --- AUTHENTICATION ---
-        window.handleAuthAction = function() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.getElementById('btn-main-action');
-
-            if(!email || !pass) { alert("Preencha e-mail e senha!"); return; }
-
-            btn.innerText = "Carregando...";
-            btn.disabled = true;
-
-            if (window.isRegisterMode) {
-                auth.createUserWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    return db.collection("users").doc(userCredential.user.uid).set({
-                        email: email,
-                        criadoEm: new Date().toISOString(),
-                        history: []
-                    });
-                })
-                .then(() => { alert("Conta criada!"); })
-                .catch((error) => {
-                    console.error(error);
-                    alert("Erro ao criar conta: " + error.message);
-                    btn.disabled = false;
-                    btn.innerText = "CRIAR CONTA";
-                });
-            } else {
-                auth.signInWithEmailAndPassword(email, pass)
-                .catch((error) => {
-                    console.error(error);
-                    alert("Erro ao entrar: " + error.message);
-                    btn.disabled = false;
-                    btn.innerText = "ENTRAR";
-                });
-            }
-        };
-    </script>
-
-    <script>
         const steps = [
             { id: 'customDate', title: 'Data', icon: '📅', label: 'Qual a data do registro?', type: 'date' },
             { id: 'uber', title: 'Ganhos Uber', icon: '🚗', label: 'Valor total feito na Uber', type: 'number' },
@@ -606,4 +486,413 @@
 
         function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
         function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
-        function migrateOldData() { const old = localStorage.getItem('app_motorista_v21'); if(old && !localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY
+        function migrateOldData() { const old = localStorage.getItem('app_motorista_v21'); if(old && !localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY, old); }
+
+        function openRentConfig() {
+            window.history.pushState({modal: 'rent'}, "", "");
+            document.getElementById('modal-rent').classList.remove('hidden');
+            const config = JSON.parse(localStorage.getItem('rent_config')) || { total: 0, offDays: [] };
+            document.getElementById('input-total-rent').value = config.total || '';
+            tempOffDays = (config.offDays || []).map(Number);
+            rentCalendarDate = new Date(); 
+            renderRentCalendar();
+            updateRentPreview();
+        }
+
+        function changeRentMonth(dir) {
+            rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir);
+            renderRentCalendar();
+        }
+
+        function renderRentCalendar() {
+            const m = rentCalendarDate.getMonth();
+            const y = rentCalendarDate.getFullYear();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const container = document.getElementById('rent-calendar');
+            document.getElementById('cal-month-title').innerText = `${monthNames[m]} ${y}`;
+            container.innerHTML = '';
+
+            const db = getDB();
+            const today = new Date();
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'cal-day';
+                dayDiv.innerText = i;
+                
+                const currentDate = new Date(y, m, i);
+                const isPast = currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                
+                if (isPast) {
+                    const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
+                    const hasRecord = db.some(item => item.date === checkDateStr);
+                    if (hasRecord) dayDiv.classList.add('past-working');
+                    else dayDiv.classList.add('past-missing');
+                } else {
+                    dayDiv.classList.add(tempOffDays.includes(i) ? 'off' : 'working');
+                    if (currentDate.getDate() === today.getDate() && m === today.getMonth()) dayDiv.classList.add('today');
+                    dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
+                }
+                container.appendChild(dayDiv);
+            }
+        }
+
+        function toggleDayOff(day, el) {
+            if(tempOffDays.includes(day)) {
+                tempOffDays = tempOffDays.filter(d => d !== day);
+                el.classList.remove('off'); el.classList.add('working');
+            } else {
+                tempOffDays.push(day);
+                el.classList.remove('working'); el.classList.add('off');
+            }
+            updateRentPreview();
+        }
+
+        function updateRentPreview() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const result = calculateTargetLogic(total, tempOffDays);
+            
+            document.getElementById('rent-preview-val').innerText = formatMoney(result.target);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(result.remaining);
+            document.getElementById('rent-debug-days').innerText = result.daysLeft;
+        }
+
+        function calculateTargetLogic(totalRent, offDaysArray) {
+            if(totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const db = getDB();
+            let paidSoFar = 0;
+            db.forEach(item => { if(item.month === currentMonth && item.year === currentYear) paidSoFar += (item.rentPaid || 0); });
+
+            const remainingToPay = Math.max(0, totalRent - paidSoFar);
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = now.getDate();
+            
+            let futureWorkDays = 0;
+            for(let d = today; d <= daysInMonth; d++) {
+                if(!offDaysArray.includes(d)) futureWorkDays++;
+            }
+            
+            const target = futureWorkDays > 0 ? remainingToPay / futureWorkDays : remainingToPay;
+            return { target: target, remaining: remainingToPay, daysLeft: futureWorkDays };
+        }
+
+        function saveRentConfig() {
+            const valStr = document.getElementById('input-total-rent').value;
+            const total = parseFloat(valStr) || 0;
+            localStorage.setItem('rent_config', JSON.stringify({ total: total, offDays: tempOffDays }));
+            alert("Planejamento Salvo!");
+            closeRentConfig();
+            
+            const dashTarget = document.getElementById('dash-rent-target');
+            if(dashTarget) {
+                dashTarget.innerText = formatMoney(total);
+                dashTarget.style.fontSize = "18px";
+            }
+            renderDashboard();
+        }
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
+
+        // --- DASHBOARD BLINDADO (CORREÇÃO DE ZEROS) ---
+        function renderDashboard() {
+            window.renderDashboard = renderDashboard;
+            const db = getDB();
+            const m = viewDate.getMonth();
+            const y = viewDate.getFullYear();
+            document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
+            document.getElementById('label-year').innerText = y;
+
+            const data = db.filter(i => (i.month !== undefined ? i.month === m && i.year === y : parseInt(i.date.split('/')[1])-1 === m));
+            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
+
+            data.forEach(i => {
+                // Forçando conversão para Número para evitar erros de texto
+                tFuel += Number(i.fuel || 0); 
+                tFood += Number(i.food || 0); 
+                tRent += Number(i.rentPaid || 0);
+                tRev += Number(i.uber || 0) + Number(i.pop || 0);
+                
+                // Correção específica para HORAS e KM
+                let h = Number(i.hours);
+                // Se horas for inválido (NaN) ou zero, tenta converter do texto HH:MM
+                if((!h || isNaN(h)) && i.hoursFormatted) {
+                    const parts = i.hoursFormatted.split(':');
+                    if(parts.length === 2) {
+                        const hh = Number(parts[0]);
+                        const mm = Number(parts[1]);
+                        h = hh + (mm/60);
+                    }
+                }
+                tHours += Number(h || 0); 
+                tKm += Number(i.km || 0);
+            });
+            
+            tExp = tFuel + tFood + tRent;
+
+            document.getElementById('dash-profit').innerText = formatMoney(tRev - tExp);
+            document.getElementById('dash-rev').innerText = formatMoney(tRev);
+            document.getElementById('dash-exp').innerText = formatMoney(tExp);
+            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
+            document.getElementById('dash-food-val').innerText = formatMoney(tFood);
+            document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
+            document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
+            
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            const total = config ? Number(config.total) : 0;
+            const dashTargetEl = document.getElementById('dash-rent-target');
+            if(total > 0) {
+                dashTargetEl.innerText = formatMoney(total);
+                dashTargetEl.style.fontSize = "18px";
+            } else {
+                dashTargetEl.innerText = "Definir Meta";
+                dashTargetEl.style.fontSize = "14px";
+            }
+
+            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? (tRev-tExp)/tHours : 0);
+            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
+            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev/tKm : 0);
+        }
+
+        // --- HISTÓRICO ---
+        function renderHistory() {
+            window.renderHistory = renderHistory;
+            const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
+            const groups = {};
+            db.forEach((item, index) => {
+                let m = item.month, y = item.year;
+                if(m===undefined) { const p = item.date.split('/'); m=parseInt(p[1])-1; y=parseInt(p[2]); }
+                const key = `${m}-${y}`;
+                if(!groups[key]) groups[key] = { label: `${monthNames[m]} ${y}`, items: [] };
+                item.originalIndex = index; groups[key].items.push(item);
+            });
+            Object.keys(groups).forEach(key => {
+                const g = groups[key];
+                const folder = document.createElement('div'); folder.className = 'month-folder';
+                folder.innerHTML = `<span class="folder-title">📂 ${g.label}</span><span class="folder-icon">▼</span>`;
+                const itemsDiv = document.createElement('div'); itemsDiv.className = 'days-list';
+                g.items.forEach(d => {
+                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+                    
+                    let h = Number(d.hours);
+                    if((!h || isNaN(h)) && d.hoursFormatted) { 
+                        const p=d.hoursFormatted.split(':'); if(p.length===2) h=Number(p[0])+(Number(p[1])/60);
+                    }
+                    
+                    let hoursVal = h > 0 ? luc/h : 0;
+                    let fuelPct = rec > 0 ? ((d.fuel||0)/rec)*100 : 0;
+                    let tagsHtml = `<span class="tag tag-fuel">⛽ ${fuelPct.toFixed(0)}%</span>`;
+                    if(h) tagsHtml += `<span class="tag tag-hour" style="margin-left:5px;">⏱️ ${d.hoursFormatted||h.toFixed(1)+'h'} • ${formatMoney(hoursVal)}/h</span>`;
+
+                    const div = document.createElement('div'); div.className = 'history-item';
+                    
+                    div.innerHTML = `
+                        <div onclick="openDayDetail(${d.originalIndex})" style="flex:1;">
+                            <div class="date-badge">${d.date}</div>
+                            <div class="sub-info">Lucro: ${formatMoney(luc)} <br> ${tagsHtml}</div>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>
+                            <span onclick="openDayDetail(${d.originalIndex})" style="font-size:18px; color:#666; margin-left:10px;">▶</span>
+                        </div>`;
+                    itemsDiv.appendChild(div);
+                });
+                folder.onclick = () => folder.classList.toggle('folder-open');
+                list.appendChild(folder); list.appendChild(itemsDiv);
+            });
+        }
+
+        function openDayDetail(index) {
+            window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
+            const d = getDB()[index]; if(!d) return;
+            const rec = (d.uber||0)+(d.pop||0), desp = (d.fuel||0)+(d.food||0)+(d.rentPaid||0), luc = rec-desp;
+            
+            // Correção horas detalhe
+            let h = Number(d.hours);
+            if((!h || isNaN(h)) && d.hoursFormatted) { 
+                const p=d.hoursFormatted.split(':'); if(p.length===2) h=Number(p[0])+(Number(p[1])/60);
+            }
+            
+            document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
+            document.getElementById('day-profit').innerText = formatMoney(luc);
+            document.getElementById('day-rev').innerText = formatMoney(rec);
+            document.getElementById('day-exp').innerText = formatMoney(desp);
+            document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
+            document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
+            document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
+            document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
+            document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
+            document.getElementById('day-fuel-pct').innerText = (rec>0?((d.fuel||0)/rec)*100:0).toFixed(1)+'%';
+            document.getElementById('day-hours').innerText = (d.hoursFormatted||(h||0).toFixed(1))+"h";
+            document.getElementById('day-hourly').innerText = formatMoney(h>0?luc/h:0);
+            document.getElementById('day-km-val').innerText = formatMoney(d.km>0?rec/d.km:0);
+            
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            const res = config ? calculateTargetLogic(config.total, config.offDays||[]) : { target: 0, remaining: 0, daysLeft: 0 };
+            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
+            
+            const displayDays = Math.max(0, res.daysLeft - 1);
+            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${displayDays} dias restantes`;
+
+            document.getElementById('view-day-detail').classList.remove('hidden');
+        }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
+
+        function askDelete(index) { itemToDeleteIndex = index; document.getElementById('modal-delete').classList.remove('hidden'); }
+        function closeDeleteModal() { itemToDeleteIndex = null; document.getElementById('modal-delete').classList.add('hidden'); }
+        
+        function confirmDelete() {
+            if(itemToDeleteIndex !== null) {
+                const db = getDB(); db.splice(itemToDeleteIndex, 1); saveDB(db);
+                if(window.syncToCloud) window.syncToCloud();
+                closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail();
+            }
+        }
+        
+        function startWizard(indexToEdit = null) {
+            window.history.pushState({modal: 'wizard'}, "", "");
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            const res = config ? calculateTargetLogic(config.total, config.offDays || []) : {target:0};
+            if(indexToEdit !== null) { editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); tempData.customDate = `${p[2]}-${p[1]}-${p[0]}`; }
+            else { editingIndex = null; tempData = {}; tempData.customDate = new Date().toISOString().split('T')[0]; tempData.rentPaid = res.target; }
+            currentStep = 0; toggleWizard(true); renderStep();
+        }
+        function renderStep() {
+            const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/${steps.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentStep+1)/steps.length)*100}%`;
+            document.getElementById('btn-next').innerText = (currentStep === steps.length - 1) ? 'SALVAR' : 'PRÓXIMO';
+            let val = tempData[s.id], html = s.type === 'date' ? `<input type="date" id="inp-val" class="step-input" value="${tempData.customDate}">` : s.type === 'time' ? `<input type="time" id="inp-val" class="step-input" style="color-scheme:dark;" value="${tempData.hoursFormatted||''}">` : `<input type="number" id="inp-val" class="step-input" placeholder="0" autofocus value="${val!==undefined && val!==0?val:''}">`;
+            document.getElementById('wizard-content').innerHTML = `<div class="step-icon-circle">${s.icon}</div><h2>${s.title}</h2><p style="color:#888;">${s.label}</p>${html}`;
+            if(s.id==='rentPaid' && val) {
+                document.getElementById('inp-val').value = parseFloat(val).toFixed(2);
+            }
+            if(s.type!=='date'&&s.type!=='time') setTimeout(()=>document.getElementById('inp-val').focus(),100);
+        }
+        function nextStep(skip) {
+            const el = document.getElementById('inp-val'), s = steps[currentStep];
+            if(s.type === 'date') tempData.customDate = el.value;
+            else if(s.type === 'time') { if(skip||!el.value) tempData[s.id]=0; else { tempData.hoursFormatted=el.value; const [h,m]=el.value.split(':').map(Number); tempData[s.id]=h+(m/60); } }
+            else tempData[s.id] = skip ? 0 : (parseFloat(el.value)||0);
+            if(currentStep < steps.length - 1) { currentStep++; renderStep(); } else saveEntry();
+        }
+        function saveEntry() {
+            const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
+            tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
+            if(editingIndex!==null) db[editingIndex]=tempData; else { tempData.timestamp=Date.now(); if(tempData.rentPaid===undefined)tempData.rentPaid=0; db.unshift(tempData); }
+            saveDB(db); 
+            if(window.syncToCloud) window.syncToCloud();
+            toggleWizard(false); renderDashboard(); renderHistory(); openDayDetail(editingIndex!==null?editingIndex:0);
+        }
+        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
+        function toggleWizard(show) { const el = document.getElementById('wizard-overlay'); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+        function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
+        function switchTab(tab) {
+            document.querySelectorAll('#view-dashboard, #view-history').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            if(tab === 'home') { document.getElementById('view-dashboard').classList.remove('hidden'); document.getElementById('nav-home').classList.add('active'); renderDashboard(); }
+            else { window.history.pushState({page: 'history'}, "", ""); document.getElementById('view-history').classList.remove('hidden'); document.getElementById('nav-hist').classList.add('active'); renderHistory(); }
+        }
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    </script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
+            authDomain: "uber-gestao.firebaseapp.com",
+            projectId: "uber-gestao",
+            storageBucket: "uber-gestao.firebasestorage.app",
+            messagingSenderId: "615548282513",
+            appId: "1:615548282513:web:89db20f983e7d4eea5c130"
+        };
+
+        let auth, db;
+        
+        // INICIALIZAÇÃO SEGURA (NO FINAL DO LOAD)
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                auth = firebase.auth();
+                db = firebase.firestore();
+                initAuthObserver();
+            } else {
+                console.warn("Firebase não carregou (Modo Offline)");
+            }
+        } catch(e) { console.error("Erro Firebase:", e); }
+
+        function initAuthObserver() {
+            if(!auth) return;
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('view-dashboard').classList.remove('hidden');
+                    
+                    // Sincronizar da Nuvem
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists) {
+                            const cloudData = doc.data().history;
+                            if (cloudData && Array.isArray(cloudData)) {
+                                localStorage.setItem('app_motorista_v22', JSON.stringify(cloudData));
+                                if(window.renderDashboard) window.renderDashboard();
+                                if(window.renderHistory) window.renderHistory();
+                            }
+                        }
+                    });
+                } else {
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('view-dashboard').classList.add('hidden');
+                }
+            });
+        }
+
+        window.syncToCloud = function() {
+            if(!auth || !auth.currentUser) return;
+            const currentData = JSON.parse(localStorage.getItem('app_motorista_v22')) || [];
+            db.collection("users").doc(auth.currentUser.uid).set({ history: currentData }, { merge: true })
+            .then(() => console.log("Salvo na nuvem"))
+            .catch((e) => console.error(e));
+        };
+
+        window.handleAuthAction = function() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-main-action');
+
+            if(!email || !pass) { alert("Preencha e-mail e senha!"); return; }
+            if(!auth) { alert("Erro de conexão. Verifique sua internet."); return; }
+
+            btn.innerText = "Carregando...";
+            btn.disabled = true;
+
+            if (window.isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                .then((cred) => {
+                    return db.collection("users").doc(cred.user.uid).set({
+                        email: email, criadoEm: new Date().toISOString(), history: []
+                    });
+                })
+                .then(() => { alert("Conta criada!"); })
+                .catch((e) => { alert("Erro: " + e.message); btn.disabled=false; btn.innerText="CRIAR CONTA"; });
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                .catch((e) => { alert("Erro: " + e.message); btn.disabled=false; btn.innerText="ENTRAR"; });
+            }
+        };
+        
+        // Inicializa o app visualmente mesmo sem firebase
+        window.onload = function() { 
+            window.history.pushState({page: 'home'}, "", ""); 
+            window.onpopstate = function(event) { handleBackButton(); };
+            migrateOldData(); renderDashboard(); 
+        };
+    </script>
+</body>
+</html>
