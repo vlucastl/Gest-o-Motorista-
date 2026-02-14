@@ -82,6 +82,7 @@
         .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
         .cal-day.off { background-color: rgba(255, 69, 58, 0.2); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.8; }
         .cal-day.past-working { background-color: #1a332a; color: #4a8; border: 1px solid #264438; cursor: default; }
+        .cal-day.past-date { background-color: #1a1a1a; color: #444; border-color: #222; cursor: default; opacity: 0.5; }
         .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
 
         .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(20,20,20,0.8) 0%, transparent 100%); }
@@ -261,38 +262,33 @@
 
     <div id="view-day-detail" class="hidden">
         <div class="detail-header">
-            <button class="btn-back" onclick="goBack()">←</button>
+            <button class="btn-back" onclick="handleBackButton()">←</button>
             <h2 id="detail-title">Detalhes do Dia</h2>
             <button class="btn-text" onclick="editCurrentDay()" style="margin-left:auto; color:var(--primary-color);">✏️ Editar</button>
         </div>
+        
         <div class="summary-grid" style="margin-top:10px;">
              <div class="card-rent-config" style="background: rgba(191, 90, 242, 0.15); cursor:default;">
                 <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color);">🟣 Meta Dinâmica</span>
+                    <span style="font-weight:bold; color:var(--rent-color); font-size:12px;">🟣 META DINÂMICA (HOJE)</span>
                     <div style="font-size:10px; color:#aaa; margin-top:5px; line-height:1.2;" id="day-rent-math-expl">Calculando...</div>
                 </div>
                 <div class="rent-info-right">
-                    <span style="font-weight:800; font-size:24px; color:#fff;" id="day-rent-target-val">R$ 0</span>
+                    <span style="font-weight:800; font-size:18px; color:#fff;" id="day-rent-target-val">R$ 0</span>
                 </div>
             </div>
-            <div class="card-small">
-                <span class="label">Aluguel Pago</span>
-                <div class="value-med text-purple" id="day-rent-val">R$ 0,00</div>
-            </div>
-            <div class="card-fuel-alert">
-                <span style="font-weight:bold; color:var(--warning-color);">⛽ Impacto Combustível</span>
-                <span style="font-weight:800;" id="day-fuel-pct">0%</span>
-            </div>
+
             <div class="card-main">
                 <span class="label">Lucro do Dia</span>
                 <div class="value-big" id="day-profit">R$ 0,00</div>
             </div>
+
             <div class="card-small">
                 <span class="label">Receita</span>
                 <div class="value-med text-green" id="day-rev">R$ 0,00</div>
             </div>
             <div class="card-small">
-                <span class="label">Despesas (Total)</span>
+                <span class="label">Despesas Totais</span>
                 <div class="value-med text-red" id="day-exp">R$ 0,00</div>
             </div>
             <div class="card-small">
@@ -303,6 +299,14 @@
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red" id="day-food-val">R$ 0,00</div>
             </div>
+            <div class="card-small">
+                <span class="label">🟣 Aluguel Pago</span>
+                <div class="value-med text-purple" id="day-rent-val">R$ 0,00</div>
+            </div>
+            <div class="card-small">
+                <span class="label">⛽ % Combustível</span>
+                <div class="value-med text-orange" id="day-fuel-pct">0%</div>
+            </div>
              <div class="card-small">
                 <span class="label">🚗 Uber</span>
                 <div class="value-med" id="day-uber">R$ 0,00</div>
@@ -310,6 +314,27 @@
              <div class="card-small">
                 <span class="label">🚕 99/Outros</span>
                 <div class="value-med" id="day-pop">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="performance-section">
+            <div class="section-title">Estatísticas do Dia</div>
+            <div class="perf-grid">
+                <div class="card-perf">
+                    <span class="perf-icon">⏱️</span>
+                    <span class="label">Horas</span>
+                    <span class="perf-val" id="day-total-hours">0h</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">💎</span>
+                    <span class="label">Ganho/Hora</span>
+                    <span class="perf-val text-green" id="day-hourly-val">R$ 0</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">🛣️</span>
+                    <span class="label">R$/KM</span>
+                    <span class="perf-val text-blue" id="day-km-val">R$ 0</span>
+                </div>
             </div>
         </div>
     </div>
@@ -396,26 +421,23 @@
             { id: 'rides', title: 'Viagens', icon: '🔢', label: 'Quantidade de corridas', type: 'number' }
         ];
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null;
+        let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null, currentDetailIndex = null;
         const DB_KEY = 'app_motorista_v22'; 
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
-        // --- LÓGICA DE ALUGUEL (SOLICITADA) ---
+        // --- LÓGICA DE ALUGUEL ---
         function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             const m = referenceDate.getMonth(), y = referenceDate.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-
             let plannedWorkDays = 0;
             for (let i = 1; i <= daysInMonth; i++) { if (!offDaysArray.includes(i)) plannedWorkDays++; }
-
             const db = getDB();
             let paidSoFar = 0, paymentsCount = 0;
             const daysWithPayment = new Set();
-
             db.forEach(item => {
                 const parts = item.date.split('/');
                 if (parseInt(parts[1])-1 === m && parseInt(parts[2]) === y) {
@@ -426,20 +448,12 @@
                     }
                 }
             });
-
             const remaining = Math.max(0, totalRent - paidSoFar);
             const realRemainingDays = Math.max(0, plannedWorkDays - paymentsCount);
             return { target: realRemainingDays > 0 ? remaining / realRemainingDays : remaining, remaining, daysLeft: realRemainingDays };
         }
 
-        // --- FUNÇÕES DE INTERFACE ---
-        function toggleAuthMode() {
-            window.isRegisterMode = !window.isRegisterMode;
-            const btnMain = document.getElementById('btn-main-action'), txtToggle = document.getElementById('txt-toggle'), btnToggle = document.getElementById('btn-toggle');
-            if(window.isRegisterMode) { btnMain.innerText = "CRIAR CONTA"; txtToggle.innerText = "Já tem conta?"; btnToggle.innerText = "Fazer Login"; }
-            else { btnMain.innerText = "ENTRAR"; txtToggle.innerText = "Não tem conta?"; btnToggle.innerText = "Criar agora"; }
-        }
-
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
         function handleBackButton() {
             if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
             if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
@@ -447,10 +461,9 @@
             if(!document.getElementById('view-history').classList.contains('hidden')) { switchTab('home'); return; }
         }
         function goBack() { window.history.back(); }
-        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
-        function migrateOldData() { const old = localStorage.getItem('app_motorista_v21'); if(old && !localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY, old); }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
 
+        // --- ALUGUEL E CALENDÁRIO ---
         function openRentConfig() {
             window.history.pushState({modal: 'rent'}, "", "");
             document.getElementById('modal-rent').classList.remove('hidden');
@@ -461,12 +474,11 @@
             renderRentCalendar(); updateRentPreview();
         }
 
-        function changeRentMonth(dir) { rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir); renderRentCalendar(); updateRentPreview(); }
-
         function renderRentCalendar() {
             const m = rentCalendarDate.getMonth(), y = rentCalendarDate.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
             const container = document.getElementById('rent-calendar');
+            const today = new Date(); today.setHours(0,0,0,0);
             document.getElementById('cal-month-title').innerText = `${monthNames[m]} ${y}`;
             container.innerHTML = '';
             const db = getDB();
@@ -474,33 +486,24 @@
                 const dayDiv = document.createElement('div'); dayDiv.className = 'cal-day'; dayDiv.innerText = i;
                 const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
                 const hasRecord = db.some(item => item.date === checkDateStr && (item.rentPaid||0) > 0);
-                if (tempOffDays.includes(i)) dayDiv.classList.add('off');
-                else if (hasRecord) dayDiv.classList.add('past-working');
-                else dayDiv.classList.add('working');
-                dayDiv.onclick = () => {
-                    if(tempOffDays.includes(i)) tempOffDays = tempOffDays.filter(d => d !== i);
-                    else tempOffDays.push(i);
-                    renderRentCalendar(); updateRentPreview();
-                };
+                const loopDate = new Date(y, m, i);
+                
+                if (loopDate < today) { dayDiv.classList.add('past-date'); }
+                else {
+                    if (tempOffDays.includes(i)) dayDiv.classList.add('off');
+                    else if (hasRecord) dayDiv.classList.add('past-working');
+                    else dayDiv.classList.add('working');
+                    dayDiv.onclick = () => {
+                        if(tempOffDays.includes(i)) tempOffDays = tempOffDays.filter(d => d !== i);
+                        else tempOffDays.push(i);
+                        renderRentCalendar(); updateRentPreview();
+                    };
+                }
                 container.appendChild(dayDiv);
             }
         }
 
-        function updateRentPreview() {
-            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const res = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
-            document.getElementById('rent-preview-val').innerText = formatMoney(res.target);
-            document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
-            document.getElementById('rent-debug-days').innerText = res.daysLeft;
-        }
-
-        function saveRentConfig() {
-            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            localStorage.setItem('rent_config', JSON.stringify({ total, offDays: tempOffDays }));
-            closeRentConfig(); renderDashboard();
-        }
-        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
-
+        // --- DASHBOARD ---
         function renderDashboard() {
             const db = getDB(); const m = viewDate.getMonth(), y = viewDate.getFullYear();
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
@@ -528,6 +531,48 @@
             document.getElementById('dash-rent-target').innerText = formatMoney(config ? config.total : 0);
         }
 
+        // --- DETALHE DO DIA (ESTÉTICA CORRIGIDA) ---
+        function openDayDetail(index) {
+            window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
+            const d = getDB()[index]; if(!d) return;
+            const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+            
+            let h = d.hours || 0;
+            if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+
+            document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
+            document.getElementById('day-profit').innerText = formatMoney(luc);
+            document.getElementById('day-rev').innerText = formatMoney(rec);
+            document.getElementById('day-exp').innerText = formatMoney((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+            document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
+            document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
+            document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
+            document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
+            document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
+            document.getElementById('day-fuel-pct').innerText = (rec>0?((d.fuel||0)/rec)*100:0).toFixed(1)+'%';
+            
+            // Novos campos estatísticos na seção de performance
+            document.getElementById('day-total-hours').innerText = (d.hoursFormatted || h.toFixed(1) + "h");
+            document.getElementById('day-hourly-val').innerText = formatMoney(h > 0 ? luc / h : 0);
+            document.getElementById('day-km-val').innerText = formatMoney((d.km||0) > 0 ? rec / d.km : 0);
+
+            const parts = d.date.split('/'); const res = calculateTargetLogic(JSON.parse(localStorage.getItem('rent_config'))?.total||0, JSON.parse(localStorage.getItem('rent_config'))?.offDays||[], new Date(parts[2], parts[1]-1, parts[0]));
+            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
+            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
+            document.getElementById('view-day-detail').classList.remove('hidden');
+        }
+
+        // --- FUNÇÕES AUXILIARES ---
+        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function switchTab(tab) {
+            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
+            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === (tab==='home'?'nav-home':'nav-hist')));
+            if(tab==='history') renderHistory(); else renderDashboard();
+        }
         function renderHistory() {
             const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
             const groups = {};
@@ -551,27 +596,7 @@
                 list.appendChild(folder); list.appendChild(itemsDiv);
             });
         }
-
-        function openDayDetail(index) {
-            window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
-            const d = getDB()[index]; if(!d) return;
-            const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
-            document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
-            document.getElementById('day-profit').innerText = formatMoney(luc);
-            document.getElementById('day-rev').innerText = formatMoney(rec);
-            document.getElementById('day-exp').innerText = formatMoney((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
-            document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
-            document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
-            document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
-            document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
-            document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
-            document.getElementById('day-fuel-pct').innerText = (rec>0?((d.fuel||0)/rec)*100:0).toFixed(1)+'%';
-            const parts = d.date.split('/'); const res = calculateTargetLogic(JSON.parse(localStorage.getItem('rent_config'))?.total||0, JSON.parse(localStorage.getItem('rent_config'))?.offDays||[], new Date(parts[2], parts[1]-1, parts[0]));
-            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
-            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
-            document.getElementById('view-day-detail').classList.remove('hidden');
-        }
-
+        function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
         function startWizard(indexToEdit = null) {
             window.history.pushState({modal: 'wizard'}, "", "");
             const config = JSON.parse(localStorage.getItem('rent_config'));
@@ -582,18 +607,15 @@
             if(editingIndex === null) tempData.rentPaid = res.target;
             currentStep = 0; toggleWizard(true); renderStep();
         }
-
         function renderStep() {
             const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/9`;
             document.getElementById('progress-bar').style.width = `${((currentStep+1)/9)*100}%`;
             document.getElementById('btn-next').innerText = currentStep === 8 ? 'SALVAR' : 'PRÓXIMO';
-            let val = tempData[s.id];
             let html = `<div class="step-icon-circle">${s.icon}</div><h2>${s.title}</h2><p style="color:#888;">${s.label}</p>`;
-            html += s.type === 'date' ? `<input type="date" id="inp-val" class="step-input" value="${tempData.customDate}">` : s.type === 'time' ? `<input type="time" id="inp-val" class="step-input" value="${tempData.hoursFormatted||''}">` : `<input type="number" id="inp-val" class="step-input" placeholder="0" value="${val||''}">`;
+            html += s.type === 'date' ? `<input type="date" id="inp-val" class="step-input" value="${tempData.customDate}">` : s.type === 'time' ? `<input type="time" id="inp-val" class="step-input" value="${tempData.hoursFormatted||''}">` : `<input type="number" id="inp-val" class="step-input" placeholder="0" value="${tempData[s.id]||''}">`;
             document.getElementById('wizard-content').innerHTML = html;
             setTimeout(()=>document.getElementById('inp-val').focus(),100);
         }
-
         function nextStep(skip) {
             const el = document.getElementById('inp-val'), s = steps[currentStep];
             if(s.type === 'date') tempData.customDate = el.value;
@@ -601,7 +623,6 @@
             else tempData[s.id] = skip ? 0 : parseFloat(el.value)||0;
             if(currentStep < 8) { currentStep++; renderStep(); } else saveEntry();
         }
-
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
             tempData.date = d.toLocaleDateString('pt-BR');
@@ -609,21 +630,31 @@
             saveDB(db); if(window.syncToCloud) window.syncToCloud();
             toggleWizard(false); renderDashboard(); openDayDetail(editingIndex!==null?editingIndex:0);
         }
-
-        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
-        function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
-        function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
-            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === (tab==='home'?'nav-home':'nav-hist')));
-            if(tab==='history') renderHistory(); else renderDashboard();
+        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
+        function updateRentPreview() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const res = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
+            document.getElementById('rent-preview-val').innerText = formatMoney(res.target);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
+            document.getElementById('rent-debug-days').innerText = res.daysLeft;
         }
-        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
-        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function changeRentMonth(dir) { rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir); renderRentCalendar(); updateRentPreview(); }
+        function saveRentConfig() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            localStorage.setItem('rent_config', JSON.stringify({ total, offDays: tempOffDays }));
+            closeRentConfig(); renderDashboard();
+        }
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
         function askDelete(i) { itemToDeleteIndex = i; document.getElementById('modal-delete').classList.remove('hidden'); }
         function closeDeleteModal() { document.getElementById('modal-delete').classList.add('hidden'); }
         function confirmDelete() { const db = getDB(); db.splice(itemToDeleteIndex,1); saveDB(db); if(window.syncToCloud) window.syncToCloud(); closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail(); }
+        function toggleAuthMode() {
+            window.isRegisterMode = !window.isRegisterMode;
+            const btnMain = document.getElementById('btn-main-action'), txtToggle = document.getElementById('txt-toggle'), btnToggle = document.getElementById('btn-toggle');
+            if(window.isRegisterMode) { btnMain.innerText = "CRIAR CONTA"; txtToggle.innerText = "Já tem conta?"; btnToggle.innerText = "Fazer Login"; }
+            else { btnMain.innerText = "ENTRAR"; txtToggle.innerText = "Não tem conta?"; btnToggle.innerText = "Criar agora"; }
+        }
     </script>
 
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
@@ -674,7 +705,7 @@
         };
 
         window.syncToCloud = function() { if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB() }, { merge: true }); };
-        window.onload = function() { window.history.pushState({page: 'home'}, "", ""); window.onpopstate = () => handleBackButton(); migrateOldData(); renderDashboard(); };
+        window.onload = function() { window.history.pushState({page: 'home'}, "", ""); window.onpopstate = () => handleBackButton(); renderDashboard(); };
     </script>
 </body>
 </html>
