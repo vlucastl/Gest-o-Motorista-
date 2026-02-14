@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestão Motorista V28 - Final</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL --- */
+        /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -43,7 +43,7 @@
             position: fixed; 
             top: 0; left: 0; 
             width: 100%; height: 100%; 
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://source.unsplash.com/random/1080x1920/?luxury-car,night,neon'); 
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1080&auto=format&fit=crop'); 
             background-size: cover; 
             background-position: center; 
             z-index: 9999; 
@@ -98,6 +98,8 @@
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
         .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
+        .card-fuel-alert { grid-column: span 2; background: rgba(255, 159, 10, 0.15); border: 1px solid var(--warning-color); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        
         .card-rent-config { 
             grid-column: span 2; 
             background: rgba(191, 90, 242, 0.1); 
@@ -184,16 +186,20 @@
         <div class="login-logo">🚗</div>
         <div class="login-title">GESTÃO PRO</div>
         <div class="login-subtitle">Controle total dos seus ganhos e metas na palma da mão.</div>
+
         <div style="width:100%; max-width:400px;">
             <div class="input-group">
                 <span class="input-icon">✉️</span>
                 <input type="email" id="login-email" class="login-input" placeholder="Seu E-mail">
             </div>
+            
             <div class="input-group">
                 <span class="input-icon">🔒</span>
                 <input type="password" id="login-pass" class="login-input" placeholder="Sua Senha">
             </div>
+
             <button class="btn btn-primary" onclick="handleAuthAction()" id="btn-main-action">ENTRAR</button>
+            
             <div class="login-footer">
                 <span id="txt-toggle">Não tem conta?</span> 
                 <span class="link-action" onclick="toggleAuthMode()" id="btn-toggle">Criar agora</span>
@@ -295,9 +301,15 @@
                     <span style="font-weight:800; font-size:24px; color:#fff;" id="day-rent-target-val">R$ 0</span>
                 </div>
             </div>
+            
             <div class="card-small">
                 <span class="label">Aluguel Pago</span>
                 <div class="value-med text-purple" id="day-rent-val">R$ 0,00</div>
+            </div>
+
+            <div class="card-fuel-alert">
+                <span style="font-weight:bold; color:var(--warning-color);">⛽ Impacto Combustível</span>
+                <span style="font-weight:800;" id="day-fuel-pct">0%</span>
             </div>
             <div class="card-main">
                 <span class="label">Lucro do Dia</span>
@@ -328,13 +340,39 @@
                 <div class="value-med" id="day-pop">R$ 0,00</div>
             </div>
         </div>
+        <div class="performance-section">
+            <div class="section-title">Performance do Dia</div>
+            <div class="perf-grid">
+                <div class="card-perf">
+                    <span class="perf-icon">⏱️</span>
+                    <span class="label">Horas Trab.</span>
+                    <span class="perf-val" id="day-hours">0h</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">💎</span>
+                    <span class="label">Valor/Hora</span>
+                    <span class="perf-val text-green" id="day-hourly">R$ 0,00</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">🪙</span>
+                    <span class="label">Ganho/KM</span>
+                    <span class="perf-val text-blue" id="day-km-val">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="modal-rent" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="modal-title">Planejar Aluguel</div>
+            <div class="modal-desc" style="font-size:12px;">
+                <span style="color:var(--primary-color);">VERDE:</span> Futuro (Trabalho) ou Passado (Pago)<br>
+                <span style="color:var(--danger-color);">VERMELHO:</span> Futuro (Folga) ou Passado (Não Pago)
+            </div>
+            
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Valor TOTAL do Aluguel (Mês)</label>
             <input type="number" id="input-total-rent" class="step-input" style="font-size:18px; padding:10px; margin-bottom:15px;" placeholder="Ex: 3000" oninput="updateRentPreview()">
+
             <div class="calendar-wrapper">
                 <div class="calendar-header">
                     <button class="btn-icon-nav" style="width:30px;height:30px;font-size:14px;" onclick="changeRentMonth(-1)">◀</button>
@@ -343,6 +381,7 @@
                 </div>
                 <div id="rent-calendar" class="calendar-grid"></div>
             </div>
+
             <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid var(--rent-color); text-align:left;">
                 <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
                     <span style="color:#aaa;">Falta Pagar:</span>
@@ -357,9 +396,21 @@
                     <span style="font-size:20px; font-weight:bold; color:var(--rent-color);" id="rent-preview-val">R$ 0</span>
                 </div>
             </div>
+
             <div class="modal-btns">
-                <button class="btn btn-primary" onclick="saveRentConfig()">Salvar</button>
+                <button class="btn btn-primary" onclick="saveRentConfig()">Salvar Planejamento</button>
                 <button class="btn btn-text" onclick="closeRentConfig()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-delete" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div style="font-size:40px; margin-bottom:10px;">🗑️</div>
+            <div class="modal-title">Apagar Registro?</div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Apagar</button>
             </div>
         </div>
     </div>
@@ -405,8 +456,10 @@
         const DB_KEY = 'app_motorista_v22'; 
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
+        let itemToDeleteIndex = null;
+        window.isRegisterMode = false;
 
-        // --- NOVA FUNÇÃO DE CÁLCULO DE ALUGUEL (Lógica de Cotas Estáveis) ---
+        // --- FUNÇÃO DE CÁLCULO DE ALUGUEL (Lógica de Cotas Estáveis) ---
         function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
 
@@ -414,7 +467,7 @@
             const currentYear = referenceDate.getFullYear();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            // 1. Dias planejados (Total - Folgas) -> Folga aumenta meta
+            // 1. Dias planejados (Folga diminui o divisor e sobe a meta)
             let plannedWorkDays = 0;
             for (let i = 1; i <= daysInMonth; i++) {
                 if (!offDaysArray.includes(i)) plannedWorkDays++;
@@ -425,7 +478,7 @@
             let paymentsCount = 0;
             const daysWithPayment = new Set();
 
-            // 2. Conta registros de pagamento no histórico
+            // 2. Conta registros no histórico (Registro diminui dia, mas mantém meta estável)
             db.forEach(item => {
                 let m = item.month, y = item.year, d = 0;
                 if (m === undefined || y === undefined) {
@@ -440,7 +493,7 @@
                     if (val > 0) {
                         paidSoFar += val;
                         if (!daysWithPayment.has(d)) {
-                            paymentsCount++; // Registrar diária diminui 1 dia restante
+                            paymentsCount++;
                             daysWithPayment.add(d);
                         }
                     }
@@ -448,58 +501,56 @@
             });
 
             const remainingToPay = Math.max(0, totalRent - paidSoFar);
-            // Dias Restantes = Planejados - Já pagos
             const realRemainingDays = Math.max(0, plannedWorkDays - paymentsCount);
 
             const target = realRemainingDays > 0 ? remainingToPay / realRemainingDays : remainingToPay;
             return { target, remaining: remainingToPay, daysLeft: realRemainingDays };
         }
 
-        // --- DASHBOARD E UI ---
-        function renderDashboard() {
-            const db = getDB();
-            const m = viewDate.getMonth();
-            const y = viewDate.getFullYear();
-            document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
-            document.getElementById('label-year').innerText = y;
-            const data = db.filter(item => {
-                const parts = item.date.split('/');
-                return parseInt(parts[1])-1 === m && parseInt(parts[2]) === y;
-            });
-            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
-            data.forEach(item => {
-                tFuel += (item.fuel || 0); tFood += (item.food || 0); tRent += (item.rentPaid || 0);
-                tRev += (item.uber || 0) + (item.pop || 0); tKm += (item.km || 0);
-                if (item.hours) tHours += item.hours;
-            });
-            tExp = tFuel + tFood + tRent;
-            document.getElementById('dash-profit').innerText = formatMoney(tRev - tExp);
-            document.getElementById('dash-rev').innerText = formatMoney(tRev);
-            document.getElementById('dash-exp').innerText = formatMoney(tExp);
-            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
-            document.getElementById('dash-food-val').innerText = formatMoney(tFood);
-            document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
-            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
-            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? (tRev - tExp) / tHours : 0);
-            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
-            const config = JSON.parse(localStorage.getItem('rent_config'));
-            document.getElementById('dash-rent-target').innerText = formatMoney(config ? config.total : 0);
+        function toggleAuthMode() {
+            window.isRegisterMode = !window.isRegisterMode;
+            const btnMain = document.getElementById('btn-main-action');
+            const txtToggle = document.getElementById('txt-toggle');
+            const btnToggle = document.getElementById('btn-toggle');
+            
+            if(window.isRegisterMode) {
+                btnMain.innerText = "CRIAR CONTA";
+                txtToggle.innerText = "Já tem conta?";
+                btnToggle.innerText = "Fazer Login";
+            } else {
+                btnMain.innerText = "ENTRAR";
+                txtToggle.innerText = "Não tem conta?";
+                btnToggle.innerText = "Criar agora";
+            }
         }
 
+        function handleBackButton() {
+            if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
+            if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
+            if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
+            if(!document.getElementById('view-history').classList.contains('hidden')) { switchTab('home'); return; }
+        }
+        function goBack() { window.history.back(); }
+
+        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+        function migrateOldData() { const old = localStorage.getItem('app_motorista_v21'); if(old && !localStorage.getItem(DB_KEY)) localStorage.setItem(DB_KEY, old); }
+
         function openRentConfig() {
+            window.history.pushState({modal: 'rent'}, "", "");
             document.getElementById('modal-rent').classList.remove('hidden');
             const config = JSON.parse(localStorage.getItem('rent_config')) || { total: 0, offDays: [] };
             document.getElementById('input-total-rent').value = config.total || '';
-            tempOffDays = config.offDays || [];
-            renderRentCalendar(); updateRentPreview();
+            tempOffDays = (config.offDays || []).map(Number);
+            rentCalendarDate = new Date(); 
+            renderRentCalendar();
+            updateRentPreview();
         }
 
-        function updateRentPreview() {
-            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const res = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
-            document.getElementById('rent-preview-val').innerText = formatMoney(res.target);
-            document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
-            document.getElementById('rent-debug-days').innerText = res.daysLeft;
+        function changeRentMonth(dir) {
+            rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir);
+            renderRentCalendar();
+            updateRentPreview();
         }
 
         function renderRentCalendar() {
@@ -509,72 +560,285 @@
             const container = document.getElementById('rent-calendar');
             document.getElementById('cal-month-title').innerText = `${monthNames[m]} ${y}`;
             container.innerHTML = '';
+
+            const db = getDB();
+            const today = new Date();
+
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div');
-                dayDiv.className = 'cal-day ' + (tempOffDays.includes(i) ? 'off' : 'working');
+                dayDiv.className = 'cal-day';
                 dayDiv.innerText = i;
-                dayDiv.onclick = () => {
-                    if(tempOffDays.includes(i)) tempOffDays = tempOffDays.filter(d => d !== i);
-                    else tempOffDays.push(i);
-                    renderRentCalendar(); updateRentPreview();
-                };
+                
+                const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
+                const hasRecord = db.some(item => item.date === checkDateStr && (item.rentPaid||0) > 0);
+                
+                if (tempOffDays.includes(i)) {
+                    dayDiv.classList.add('off');
+                } else {
+                    if (hasRecord) dayDiv.classList.add('past-working');
+                    else dayDiv.classList.add('working');
+                }
+
+                if (i === today.getDate() && m === today.getMonth() && y === today.getFullYear()) dayDiv.classList.add('today');
+                
+                dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
                 container.appendChild(dayDiv);
             }
         }
 
-        function saveRentConfig() {
+        function toggleDayOff(day, el) {
+            if(tempOffDays.includes(day)) {
+                tempOffDays = tempOffDays.filter(d => d !== day);
+                el.classList.remove('off'); el.classList.add('working');
+            } else {
+                tempOffDays.push(day);
+                el.classList.remove('working'); el.classList.add('off');
+            }
+            updateRentPreview();
+        }
+
+        function updateRentPreview() {
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            localStorage.setItem('rent_config', JSON.stringify({ total, offDays: tempOffDays }));
-            closeRentConfig(); renderDashboard();
+            const result = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
+            document.getElementById('rent-preview-val').innerText = formatMoney(result.target);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(result.remaining);
+            document.getElementById('rent-debug-days').innerText = result.daysLeft;
         }
 
-        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
-
-        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-        function getDB() { return JSON.parse(localStorage.getItem(DB_KEY)) || []; }
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
-        function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
-            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
-            document.getElementById('nav-home').classList.toggle('active', tab === 'home');
-            document.getElementById('nav-hist').classList.toggle('active', tab === 'history');
-            if(tab === 'history') renderHistory(); else renderDashboard();
-        }
-
-        function startWizard() {
-            currentStep = 0; tempData = { customDate: new Date().toISOString().split('T')[0] };
-            document.getElementById('wizard-overlay').classList.remove('hidden'); renderStep();
-        }
-
-        function renderStep() {
-            const s = steps[currentStep];
-            document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/9`;
-            document.getElementById('progress-bar').style.width = `${((currentStep+1)/9)*100}%`;
-            document.getElementById('btn-next').innerText = currentStep === 8 ? 'SALVAR' : 'PRÓXIMO';
-            let html = `<div class="step-icon-circle">${s.icon}</div><h2>${s.title}</h2><p>${s.label}</p>`;
-            html += `<input type="${s.type}" id="inp-val" class="step-input" value="${tempData[s.id] || ''}">`;
-            document.getElementById('wizard-content').innerHTML = html;
-        }
-
-        function nextStep(skip) {
-            const val = document.getElementById('inp-val').value;
-            tempData[steps[currentStep].id] = skip ? 0 : (steps[currentStep].type === 'number' ? parseFloat(val) : val);
-            if(currentStep < 8) { currentStep++; renderStep(); } 
-            else { saveEntry(); }
-        }
-
-        function saveEntry() {
-            const db = getDB();
-            const d = new Date(tempData.customDate + 'T12:00:00');
-            tempData.date = d.toLocaleDateString('pt-BR');
-            tempData.month = d.getMonth(); tempData.year = d.getFullYear();
-            db.unshift(tempData); saveDB(db);
-            document.getElementById('wizard-overlay').classList.add('hidden');
+        function saveRentConfig() {
+            const valStr = document.getElementById('input-total-rent').value;
+            const total = parseFloat(valStr) || 0;
+            localStorage.setItem('rent_config', JSON.stringify({ total: total, offDays: tempOffDays }));
+            alert("Planejamento Salvo!");
+            closeRentConfig();
             renderDashboard();
         }
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        function goBack() { document.getElementById('wizard-overlay').classList.add('hidden'); }
-        window.onload = () => renderDashboard();
+        function renderDashboard() {
+            window.renderDashboard = renderDashboard;
+            const db = getDB();
+            const m = viewDate.getMonth();
+            const y = viewDate.getFullYear();
+            
+            document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
+            document.getElementById('label-year').innerText = y;
+
+            const data = db.filter(item => {
+                const parts = item.date.split('/');
+                return parseInt(parts[1])-1 === m && parseInt(parts[2]) === y;
+            });
+
+            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
+
+            data.forEach(item => {
+                tFuel += Number(item.fuel || 0);
+                tFood += Number(item.food || 0);
+                tRent += Number(item.rentPaid || 0);
+                tRev += Number(item.uber || 0) + Number(item.pop || 0);
+                tKm += Number(item.km || 0);
+
+                let h = Number(item.hours);
+                if (isNaN(h) || h === 0) {
+                    if (item.hoursFormatted) {
+                        const [hh, mm] = item.hoursFormatted.split(':').map(Number);
+                        h = hh + (mm / 60);
+                    } else h = 0;
+                }
+                tHours += h;
+            });
+            
+            tExp = tFuel + tFood + tRent;
+            const profit = tRev - tExp;
+
+            document.getElementById('dash-profit').innerText = formatMoney(profit);
+            document.getElementById('dash-rev').innerText = formatMoney(tRev);
+            document.getElementById('dash-exp').innerText = formatMoney(tExp);
+            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
+            document.getElementById('dash-food-val').innerText = formatMoney(tFood);
+            document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
+            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
+            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? profit / tHours : 0);
+            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
+
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            document.getElementById('dash-rent-target').innerText = formatMoney(config ? config.total : 0);
+        }
+
+        function renderHistory() {
+            window.renderHistory = renderHistory;
+            const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
+            const groups = {};
+            db.forEach((item, index) => {
+                const p = item.date.split('/'); const m=parseInt(p[1])-1; const y=parseInt(p[2]);
+                const key = `${m}-${y}`;
+                if(!groups[key]) groups[key] = { label: `${monthNames[m]} ${y}`, items: [] };
+                item.originalIndex = index; groups[key].items.push(item);
+            });
+            Object.keys(groups).forEach(key => {
+                const g = groups[key];
+                const folder = document.createElement('div'); folder.className = 'month-folder';
+                folder.innerHTML = `<span class="folder-title">📂 ${g.label}</span><span class="folder-icon">▼</span>`;
+                const itemsDiv = document.createElement('div'); itemsDiv.className = 'days-list';
+                g.items.forEach(d => {
+                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+                    const div = document.createElement('div'); div.className = 'history-item';
+                    div.innerHTML = `
+                        <div onclick="openDayDetail(${d.originalIndex})" style="flex:1;">
+                            <div class="date-badge">${d.date}</div>
+                            <div class="sub-info">Lucro: ${formatMoney(luc)}</div>
+                        </div>
+                        <button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>`;
+                    itemsDiv.appendChild(div);
+                });
+                folder.onclick = () => folder.classList.toggle('folder-open');
+                list.appendChild(folder); list.appendChild(itemsDiv);
+            });
+        }
+
+        function openDayDetail(index) {
+            window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
+            const d = getDB()[index]; if(!d) return;
+            const rec = (d.uber||0)+(d.pop||0), desp = (d.fuel||0)+(d.food||0)+(d.rentPaid||0), luc = rec-desp;
+            
+            document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
+            document.getElementById('day-profit').innerText = formatMoney(luc);
+            document.getElementById('day-rev').innerText = formatMoney(rec);
+            document.getElementById('day-exp').innerText = formatMoney(desp);
+            document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
+            document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
+            document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
+            document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
+            document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
+            document.getElementById('day-fuel-pct').innerText = (rec>0?((d.fuel||0)/rec)*100:0).toFixed(1)+'%';
+            
+            let h = Number(d.hours || 0);
+            document.getElementById('day-hours').innerText = (d.hoursFormatted||h.toFixed(1))+"h";
+            document.getElementById('day-hourly').innerText = formatMoney(h>0?luc/h:0);
+            document.getElementById('day-km-val').innerText = formatMoney(d.km>0?rec/d.km:0);
+            
+            const p = d.date.split('/'); const recordDate = new Date(p[2], p[1]-1, p[0]);
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            const res = config ? calculateTargetLogic(config.total, config.offDays||[], recordDate) : { target: 0, remaining: 0, daysLeft: 0 };
+            
+            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
+            document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
+            document.getElementById('view-day-detail').classList.remove('hidden');
+        }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
+
+        function askDelete(index) { itemToDeleteIndex = index; document.getElementById('modal-delete').classList.remove('hidden'); }
+        function closeDeleteModal() { itemToDeleteIndex = null; document.getElementById('modal-delete').classList.add('hidden'); }
+        function confirmDelete() {
+            if(itemToDeleteIndex !== null) {
+                const db = getDB(); db.splice(itemToDeleteIndex, 1); saveDB(db);
+                if(window.syncToCloud) window.syncToCloud();
+                closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail();
+            }
+        }
+        
+        function startWizard(indexToEdit = null) {
+            window.history.pushState({modal: 'wizard'}, "", "");
+            const config = JSON.parse(localStorage.getItem('rent_config'));
+            let refDate = new Date();
+            if(indexToEdit !== null) { const temp = getDB()[indexToEdit]; const p = temp.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); }
+            const res = config ? calculateTargetLogic(config.total, config.offDays || [], refDate) : {target:0};
+
+            if(indexToEdit !== null) { 
+                editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; 
+                const p = tempData.date.split('/'); tempData.customDate = `${p[2]}-${p[1]}-${p[0]}`; 
+            } else { 
+                editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0], rentPaid: res.target }; 
+            }
+            currentStep = 0; toggleWizard(true); renderStep();
+        }
+        function renderStep() {
+            const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/${steps.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentStep+1)/steps.length)*100}%`;
+            document.getElementById('btn-next').innerText = (currentStep === steps.length - 1) ? 'SALVAR' : 'PRÓXIMO';
+            let val = tempData[s.id], html = s.type === 'date' ? `<input type="date" id="inp-val" class="step-input" value="${tempData.customDate}">` : s.type === 'time' ? `<input type="time" id="inp-val" class="step-input" style="color-scheme:dark;" value="${tempData.hoursFormatted||''}">` : `<input type="number" id="inp-val" class="step-input" placeholder="0" autofocus value="${val!==undefined && val!==0?val:''}">`;
+            document.getElementById('wizard-content').innerHTML = `<div class="step-icon-circle">${s.icon}</div><h2>${s.title}</h2><p style="color:#888;">${s.label}</p>${html}`;
+            if(s.type!=='date'&&s.type!=='time') setTimeout(()=>document.getElementById('inp-val').focus(),100);
+        }
+        function nextStep(skip) {
+            const el = document.getElementById('inp-val'), s = steps[currentStep];
+            if(s.type === 'date') tempData.customDate = el.value;
+            else if(s.type === 'time') { 
+                if(skip||!el.value) tempData[s.id]=0; 
+                else { tempData.hoursFormatted=el.value; const [h,m]=el.value.split(':').map(Number); tempData[s.id]=h+(m/60); } 
+            } else tempData[s.id] = skip ? 0 : (parseFloat(el.value)||0);
+            if(currentStep < steps.length - 1) { currentStep++; renderStep(); } else saveEntry();
+        }
+        function saveEntry() {
+            const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
+            tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
+            if(editingIndex!==null) db[editingIndex]=tempData; else { tempData.timestamp=Date.now(); db.unshift(tempData); }
+            saveDB(db); if(window.syncToCloud) window.syncToCloud();
+            toggleWizard(false); renderDashboard(); renderHistory(); openDayDetail(editingIndex!==null?editingIndex:0);
+        }
+        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
+        function toggleWizard(show) { const el = document.getElementById('wizard-overlay'); if(show) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+        function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
+        function switchTab(tab) {
+            document.querySelectorAll('#view-dashboard, #view-history').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            if(tab === 'home') { document.getElementById('view-dashboard').classList.remove('hidden'); document.getElementById('nav-home').classList.add('active'); renderDashboard(); }
+            else { window.history.pushState({page: 'history'}, "", ""); document.getElementById('view-history').classList.remove('hidden'); document.getElementById('nav-hist').classList.add('active'); renderHistory(); }
+        }
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    </script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
+            authDomain: "uber-gestao.firebaseapp.com",
+            projectId: "uber-gestao",
+            storageBucket: "uber-gestao.firebasestorage.app",
+            messagingSenderId: "615548282513",
+            appId: "1:615548282513:web:89db20f983e7d4eea5c130"
+        };
+        let auth, db;
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth(); db = firebase.firestore(); initAuthObserver();
+            }
+        } catch(e) { console.error(e); }
+
+        function initAuthObserver() {
+            if(!auth) return;
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('view-dashboard').classList.remove('hidden');
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists && doc.data().history) {
+                            localStorage.setItem('app_motorista_v22', JSON.stringify(doc.data().history));
+                            renderDashboard();
+                        }
+                    });
+                } else document.getElementById('login-screen').style.display = 'flex';
+            });
+        }
+        window.syncToCloud = function() {
+            if(!auth || !auth.currentUser) return;
+            db.collection("users").doc(auth.currentUser.uid).set({ history: getDB() }, { merge: true });
+        };
+        window.handleAuthAction = function() {
+            const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value;
+            if(!email || !pass) return;
+            if (window.isRegisterMode) auth.createUserWithEmailAndPassword(email, pass);
+            else auth.signInWithEmailAndPassword(email, pass);
+        };
+        window.onload = function() { 
+            window.history.pushState({page: 'home'}, "", ""); 
+            window.onpopstate = () => handleBackButton();
+            migrateOldData(); renderDashboard(); 
+        };
     </script>
 </body>
 </html>
