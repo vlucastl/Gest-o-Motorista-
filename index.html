@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -597,43 +596,57 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // --- DASHBOARD BLINDADO (CORREÇÃO DE ZEROS) ---
+        // --- DASHBOARD BLINDADO (CORRIGIDO) ---
         function renderDashboard() {
             window.renderDashboard = renderDashboard;
             const db = getDB();
             const m = viewDate.getMonth();
             const y = viewDate.getFullYear();
+            
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
 
-            const data = db.filter(i => (i.month !== undefined ? i.month === m && i.year === y : parseInt(i.date.split('/')[1])-1 === m));
+            // Filtro robusto (Ano + Mês)
+            const data = db.filter(i => {
+                if (i.month !== undefined && i.year !== undefined) {
+                    return i.month === m && i.year === y;
+                }
+                const parts = i.date.split('/');
+                return (parseInt(parts[1]) - 1) === m && parseInt(parts[2]) === y;
+            });
+
             let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
 
+            // Helper para conversão segura de números
+            const safeNum = (val) => {
+                if (!val) return 0;
+                if (typeof val === 'number') return val;
+                return parseFloat(String(val).replace(',', '.')) || 0;
+            };
+
             data.forEach(i => {
-                // Forçando conversão para Número para evitar erros de texto
-                tFuel += Number(i.fuel || 0); 
-                tFood += Number(i.food || 0); 
-                tRent += Number(i.rentPaid || 0);
-                tRev += Number(i.uber || 0) + Number(i.pop || 0);
-                
-                // Correção específica para HORAS e KM
-                let h = Number(i.hours);
-                // Se horas for inválido (NaN) ou zero, tenta converter do texto HH:MM
-                if((!h || isNaN(h)) && i.hoursFormatted) {
+                const rev = safeNum(i.uber) + safeNum(i.pop);
+                tRev += rev;
+                tFuel += safeNum(i.fuel);
+                tFood += safeNum(i.food);
+                tRent += safeNum(i.rentPaid);
+                tKm += safeNum(i.km);
+
+                // Cálculo de horas com correção
+                let h = safeNum(i.hours);
+                if (h === 0 && i.hoursFormatted) {
                     const parts = i.hoursFormatted.split(':');
                     if(parts.length === 2) {
-                        const hh = Number(parts[0]);
-                        const mm = Number(parts[1]);
-                        h = hh + (mm/60);
+                        h = Number(parts[0]) + (Number(parts[1])/60);
                     }
                 }
-                tHours += Number(h || 0); 
-                tKm += Number(i.km || 0);
+                tHours += h;
             });
             
             tExp = tFuel + tFood + tRent;
+            const profit = tRev - tExp;
 
-            document.getElementById('dash-profit').innerText = formatMoney(tRev - tExp);
+            document.getElementById('dash-profit').innerText = formatMoney(profit);
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
             document.getElementById('dash-exp').innerText = formatMoney(tExp);
             document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
@@ -641,20 +654,27 @@
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
             document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
             
+            // Performance Section
+            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
+            
+            // Proteção contra divisão por zero
+            const hourlyVal = tHours > 0 ? (profit / tHours) : 0; 
+            document.getElementById('dash-hourly').innerText = formatMoney(hourlyVal);
+
+            const kmVal = tKm > 0 ? (tRev / tKm) : 0;
+            document.getElementById('dash-km-val').innerText = formatMoney(kmVal);
+
+            // Rent Target Logic
             const config = JSON.parse(localStorage.getItem('rent_config'));
-            const total = config ? Number(config.total) : 0;
+            const totalRent = config ? Number(config.total) : 0;
             const dashTargetEl = document.getElementById('dash-rent-target');
-            if(total > 0) {
-                dashTargetEl.innerText = formatMoney(total);
+            if(totalRent > 0) {
+                dashTargetEl.innerText = formatMoney(totalRent);
                 dashTargetEl.style.fontSize = "18px";
             } else {
                 dashTargetEl.innerText = "Definir Meta";
                 dashTargetEl.style.fontSize = "14px";
             }
-
-            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? (tRev-tExp)/tHours : 0);
-            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
-            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev/tKm : 0);
         }
 
         // --- HISTÓRICO ---
