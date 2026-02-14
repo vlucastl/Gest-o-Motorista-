@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V25 - Anti-Crash</title>
+    <title>Gestão Motorista V26 - Final</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
+        /* --- CONFIGURAÇÃO VISUAL (V25 MANTIDA) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -453,7 +453,7 @@
         ];
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null;
-        const DB_KEY = 'app_motorista_v22'; 
+        const DB_KEY = 'app_motorista_v22'; // Mantendo DB Key nova para não perder dados da V25
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
@@ -596,7 +596,7 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // --- DASHBOARD BLINDADO (CORRIGIDO) ---
+        // --- DASHBOARD (LOGICA V9 TRANSPLANTADA) ---
         function renderDashboard() {
             window.renderDashboard = renderDashboard;
             const db = getDB();
@@ -606,41 +606,23 @@
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
 
-            // Filtro robusto (Ano + Mês)
-            const data = db.filter(i => {
-                if (i.month !== undefined && i.year !== undefined) {
-                    return i.month === m && i.year === y;
-                }
-                const parts = i.date.split('/');
-                return (parseInt(parts[1]) - 1) === m && parseInt(parts[2]) === y;
+            // Filtro igual da V9
+            const data = db.filter(item => {
+                if (item.month !== undefined) return item.month === m && item.year === y;
+                const parts = item.date.split('/');
+                return parseInt(parts[1])-1 === m && parseInt(parts[2]) === y;
             });
 
             let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
 
-            // Helper para conversão segura de números
-            const safeNum = (val) => {
-                if (!val) return 0;
-                if (typeof val === 'number') return val;
-                return parseFloat(String(val).replace(',', '.')) || 0;
-            };
-
-            data.forEach(i => {
-                const rev = safeNum(i.uber) + safeNum(i.pop);
-                tRev += rev;
-                tFuel += safeNum(i.fuel);
-                tFood += safeNum(i.food);
-                tRent += safeNum(i.rentPaid);
-                tKm += safeNum(i.km);
-
-                // Cálculo de horas com correção
-                let h = safeNum(i.hours);
-                if (h === 0 && i.hoursFormatted) {
-                    const parts = i.hoursFormatted.split(':');
-                    if(parts.length === 2) {
-                        h = Number(parts[0]) + (Number(parts[1])/60);
-                    }
-                }
-                tHours += h;
+            // Loop Simples (V9 Logic)
+            data.forEach(item => {
+                tFuel += Number(item.fuel || 0);
+                tFood += Number(item.food || 0);
+                tRent += Number(item.rentPaid || 0);
+                tRev += Number(item.uber || 0) + Number(item.pop || 0);
+                tHours += Number(item.hours || 0);
+                tKm += Number(item.km || 0);
             });
             
             tExp = tFuel + tFood + tRent;
@@ -654,17 +636,16 @@
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
             document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
             
-            // Performance Section
+            // Performance V9 Logic
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             
-            // Proteção contra divisão por zero
             const hourlyVal = tHours > 0 ? (profit / tHours) : 0; 
             document.getElementById('dash-hourly').innerText = formatMoney(hourlyVal);
 
             const kmVal = tKm > 0 ? (tRev / tKm) : 0;
             document.getElementById('dash-km-val').innerText = formatMoney(kmVal);
 
-            // Rent Target Logic
+            // Rent Target Logic (Mantido V25 visual)
             const config = JSON.parse(localStorage.getItem('rent_config'));
             const totalRent = config ? Number(config.total) : 0;
             const dashTargetEl = document.getElementById('dash-rent-target');
@@ -697,15 +678,11 @@
                 g.items.forEach(d => {
                     const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
                     
-                    let h = Number(d.hours);
-                    if((!h || isNaN(h)) && d.hoursFormatted) { 
-                        const p=d.hoursFormatted.split(':'); if(p.length===2) h=Number(p[0])+(Number(p[1])/60);
-                    }
-                    
+                    let h = Number(d.hours || 0);
                     let hoursVal = h > 0 ? luc/h : 0;
                     let fuelPct = rec > 0 ? ((d.fuel||0)/rec)*100 : 0;
                     let tagsHtml = `<span class="tag tag-fuel">⛽ ${fuelPct.toFixed(0)}%</span>`;
-                    if(h) tagsHtml += `<span class="tag tag-hour" style="margin-left:5px;">⏱️ ${d.hoursFormatted||h.toFixed(1)+'h'} • ${formatMoney(hoursVal)}/h</span>`;
+                    if(h > 0) tagsHtml += `<span class="tag tag-hour" style="margin-left:5px;">⏱️ ${d.hoursFormatted||h.toFixed(1)+'h'} • ${formatMoney(hoursVal)}/h</span>`;
 
                     const div = document.createElement('div'); div.className = 'history-item';
                     
@@ -730,11 +707,7 @@
             const d = getDB()[index]; if(!d) return;
             const rec = (d.uber||0)+(d.pop||0), desp = (d.fuel||0)+(d.food||0)+(d.rentPaid||0), luc = rec-desp;
             
-            // Correção horas detalhe
-            let h = Number(d.hours);
-            if((!h || isNaN(h)) && d.hoursFormatted) { 
-                const p=d.hoursFormatted.split(':'); if(p.length===2) h=Number(p[0])+(Number(p[1])/60);
-            }
+            let h = Number(d.hours || 0);
             
             document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
             document.getElementById('day-profit').innerText = formatMoney(luc);
@@ -746,7 +719,7 @@
             document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
             document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
             document.getElementById('day-fuel-pct').innerText = (rec>0?((d.fuel||0)/rec)*100:0).toFixed(1)+'%';
-            document.getElementById('day-hours').innerText = (d.hoursFormatted||(h||0).toFixed(1))+"h";
+            document.getElementById('day-hours').innerText = (d.hoursFormatted||h.toFixed(1))+"h";
             document.getElementById('day-hourly').innerText = formatMoney(h>0?luc/h:0);
             document.getElementById('day-km-val').innerText = formatMoney(d.km>0?rec/d.km:0);
             
@@ -791,13 +764,25 @@
             }
             if(s.type!=='date'&&s.type!=='time') setTimeout(()=>document.getElementById('inp-val').focus(),100);
         }
+
+        // --- SALVAMENTO (WIZARD) COM LOGICA DA V9 ---
         function nextStep(skip) {
             const el = document.getElementById('inp-val'), s = steps[currentStep];
             if(s.type === 'date') tempData.customDate = el.value;
-            else if(s.type === 'time') { if(skip||!el.value) tempData[s.id]=0; else { tempData.hoursFormatted=el.value; const [h,m]=el.value.split(':').map(Number); tempData[s.id]=h+(m/60); } }
+            else if(s.type === 'time') { 
+                if(skip||!el.value) tempData[s.id]=0; 
+                else { 
+                    // Lógica Exata da V9 para Horas
+                    tempData.hoursFormatted=el.value; 
+                    const [h,m]=el.value.split(':').map(Number); 
+                    tempData[s.id]=h+(m/60); 
+                } 
+            }
             else tempData[s.id] = skip ? 0 : (parseFloat(el.value)||0);
+            
             if(currentStep < steps.length - 1) { currentStep++; renderStep(); } else saveEntry();
         }
+
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
             tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
