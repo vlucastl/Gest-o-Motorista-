@@ -1,444 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V28 - Final</title>
-    <style>
-        /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
-        :root {
-            --bg-color: #000000;
-            --card-color: #1c1c1e;
-            --primary-color: #00E676; 
-            --text-color: #ffffff;
-            --text-gray: #8e8e93;
-            --danger-color: #ff453a;
-            --warning-color: #ff9f0a;
-            --info-color: #0a84ff;
-            --rent-color: #bf5af2;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; overflow-x: hidden; }
-        .hidden { display: none !important; }
-        .text-green { color: var(--primary-color) !important; }
-        .text-red { color: var(--danger-color) !important; }
-        .text-orange { color: var(--warning-color) !important; }
-        .text-blue { color: var(--info-color) !important; }
-        .text-purple { color: var(--rent-color) !important; }
-        
-        /* Botões Gerais */
-        .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background-color: var(--primary-color); color: #000; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3); }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-danger { background-color: var(--danger-color); color: #fff; }
-        .btn-secondary { background-color: #333; color: #fff; }
-        .btn-outline { background: transparent; border: 1px solid #333; color: #fff; }
-        .btn-text { background: transparent; color: var(--text-gray); }
-        .btn-icon-nav { background: #2c2c2e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .btn-trash { background: none; border: none; font-size: 18px; cursor: pointer; padding: 10px; color: var(--danger-color); }
-
-        /* --- TELA DE LOGIN --- */
-        #login-screen { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://source.unsplash.com/random/1080x1920/?luxury-car,night,neon'); 
-            background-size: cover; 
-            background-position: center; 
-            z-index: 9999; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 30px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .login-logo { font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--primary-color)); animation: float 3s ease-in-out infinite; }
-        .login-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
-        .login-subtitle { font-size: 14px; color: #aaa; margin-bottom: 40px; text-align: center; max-width: 80%; }
-        
-        .input-group { width: 100%; margin-bottom: 15px; position: relative; }
-        .input-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; font-size: 18px; }
-        .login-input { 
-            width: 100%; 
-            background: rgba(28, 28, 30, 0.8); 
-            border: 1px solid #333; 
-            padding: 16px 16px 16px 45px; 
-            border-radius: 12px; 
-            color: #fff; 
-            font-size: 16px; 
-            outline: none; 
-            transition: 0.3s;
-            backdrop-filter: blur(5px);
-        }
-        .login-input:focus { border-color: var(--primary-color); background: rgba(28, 28, 30, 1); box-shadow: 0 0 10px rgba(0, 230, 118, 0.1); }
-        
-        .login-footer { margin-top: 20px; font-size: 13px; color: #888; text-align: center; }
-        .link-action { color: var(--primary-color); font-weight: bold; cursor: pointer; text-decoration: none; }
-
-        /* --- CALENDÁRIO --- */
-        .calendar-wrapper { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
-        
-        .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
-        .cal-day.off { background-color: rgba(255, 69, 58, 0.2); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.8; }
-        .cal-day.past-working { background-color: #1a332a; color: #4a8; border: 1px solid #264438; cursor: default; }
-        .cal-day.past-missing { background-color: #331a1a; color: #a44; border: 1px solid #442626; cursor: default; }
-        .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
-
-        /* --- LAYOUT --- */
-        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(20,20,20,0.8) 0%, transparent 100%); }
-        .month-selector { text-align: center; }
-        .month-selector h2 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
-        .month-selector span { font-size: 12px; color: var(--text-gray); }
-
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
-        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
-        .card-fuel-alert { grid-column: span 2; background: rgba(255, 159, 10, 0.15); border: 1px solid var(--warning-color); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-        
-        .card-rent-config { 
-            grid-column: span 2; 
-            background: rgba(191, 90, 242, 0.1); 
-            border: 1px solid var(--rent-color); 
-            padding: 16px; 
-            border-radius: 16px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-        .card-rent-config:active { background: rgba(191, 90, 242, 0.2); }
-        
-        .rent-info-left { display: flex; flex-direction: column; align-items: flex-start; text-align: left; width: 60%; }
-        .rent-info-right { text-align: right; width: 40%; }
-
-        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
-        .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 5px 0; }
-        .value-med { font-size: 18px; font-weight: 700; }
-
-        .performance-section { padding: 0 20px; margin-top: 10px; margin-bottom: 20px; }
-        .section-title { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; text-transform: uppercase; }
-        .perf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .card-perf { background: #2c2c2e; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .perf-val { font-size: 16px; font-weight: bold; color: #fff; margin-top: 5px; }
-        .perf-icon { font-size: 20px; margin-bottom: 5px; }
-
-        /* --- HISTÓRICO --- */
-        .history-container { padding: 20px; }
-        .header-simple { padding: 20px 20px 0 20px; }
-        .month-folder { background-color: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-        .days-list { display: none; padding-left: 10px; margin-bottom: 20px; border-left: 2px solid #333; }
-        .folder-open + .days-list { display: block; animation: slideDown 0.3s ease; }
-        
-        .history-item { background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 8px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .history-item:active { background: #333; border-color: #555; }
-        .date-badge { font-size: 14px; font-weight: bold; color: #fff; }
-        .sub-info { font-size: 12px; color: var(--text-gray); margin-top: 4px; line-height: 1.5; display: flex; flex-wrap: wrap; gap: 5px; }
-        .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; display: inline-block; }
-        .tag-fuel { color: var(--warning-color); background: rgba(255,159,10,0.15); }
-        .tag-hour { color: var(--info-color); background: rgba(10,132,255,0.15); }
-
-        /* --- MODAIS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 500; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: #1c1c1e; width: 85%; max-width: 320px; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; animation: popIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
-        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        .modal-desc { font-size: 14px; color: #aaa; margin-bottom: 20px; }
-        .modal-btns { display: flex; gap: 10px; flex-direction: column; }
-        
-        #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 200; overflow-y: auto; padding-bottom: 40px; }
-        .detail-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid #333; background: #111; }
-        .btn-back { background: none; border: none; font-size: 24px; color: #fff; margin-right: 15px; cursor: pointer; }
-
-        /* --- WIZARD --- */
-        #wizard-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 300; display: flex; flex-direction: column; }
-        .wizard-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .progress-track { height: 4px; background: #333; margin: 0 20px; border-radius: 2px; }
-        .progress-fill { height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s; border-radius: 2px; }
-        .wizard-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .step-icon-circle { width: 80px; height: 80px; background: #1c1c1e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 20px; border: 1px solid #333; }
-        .step-input { background: #1c1c1e; border: 1px solid #333; color: #fff; font-size: 24px; padding: 15px; width: 100%; border-radius: 12px; text-align: center; margin-top: 20px; outline: none; }
-        .step-input:focus { border-color: var(--primary-color); }
-        input[type="date"], input[type="time"] { color-scheme: dark; }
-        .wizard-actions { padding: 20px; display: flex; gap: 10px; padding-bottom: 30px; }
-
-        /* --- MENU --- */
-        .bottom-bar { position: fixed; bottom: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #333; display: flex; justify-content: space-around; padding: 10px; z-index: 50; }
-        .nav-btn { background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center; }
-        .nav-btn.active { color: var(--primary-color); }
-        .nav-icon { font-size: 20px; margin-bottom: 4px; }
-        .add-btn { background: var(--primary-color); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; margin-top: -25px; border: 4px solid #000; box-shadow: 0 4px 12px rgba(0,230,118,0.4); }
-
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
-</head>
-<body>
-
-    <div id="login-screen">
-        <div class="login-logo">🚗</div>
-        <div class="login-title">GESTÃO PRO</div>
-        <div class="login-subtitle">Controle total dos seus ganhos e metas na palma da mão.</div>
-
-        <div style="width:100%; max-width:400px;">
-            <div class="input-group">
-                <span class="input-icon">✉️</span>
-                <input type="email" id="login-email" class="login-input" placeholder="Seu E-mail">
-            </div>
-            
-            <div class="input-group">
-                <span class="input-icon">🔒</span>
-                <input type="password" id="login-pass" class="login-input" placeholder="Sua Senha">
-            </div>
-
-            <button class="btn btn-primary" onclick="handleAuthAction()" id="btn-main-action">ENTRAR</button>
-            
-            <div class="login-footer">
-                <span id="txt-toggle">Não tem conta?</span> 
-                <span class="link-action" onclick="toggleAuthMode()" id="btn-toggle">Criar agora</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-dashboard" class="hidden">
-        <div class="header-nav">
-            <button class="btn-icon-nav" onclick="changeMonth(-1)">◀</button>
-            <div class="month-selector">
-                <span id="label-year">2026</span>
-                <h2 id="label-month">JANEIRO</h2>
-            </div>
-            <button class="btn-icon-nav" onclick="changeMonth(1)">▶</button>
-        </div>
-
-        <div class="summary-grid">
-            <div class="card-rent-config" onclick="openRentConfig()">
-                <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color); font-size:12px; display:block;">🟣 PLANO DE ALUGUEL</span>
-                    <span style="color:#aaa; font-size:11px;">Toque para definir folgas</span>
-                </div>
-                <div class="rent-info-right">
-                    <span style="font-size:11px; color:#aaa;">Total do Mês</span><br>
-                    <span style="font-weight:800; font-size:18px; color:#fff;" id="dash-rent-target">R$ 0</span>
-                </div>
-            </div>
-
-            <div class="card-main">
-                <span class="label">Lucro Líquido (Mês)</span>
-                <div class="value-big" id="dash-profit">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">Receita Total</span>
-                <div class="value-med text-green" id="dash-rev">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">Despesas Totais</span>
-                <div class="value-med text-red" id="dash-exp">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">⛽ Combustível</span>
-                <div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">🍔 Alimentação</span>
-                <div class="value-med text-red" id="dash-food-val">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">🟣 Aluguel (Pago)</span>
-                <div class="value-med text-purple" id="dash-rent-val">R$ 0,00</div>
-            </div>
-        </div>
-
-        <div class="performance-section">
-            <div class="section-title">Estatísticas do Mês</div>
-            <div class="perf-grid">
-                <div class="card-perf">
-                    <span class="perf-icon">⏱️</span>
-                    <span class="label">Horas/Mês</span>
-                    <span class="perf-val" id="dash-hours">0h</span>
-                </div>
-                <div class="card-perf">
-                    <span class="perf-icon">💎</span>
-                    <span class="label">Ganho/Hora</span>
-                    <span class="perf-val text-green" id="dash-hourly">R$ 0</span>
-                </div>
-                <div class="card-perf">
-                    <span class="perf-icon">🛣️</span>
-                    <span class="label">R$/KM</span>
-                    <span class="perf-val text-blue" id="dash-km-val">R$ 0</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-history" class="hidden">
-        <div class="header-simple">
-            <h2 style="font-size:24px; font-weight:700;">Histórico</h2>
-            <p style="color:#666; font-size:12px; margin-bottom:10px;">Clique num dia para ver detalhes</p>
-        </div>
-        <div id="history-list" class="history-container"></div>
-    </div>
-
-    <div id="view-day-detail" class="hidden">
-        <div class="detail-header">
-            <button class="btn-back" onclick="goBack()">←</button>
-            <h2 id="detail-title">Detalhes do Dia</h2>
-            <button class="btn-text" onclick="editCurrentDay()" style="margin-left:auto; color:var(--primary-color);">✏️ Editar</button>
-        </div>
-        <div class="summary-grid" style="margin-top:10px;">
-             <div class="card-rent-config" style="background: rgba(191, 90, 242, 0.15); cursor:default;">
-                <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color);">🟣 Meta Dinâmica</span>
-                    <div style="font-size:10px; color:#aaa; margin-top:5px; line-height:1.2;" id="day-rent-math-expl">Calculando...</div>
-                </div>
-                <div class="rent-info-right">
-                    <span style="font-weight:800; font-size:24px; color:#fff;" id="day-rent-target-val">R$ 0</span>
-                </div>
-            </div>
-            
-            <div class="card-small">
-                <span class="label">Aluguel Pago</span>
-                <div class="value-med text-purple" id="day-rent-val">R$ 0,00</div>
-            </div>
-
-            <div class="card-fuel-alert">
-                <span style="font-weight:bold; color:var(--warning-color);">⛽ Impacto Combustível</span>
-                <span style="font-weight:800;" id="day-fuel-pct">0%</span>
-            </div>
-            <div class="card-main">
-                <span class="label">Lucro do Dia</span>
-                <div class="value-big" id="day-profit">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">Receita</span>
-                <div class="value-med text-green" id="day-rev">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">Despesas (Total)</span>
-                <div class="value-med text-red" id="day-exp">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">⛽ Combustível</span>
-                <div class="value-med text-orange" id="day-fuel-val">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">🍔 Alimentação</span>
-                <div class="value-med text-red" id="day-food-val">R$ 0,00</div>
-            </div>
-             <div class="card-small">
-                <span class="label">🚗 Uber</span>
-                <div class="value-med" id="day-uber">R$ 0,00</div>
-            </div>
-             <div class="card-small">
-                <span class="label">🚕 99/Outros</span>
-                <div class="value-med" id="day-pop">R$ 0,00</div>
-            </div>
-        </div>
-        <div class="performance-section">
-            <div class="section-title">Performance do Dia</div>
-            <div class="perf-grid">
-                <div class="card-perf">
-                    <span class="perf-icon">⏱️</span>
-                    <span class="label">Horas Trab.</span>
-                    <span class="perf-val" id="day-hours">0h</span>
-                </div>
-                <div class="card-perf">
-                    <span class="perf-icon">💎</span>
-                    <span class="label">Valor/Hora</span>
-                    <span class="perf-val text-green" id="day-hourly">R$ 0,00</span>
-                </div>
-                <div class="card-perf">
-                    <span class="perf-icon">🪙</span>
-                    <span class="label">Ganho/KM</span>
-                    <span class="perf-val text-blue" id="day-km-val">R$ 0,00</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-rent" class="modal-overlay hidden">
-        <div class="modal-box">
-            <div class="modal-title">Planejar Aluguel</div>
-            <div class="modal-desc" style="font-size:12px;">
-                <span style="color:var(--primary-color);">VERDE:</span> Futuro (Trabalho) ou Passado (Pago)<br>
-                <span style="color:var(--danger-color);">VERMELHO:</span> Futuro (Folga) ou Passado (Não Pago)
-            </div>
-            
-            <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Valor TOTAL do Aluguel (Mês)</label>
-            <input type="number" id="input-total-rent" class="step-input" style="font-size:18px; padding:10px; margin-bottom:15px;" placeholder="Ex: 3000" oninput="updateRentPreview()">
-
-            <div class="calendar-wrapper">
-                <div class="calendar-header">
-                    <button class="btn-icon-nav" style="width:30px;height:30px;font-size:14px;" onclick="changeRentMonth(-1)">◀</button>
-                    <div style="font-size:14px; font-weight:bold; color:#fff;" id="cal-month-title">Mês Atual</div>
-                    <button class="btn-icon-nav" style="width:30px;height:30px;font-size:14px;" onclick="changeRentMonth(1)">▶</button>
-                </div>
-                <div id="rent-calendar" class="calendar-grid"></div>
-            </div>
-
-            <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid var(--rent-color); text-align:left;">
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                    <span style="color:#aaa;">Falta Pagar:</span>
-                    <span style="color:#fff; font-weight:bold;" id="rent-debug-remaining">R$ 0</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
-                    <span style="color:#aaa;">Dias Restantes (Futuros):</span>
-                    <span style="color:#fff; font-weight:bold;" id="rent-debug-days">0</span>
-                </div>
-                <div style="border-top:1px solid #444; margin-top:5px; padding-top:5px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--rent-color); font-weight:bold;">META DE HOJE:</span>
-                    <span style="font-size:20px; font-weight:bold; color:var(--rent-color);" id="rent-preview-val">R$ 0</span>
-                </div>
-            </div>
-
-            <div class="modal-btns">
-                <button class="btn btn-primary" onclick="saveRentConfig()">Salvar Planejamento</button>
-                <button class="btn btn-text" onclick="closeRentConfig()">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-delete" class="modal-overlay hidden">
-        <div class="modal-box">
-            <div style="font-size:40px; margin-bottom:10px;">🗑️</div>
-            <div class="modal-title">Apagar Registro?</div>
-            <div class="modal-btns">
-                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
-                <button class="btn btn-danger" onclick="confirmDelete()">Apagar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="wizard-overlay" class="hidden">
-        <div class="wizard-top">
-            <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/8</span>
-            <button onclick="goBack()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
-        <div class="wizard-body" id="wizard-content"></div>
-        <div class="wizard-actions">
-            <button class="btn btn-text" style="width:auto;" onclick="prevStep()">Voltar</button>
-            <button class="btn btn-outline" onclick="nextStep(true)" id="btn-skip">Pular</button>
-            <button class="btn btn-primary" onclick="nextStep(false)" id="btn-next">Próximo</button>
-        </div>
-    </div>
-
-    <div class="bottom-bar">
-        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
-            <span class="nav-icon">🏠</span>Início
-        </button>
-        <button class="add-btn" onclick="startWizard()">+</button>
-        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')">
-            <span class="nav-icon">📂</span>Histórico
-        </button>
-    </div>
-
     <script>
         const steps = [
             { id: 'customDate', title: 'Data', icon: '📅', label: 'Qual a data do registro?', type: 'date' },
@@ -458,6 +17,62 @@
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
+
+        // --- FUNÇÃO DE CÁLCULO DE ALUGUEL (V6 - Lógica de Cotas Pagas) ---
+        // Agora o divisor diminui baseado em quantos pagamentos você registrou no banco
+        function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
+            if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
+
+            const currentMonth = referenceDate.getMonth();
+            const currentYear = referenceDate.getFullYear();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // 1. Total de dias que PODERIAM ter trabalho (Mês inteiro - Folgas)
+            let totalPotentialWorkDays = 0;
+            for (let i = 1; i <= daysInMonth; i++) {
+                if (!offDaysArray.includes(i)) {
+                    totalPotentialWorkDays++;
+                }
+            }
+
+            const db = getDB();
+            let paidSoFar = 0;       
+            let daysWithPayment = 0; // Quantas cotas já foram pagas
+
+            // 2. Conta pagamentos no banco de dados (Passado ou Futuro)
+            db.forEach(item => {
+                let m = item.month, y = item.year;
+                
+                if (m === undefined || y === undefined) {
+                    const p = item.date.split('/');
+                    m = parseInt(p[1]) - 1; y = parseInt(p[2]);
+                }
+
+                if (m === currentMonth && y === currentYear) {
+                    const val = (item.rentPaid || 0);
+                    // Se pagou algo (> 0), conta como uma diária abatida
+                    if (val > 0) {
+                        paidSoFar += val;
+                        daysWithPayment++; 
+                    }
+                }
+            });
+
+            const remainingToPay = Math.max(0, totalRent - paidSoFar);
+            
+            // 3. Dias Restantes = (Dias Potenciais) - (Dias Pagos)
+            let realRemainingDays = Math.max(0, totalPotentialWorkDays - daysWithPayment);
+
+            // 4. Cálculo final
+            let target = 0;
+            if (realRemainingDays > 0) {
+                target = remainingToPay / realRemainingDays;
+            } else {
+                target = remainingToPay;
+            }
+
+            return { target: target, remaining: remainingToPay, daysLeft: realRemainingDays };
+        }
 
         function toggleAuthMode() {
             window.isRegisterMode = !window.isRegisterMode;
@@ -502,6 +117,7 @@
         function changeRentMonth(dir) {
             rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir);
             renderRentCalendar();
+            updateRentPreview(); // Atualiza preview ao mudar mês
         }
 
         function renderRentCalendar() {
@@ -520,19 +136,21 @@
                 dayDiv.className = 'cal-day';
                 dayDiv.innerText = i;
                 
-                const currentDate = new Date(y, m, i);
-                const isPast = currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                // Verifica histórico visual
+                const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
+                const hasRecord = db.some(item => item.date === checkDateStr);
                 
-                if (isPast) {
-                    const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
-                    const hasRecord = db.some(item => item.date === checkDateStr);
-                    if (hasRecord) dayDiv.classList.add('past-working');
-                    else dayDiv.classList.add('past-missing');
+                // Lógica visual simples: se tem registro é verde escuro, se é folga é vermelho
+                if (tempOffDays.includes(i)) {
+                    dayDiv.classList.add('off');
                 } else {
-                    dayDiv.classList.add(tempOffDays.includes(i) ? 'off' : 'working');
-                    if (currentDate.getDate() === today.getDate() && m === today.getMonth()) dayDiv.classList.add('today');
-                    dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
+                    if (hasRecord) dayDiv.classList.add('past-working'); // Usando estilo de "já trabalhado" para registros
+                    else dayDiv.classList.add('working');
                 }
+                
+                if (i === today.getDate() && m === today.getMonth() && y === today.getFullYear()) dayDiv.classList.add('today');
+                
+                dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
                 container.appendChild(dayDiv);
             }
         }
@@ -550,59 +168,12 @@
 
         function updateRentPreview() {
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const result = calculateTargetLogic(total, tempOffDays);
+            // ATUALIZADO: Passa a data do calendário do modal
+            const result = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
             
             document.getElementById('rent-preview-val').innerText = formatMoney(result.target);
             document.getElementById('rent-debug-remaining').innerText = formatMoney(result.remaining);
             document.getElementById('rent-debug-days').innerText = result.daysLeft;
-        }
-
-        // --- FUNÇÃO CORRIGIDA DO ALUGUEL (V3) ---
-        function calculateTargetLogic(totalRent, offDaysArray) {
-            if(totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
-            
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-            const today = now.getDate();
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            
-            const db = getDB();
-            let paidSoFar = 0;
-            let paidToday = 0; // Monitora se houve pagamento HOJE
-
-            db.forEach(item => {
-                let m = item.month, y = item.year, d = 0;
-                
-                // Tratamento de datas
-                if (m === undefined || y === undefined) {
-                    const p = item.date.split('/'); 
-                    d = parseInt(p[0]); m = parseInt(p[1])-1; y = parseInt(p[2]);
-                } else {
-                    d = parseInt(item.date.split('/')[0]);
-                }
-
-                if(m === currentMonth && y === currentYear) {
-                    const val = (item.rentPaid || 0);
-                    paidSoFar += val;
-                    if(d === today) paidToday += val;
-                }
-            });
-
-            const remainingToPay = Math.max(0, totalRent - paidSoFar);
-            
-            // --- LÓGICA DO DIVISOR ---
-            // Se já pagou algo HOJE (paidToday > 0), o dia de hoje não conta mais no divisor.
-            // Começa a contar de AMANHÃ.
-            const startDay = (paidToday > 0) ? today + 1 : today;
-            
-            let futureWorkDays = 0;
-            for(let d = startDay; d <= daysInMonth; d++) {
-                if(!offDaysArray.includes(d)) futureWorkDays++;
-            }
-            
-            const target = futureWorkDays > 0 ? remainingToPay / futureWorkDays : remainingToPay;
-            return { target: target, remaining: remainingToPay, daysLeft: futureWorkDays };
         }
 
         function saveRentConfig() {
@@ -753,11 +324,15 @@
             document.getElementById('day-hourly').innerText = formatMoney(h>0?luc/h:0);
             document.getElementById('day-km-val').innerText = formatMoney(d.km>0?rec/d.km:0);
             
+            // ATUALIZADO: Cria uma data baseada no registro para calcular o contexto correto
+            const parts = d.date.split('/');
+            const recordDate = new Date(parts[2], parts[1]-1, parts[0]);
+
             const config = JSON.parse(localStorage.getItem('rent_config'));
-            const res = config ? calculateTargetLogic(config.total, config.offDays||[]) : { target: 0, remaining: 0, daysLeft: 0 };
-            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
+            // Passa a recordDate para a função V6
+            const res = config ? calculateTargetLogic(config.total, config.offDays||[], recordDate) : { target: 0, remaining: 0, daysLeft: 0 };
             
-            const displayDays = Math.max(0, res.daysLeft - 1); // UX visual adjustment
+            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
             document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
 
             document.getElementById('view-day-detail').classList.remove('hidden');
@@ -778,9 +353,29 @@
         function startWizard(indexToEdit = null) {
             window.history.pushState({modal: 'wizard'}, "", "");
             const config = JSON.parse(localStorage.getItem('rent_config'));
-            const res = config ? calculateTargetLogic(config.total, config.offDays || []) : {target:0};
-            if(indexToEdit !== null) { editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); tempData.customDate = `${p[2]}-${p[1]}-${p[0]}`; }
-            else { editingIndex = null; tempData = {}; tempData.customDate = new Date().toISOString().split('T')[0]; tempData.rentPaid = res.target; }
+            
+            // Define data de referência (hoje ou data do registro editado)
+            let refDate = new Date();
+            if(indexToEdit !== null) {
+                const temp = getDB()[indexToEdit];
+                const p = temp.date.split('/');
+                refDate = new Date(p[2], p[1]-1, p[0]);
+            }
+            
+            const res = config ? calculateTargetLogic(config.total, config.offDays || [], refDate) : {target:0};
+
+            if(indexToEdit !== null) { 
+                editingIndex = indexToEdit; 
+                tempData = {...getDB()[indexToEdit]}; 
+                const p = tempData.date.split('/'); 
+                tempData.customDate = `${p[2]}-${p[1]}-${p[0]}`; 
+            }
+            else { 
+                editingIndex = null; 
+                tempData = {}; 
+                tempData.customDate = new Date().toISOString().split('T')[0]; 
+                tempData.rentPaid = res.target; 
+            }
             currentStep = 0; toggleWizard(true); renderStep();
         }
         function renderStep() {
@@ -829,99 +424,3 @@
         function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
         function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
     </script>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-    <script>
-        // CONFIGURAÇÃO DO FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
-            authDomain: "uber-gestao.firebaseapp.com",
-            projectId: "uber-gestao",
-            storageBucket: "uber-gestao.firebasestorage.app",
-            messagingSenderId: "615548282513",
-            appId: "1:615548282513:web:89db20f983e7d4eea5c130"
-        };
-
-        let auth, db;
-        
-        try {
-            if (typeof firebase !== 'undefined') {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-                auth = firebase.auth();
-                db = firebase.firestore();
-                initAuthObserver();
-            } else {
-                console.warn("Firebase não carregou (Modo Offline)");
-            }
-        } catch(e) { console.error("Erro Firebase:", e); }
-
-        function initAuthObserver() {
-            if(!auth) return;
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('view-dashboard').classList.remove('hidden');
-                    
-                    db.collection("users").doc(user.uid).get().then((doc) => {
-                        if (doc.exists) {
-                            const cloudData = doc.data().history;
-                            if (cloudData && Array.isArray(cloudData)) {
-                                localStorage.setItem('app_motorista_v22', JSON.stringify(cloudData));
-                                if(window.renderDashboard) window.renderDashboard();
-                                if(window.renderHistory) window.renderHistory();
-                            }
-                        }
-                    });
-                } else {
-                    document.getElementById('login-screen').style.display = 'flex';
-                    document.getElementById('view-dashboard').classList.add('hidden');
-                }
-            });
-        }
-
-        window.syncToCloud = function() {
-            if(!auth || !auth.currentUser) return;
-            const currentData = JSON.parse(localStorage.getItem('app_motorista_v22')) || [];
-            db.collection("users").doc(auth.currentUser.uid).set({ history: currentData }, { merge: true })
-            .then(() => console.log("Salvo na nuvem"))
-            .catch((e) => console.error(e));
-        };
-
-        window.handleAuthAction = function() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.getElementById('btn-main-action');
-
-            if(!email || !pass) { alert("Preencha e-mail e senha!"); return; }
-            if(!auth) { alert("Erro de conexão. Verifique sua internet."); return; }
-
-            btn.innerText = "Carregando...";
-            btn.disabled = true;
-
-            if (window.isRegisterMode) {
-                auth.createUserWithEmailAndPassword(email, pass)
-                .then((cred) => {
-                    return db.collection("users").doc(cred.user.uid).set({
-                        email: email, criadoEm: new Date().toISOString(), history: []
-                    });
-                })
-                .then(() => { alert("Conta criada!"); })
-                .catch((e) => { alert("Erro: " + e.message); btn.disabled=false; btn.innerText="CRIAR CONTA"; });
-            } else {
-                auth.signInWithEmailAndPassword(email, pass)
-                .catch((e) => { alert("Erro: " + e.message); btn.disabled=false; btn.innerText="ENTRAR"; });
-            }
-        };
-        
-        window.onload = function() { 
-            window.history.pushState({page: 'home'}, "", ""); 
-            window.onpopstate = function(event) { handleBackButton(); };
-            migrateOldData(); renderDashboard(); 
-        };
-    </script>
-</body>
-</html>
