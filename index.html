@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V28 - Final</title>
+    <title>Gestão Motorista V28 - Final (Dinâmico)</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
@@ -514,6 +514,8 @@
 
             const db = getDB();
             const today = new Date();
+            // Data de hoje sem horas (meia-noite) para comparação correta
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div');
@@ -521,14 +523,16 @@
                 dayDiv.innerText = i;
                 
                 const currentDate = new Date(y, m, i);
-                const isPast = currentDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                // "Passado" é apenas o que veio ANTES de hoje
+                const isStrictlyPast = currentDate < todayMidnight;
                 
-                if (isPast) {
+                if (isStrictlyPast) {
                     const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
                     const hasRecord = db.some(item => item.date === checkDateStr);
                     if (hasRecord) dayDiv.classList.add('past-working');
                     else dayDiv.classList.add('past-missing');
                 } else {
+                    // Hoje e Futuro são editáveis
                     dayDiv.classList.add(tempOffDays.includes(i) ? 'off' : 'working');
                     if (currentDate.getDate() === today.getDate() && m === today.getMonth()) dayDiv.classList.add('today');
                     dayDiv.onclick = function() { toggleDayOff(i, dayDiv); };
@@ -557,27 +561,50 @@
             document.getElementById('rent-debug-days').innerText = result.daysLeft;
         }
 
+        // --- NOVA LÓGICA DINÂMICA (SUBSTITUÍDA) ---
         function calculateTargetLogic(totalRent, offDaysArray) {
-            if(totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
-            
+            const todayDate = now.getDate();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // 1. Calcular o ACUMULADO (Pago até o momento)
             const db = getDB();
             let paidSoFar = 0;
-            db.forEach(item => { if(item.month === currentMonth && item.year === currentYear) paidSoFar += (item.rentPaid || 0); });
 
+            db.forEach(item => {
+                let m = item.month;
+                let y = item.year;
+                if(m === undefined) { 
+                    const p = item.date.split('/'); 
+                    m = parseInt(p[1])-1; y = parseInt(p[2]); 
+                }
+                if(m === currentMonth && y === currentYear) {
+                    paidSoFar += (parseFloat(item.rentPaid) || 0);
+                }
+            });
+
+            // 2. Saldo Devedor
             const remainingToPay = Math.max(0, totalRent - paidSoFar);
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            const today = now.getDate();
-            
+
+            // 3. Calcular Dias Úteis Restantes (INCLUINDO HOJE)
             let futureWorkDays = 0;
-            for(let d = today; d <= daysInMonth; d++) {
-                if(!offDaysArray.includes(d)) futureWorkDays++;
+            for(let d = todayDate; d <= daysInMonth; d++) {
+                if(!offDaysArray.includes(d)) {
+                    futureWorkDays++;
+                }
             }
-            
-            const target = futureWorkDays > 0 ? remainingToPay / futureWorkDays : remainingToPay;
-            return { target: target, remaining: remainingToPay, daysLeft: futureWorkDays };
+
+            // 4. Divisão Final
+            let target = 0;
+            if (futureWorkDays > 0) {
+                target = remainingToPay / futureWorkDays;
+            } else if (remainingToPay > 0) {
+                target = remainingToPay;
+            }
+
+            return { target, remaining: remainingToPay, daysLeft: futureWorkDays };
         }
 
         function saveRentConfig() {
