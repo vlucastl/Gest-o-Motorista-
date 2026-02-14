@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V27 - Completo</title>
+    <title>Gestão Motorista V28 - Final</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL --- */
+        /* --- CONFIGURAÇÃO VISUAL (MANTIDA) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -453,7 +453,7 @@
         ];
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null;
-        const DB_KEY = 'app_motorista_v22'; // Mantendo DB Key
+        const DB_KEY = 'app_motorista_v22'; 
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
@@ -596,7 +596,7 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // --- DASHBOARD (LOGICA V9 TRANSPLANTADA + KPIs MÊS) ---
+        // --- DASHBOARD: CORRIGIDO COM LÓGICA DO HISTÓRICO ---
         function renderDashboard() {
             window.renderDashboard = renderDashboard;
             const db = getDB();
@@ -606,7 +606,6 @@
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
 
-            // Filtro igual da V9
             const data = db.filter(item => {
                 if (item.month !== undefined) return item.month === m && item.year === y;
                 const parts = item.date.split('/');
@@ -615,19 +614,36 @@
 
             let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
 
-            // Loop Simples (V9 Logic)
+            // --- AQUI ESTÁ A CORREÇÃO CRÍTICA ---
+            // Usamos a mesma lógica de fallback do histórico para somar
             data.forEach(item => {
+                // Soma Financeira Simples
                 tFuel += Number(item.fuel || 0);
                 tFood += Number(item.food || 0);
                 tRent += Number(item.rentPaid || 0);
                 tRev += Number(item.uber || 0) + Number(item.pop || 0);
-                tHours += Number(item.hours || 0);
                 tKm += Number(item.km || 0);
+
+                // Lógica de Horas IDÊNTICA ao Histórico (com fallback)
+                // 1. Tenta pegar o número direto (ex: 5.5)
+                let h = Number(item.hours);
+                
+                // 2. Se for inválido ou zero, tenta calcular do texto (ex: "05:30")
+                if (isNaN(h) || h === 0) {
+                    if (item.hoursFormatted) {
+                        const [hh, mm] = item.hoursFormatted.split(':').map(Number);
+                        h = hh + (mm / 60);
+                    } else {
+                        h = 0;
+                    }
+                }
+                tHours += h;
             });
             
             tExp = tFuel + tFood + tRent;
             const profit = tRev - tExp;
 
+            // Atualiza Cards
             document.getElementById('dash-profit').innerText = formatMoney(profit);
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
             document.getElementById('dash-exp').innerText = formatMoney(tExp);
@@ -636,18 +652,16 @@
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
             document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
             
-            // Performance V9 Logic + Display Mês
+            // Atualiza Performance do Mês
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             
-            // Média de Ganho (Lucro) por Hora do Mês
             const hourlyVal = tHours > 0 ? (profit / tHours) : 0; 
             document.getElementById('dash-hourly').innerText = formatMoney(hourlyVal);
 
-            // Valor por KM do Mês (Receita Bruta / KM)
             const kmVal = tKm > 0 ? (tRev / tKm) : 0;
             document.getElementById('dash-km-val').innerText = formatMoney(kmVal);
 
-            // Rent Target Logic (Mantido V25 visual)
+            // Meta Aluguel
             const config = JSON.parse(localStorage.getItem('rent_config'));
             const totalRent = config ? Number(config.total) : 0;
             const dashTargetEl = document.getElementById('dash-rent-target');
@@ -766,15 +780,12 @@
             }
             if(s.type!=='date'&&s.type!=='time') setTimeout(()=>document.getElementById('inp-val').focus(),100);
         }
-
-        // --- SALVAMENTO (WIZARD) COM LOGICA DA V9 ---
         function nextStep(skip) {
             const el = document.getElementById('inp-val'), s = steps[currentStep];
             if(s.type === 'date') tempData.customDate = el.value;
             else if(s.type === 'time') { 
                 if(skip||!el.value) tempData[s.id]=0; 
                 else { 
-                    // Lógica Exata da V9 para Horas
                     tempData.hoursFormatted=el.value; 
                     const [h,m]=el.value.split(':').map(Number); 
                     tempData[s.id]=h+(m/60); 
@@ -784,7 +795,6 @@
             
             if(currentStep < steps.length - 1) { currentStep++; renderStep(); } else saveEntry();
         }
-
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
             tempData.date = d.toLocaleDateString('pt-BR'); tempData.month = d.getMonth(); tempData.year = d.getFullYear();
@@ -822,7 +832,6 @@
 
         let auth, db;
         
-        // INICIALIZAÇÃO SEGURA (NO FINAL DO LOAD)
         try {
             if (typeof firebase !== 'undefined') {
                 if (!firebase.apps.length) {
@@ -843,7 +852,6 @@
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('view-dashboard').classList.remove('hidden');
                     
-                    // Sincronizar da Nuvem
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
                             const cloudData = doc.data().history;
@@ -895,7 +903,6 @@
             }
         };
         
-        // Inicializa o app visualmente mesmo sem firebase
         window.onload = function() { 
             window.history.pushState({page: 'home'}, "", ""); 
             window.onpopstate = function(event) { handleBackButton(); };
