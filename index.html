@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V26 - Final</title>
+    <title>Gestão Motorista V27 - Completo</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL (V25 MANTIDA) --- */
+        /* --- CONFIGURAÇÃO VISUAL --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -256,21 +256,21 @@
         </div>
 
         <div class="performance-section">
-            <div class="section-title">Performance do Mês</div>
+            <div class="section-title">Estatísticas do Mês</div>
             <div class="perf-grid">
                 <div class="card-perf">
                     <span class="perf-icon">⏱️</span>
-                    <span class="label">Total Horas</span>
+                    <span class="label">Horas/Mês</span>
                     <span class="perf-val" id="dash-hours">0h</span>
                 </div>
                 <div class="card-perf">
                     <span class="perf-icon">💎</span>
-                    <span class="label">Média R$/h</span>
+                    <span class="label">Ganho/Hora</span>
                     <span class="perf-val text-green" id="dash-hourly">R$ 0</span>
                 </div>
                 <div class="card-perf">
-                    <span class="perf-icon">🪙</span>
-                    <span class="label">Ganho/KM</span>
+                    <span class="perf-icon">🛣️</span>
+                    <span class="label">R$/KM</span>
                     <span class="perf-val text-blue" id="dash-km-val">R$ 0</span>
                 </div>
             </div>
@@ -453,7 +453,7 @@
         ];
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null;
-        const DB_KEY = 'app_motorista_v22'; // Mantendo DB Key nova para não perder dados da V25
+        const DB_KEY = 'app_motorista_v22'; // Mantendo DB Key
         let tempOffDays = []; 
         let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
@@ -596,7 +596,7 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // --- DASHBOARD (LOGICA V9 TRANSPLANTADA) ---
+        // --- DASHBOARD (LOGICA V9 TRANSPLANTADA + KPIs MÊS) ---
         function renderDashboard() {
             window.renderDashboard = renderDashboard;
             const db = getDB();
@@ -636,12 +636,14 @@
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
             document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? ((tFuel/tRev)*100).toFixed(1) : '0') + "%";
             
-            // Performance V9 Logic
+            // Performance V9 Logic + Display Mês
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             
+            // Média de Ganho (Lucro) por Hora do Mês
             const hourlyVal = tHours > 0 ? (profit / tHours) : 0; 
             document.getElementById('dash-hourly').innerText = formatMoney(hourlyVal);
 
+            // Valor por KM do Mês (Receita Bruta / KM)
             const kmVal = tKm > 0 ? (tRev / tKm) : 0;
             document.getElementById('dash-km-val').innerText = formatMoney(kmVal);
 
