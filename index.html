@@ -428,7 +428,7 @@
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
-        // --- LÓGICA DE ALUGUEL (CONSERTADA) ---
+        // --- LÓGICA DE ALUGUEL (MENSAL INDIVIDUAL) ---
         function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             const m = referenceDate.getMonth(), y = referenceDate.getFullYear();
@@ -447,7 +447,6 @@
             const remaining = Math.max(0, totalRent - paidSoFar);
             let realRemainingDays = 0;
             
-            // CONSERTO: Só conta dias que ainda não passaram e não são folgas
             for (let i = 1; i <= daysInMonth; i++) {
                 const loopDate = new Date(y, m, i);
                 if (loopDate >= today && !offDaysArray.includes(i)) {
@@ -456,6 +455,12 @@
             }
             
             return { target: realRemainingDays > 0 ? remaining / realRemainingDays : remaining, remaining, daysLeft: realRemainingDays };
+        }
+
+        function getRentConfigForMonth(m, y) {
+            const allConfigs = JSON.parse(localStorage.getItem('rent_configs_v2')) || {};
+            const key = `${m}-${y}`;
+            return allConfigs[key] || { total: 0, offDays: [] };
         }
 
         // --- FUNÇÕES DE NAVEGAÇÃO ---
@@ -472,10 +477,14 @@
         function openRentConfig() {
             window.history.pushState({modal: 'rent'}, "", "");
             document.getElementById('modal-rent').classList.remove('hidden');
-            const config = JSON.parse(localStorage.getItem('rent_config')) || { total: 0, offDays: [] };
+            rentCalendarDate = new Date(); 
+            loadRentConfigForCurrentCalendar();
+        }
+
+        function loadRentConfigForCurrentCalendar() {
+            const config = getRentConfigForMonth(rentCalendarDate.getMonth(), rentCalendarDate.getFullYear());
             document.getElementById('input-total-rent').value = config.total || '';
             tempOffDays = (config.offDays || []).map(Number);
-            rentCalendarDate = new Date(); 
             renderRentCalendar(); updateRentPreview();
         }
 
@@ -532,7 +541,8 @@
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? profit / tHours : 0);
             document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
-            const config = JSON.parse(localStorage.getItem('rent_config'));
+            
+            const config = getRentConfigForMonth(m, y);
             document.getElementById('dash-rent-target').innerText = formatMoney(config ? config.total : 0);
         }
 
@@ -560,7 +570,10 @@
             document.getElementById('day-hourly-val').innerText = formatMoney(h > 0 ? luc / h : 0);
             document.getElementById('day-km-val').innerText = formatMoney((d.km||0) > 0 ? rec / d.km : 0);
 
-            const parts = d.date.split('/'); const res = calculateTargetLogic(JSON.parse(localStorage.getItem('rent_config'))?.total||0, JSON.parse(localStorage.getItem('rent_config'))?.offDays||[], new Date(parts[2], parts[1]-1, parts[0]));
+            const parts = d.date.split('/'); 
+            const config = getRentConfigForMonth(parseInt(parts[1])-1, parseInt(parts[2]));
+            const res = calculateTargetLogic(config.total || 0, config.offDays || [], new Date(parts[2], parts[1]-1, parts[0]));
+            
             document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
             document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
             document.getElementById('view-day-detail').classList.remove('hidden');
@@ -603,11 +616,16 @@
         function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
         function startWizard(indexToEdit = null) {
             window.history.pushState({modal: 'wizard'}, "", "");
-            const config = JSON.parse(localStorage.getItem('rent_config'));
             let refDate = new Date();
-            if(indexToEdit !== null) { editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); }
-            else { editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0] }; }
-            const res = config ? calculateTargetLogic(config.total, config.offDays||[], refDate) : {target:0};
+            if(indexToEdit !== null) { 
+                editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; 
+                const p = tempData.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); 
+            } else { 
+                editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0] }; 
+            }
+            
+            const config = getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear());
+            const res = calculateTargetLogic(config.total, config.offDays||[], refDate);
             if(editingIndex === null) tempData.rentPaid = res.target;
             currentStep = 0; toggleWizard(true); renderStep();
         }
@@ -643,10 +661,18 @@
             document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
             document.getElementById('rent-debug-days').innerText = res.daysLeft;
         }
-        function changeRentMonth(dir) { rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir); renderRentCalendar(); updateRentPreview(); }
+        function changeRentMonth(dir) { 
+            rentCalendarDate.setMonth(rentCalendarDate.getMonth() + dir); 
+            loadRentConfigForCurrentCalendar();
+        }
         function saveRentConfig() {
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            localStorage.setItem('rent_config', JSON.stringify({ total, offDays: tempOffDays }));
+            const m = rentCalendarDate.getMonth(), y = rentCalendarDate.getFullYear();
+            const key = `${m}-${y}`;
+            const allConfigs = JSON.parse(localStorage.getItem('rent_configs_v2')) || {};
+            allConfigs[key] = { total, offDays: tempOffDays };
+            localStorage.setItem('rent_configs_v2', JSON.stringify(allConfigs));
+            
             if(window.syncToCloud) window.syncToCloud();
             closeRentConfig(); renderDashboard();
         }
@@ -682,7 +708,6 @@
             }
         } catch(e) { console.error(e); }
 
-        // --- CONSERTO: RECUPERAÇÃO DE DADOS COMPLETA ---
         function initAuthObserver() {
             if(!auth) return;
             auth.onAuthStateChanged((user) => {
@@ -692,9 +717,10 @@
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
                             const data = doc.data();
-                            if (data.history) { localStorage.setItem(DB_KEY, JSON.stringify(data.history)); }
-                            if (data.rent_config) { localStorage.setItem('rent_config', JSON.stringify(data.rent_config)); }
-                            renderDashboard();
+                            if (data.history) localStorage.setItem(DB_KEY, JSON.stringify(data.history));
+                            // CARREGA TODAS AS CONFIGS DE ALUGUEL SALVAS
+                            if (data.rent_configs_v2) localStorage.setItem('rent_configs_v2', JSON.stringify(data.rent_configs_v2));
+                            renderDashboard(); 
                         }
                     });
                 } else document.getElementById('login-screen').style.display = 'flex';
@@ -715,17 +741,15 @@
             }
         };
 
-        // --- CONSERTO: SINCRONIZAÇÃO COMPLETA (HISTÓRICO + ALUGUEL) ---
         window.syncToCloud = function() { 
             if(auth?.currentUser) {
-                const rentConfig = JSON.parse(localStorage.getItem('rent_config')) || { total: 0, offDays: [] };
+                const allConfigs = JSON.parse(localStorage.getItem('rent_configs_v2')) || {};
                 db.collection("users").doc(auth.currentUser.uid).set({ 
                     history: getDB(),
-                    rent_config: rentConfig
+                    rent_configs_v2: allConfigs
                 }, { merge: true }); 
             }
         };
-
         window.onload = function() { window.history.pushState({page: 'home'}, "", ""); window.onpopstate = () => handleBackButton(); renderDashboard(); };
     </script>
 </body>
