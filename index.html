@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V29 - Final</title>
+    <title>Gestão Motorista V30 - Meta Real</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL (ORIGINAL) --- */
         :root {
@@ -229,7 +229,7 @@
                 <span class="label">🟣 Aluguel (Pago)</span>
                 <div class="value-med text-purple" id="dash-rent-val">R$ 0,00</div>
             </div>
-             <div class="card-small">
+            <div class="card-small">
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red" id="dash-food-val">R$ 0,00</div>
             </div>
@@ -437,7 +437,7 @@
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
-        // --- LÓGICA DE ALUGUEL ---
+        // --- LÓGICA DE ALUGUEL (CORRIGIDA: DIAS PASSADOS) ---
         function calculateTargetLogic(m, y, referenceDate = new Date()) {
             const configKey = `rent_config_${m}_${y}`;
             const config = JSON.parse(localStorage.getItem(configKey)) || { total: 0, offDays: [] };
@@ -447,25 +447,42 @@
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-            let plannedWorkDays = 0;
-            for (let i = 1; i <= daysInMonth; i++) { if (!offDaysArray.includes(i)) plannedWorkDays++; }
-            
             const db = getDB();
-            let paidSoFar = 0, paymentsCount = 0;
-            const daysWithPayment = new Set();
+            let paidSoFar = 0;
+
             db.forEach(item => {
                 const parts = item.date.split('/');
                 if (parseInt(parts[1])-1 === m && parseInt(parts[2]) === y) {
-                    const val = (item.rentPaid || 0);
-                    if (val > 0) {
-                        paidSoFar += val;
-                        if (!daysWithPayment.has(parts[0])) { paymentsCount++; daysWithPayment.add(parts[0]); }
-                    }
+                    paidSoFar += (item.rentPaid || 0);
                 }
             });
-            const remaining = Math.max(0, totalRent - paidSoFar);
-            const realRemainingDays = Math.max(0, plannedWorkDays - paymentsCount);
-            return { target: realRemainingDays > 0 ? remaining / realRemainingDays : remaining, remaining, daysLeft: realRemainingDays };
+
+            const remainingValue = Math.max(0, totalRent - paidSoFar);
+            const now = new Date();
+            const isCurrentMonth = (m === now.getMonth() && y === now.getFullYear());
+            
+            let realRemainingDays = 0;
+            
+            if (isCurrentMonth) {
+                // Se for o mês atual, conta apenas de HOJE até o fim do mês
+                for (let i = now.getDate(); i <= daysInMonth; i++) {
+                    if (!offDaysArray.includes(i)) realRemainingDays++;
+                }
+            } else if (y > now.getFullYear() || (y === now.getFullYear() && m > now.getMonth())) {
+                // Se for mês futuro, conta todos os dias úteis planejados
+                for (let i = 1; i <= daysInMonth; i++) {
+                    if (!offDaysArray.includes(i)) realRemainingDays++;
+                }
+            } else {
+                // Se for mês passado, dias restantes é 0 (dívida acumulada)
+                realRemainingDays = 0;
+            }
+
+            return { 
+                target: realRemainingDays > 0 ? remainingValue / realRemainingDays : remainingValue, 
+                remaining: remainingValue, 
+                daysLeft: realRemainingDays 
+            };
         }
 
         // --- FUNÇÕES DE NAVEGAÇÃO ---
