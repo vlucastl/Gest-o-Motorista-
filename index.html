@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestão Motorista V28 - Final</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL (MANTIDA ORIGINAL) --- */
+        /* --- CONFIGURAÇÃO VISUAL (ORIGINAL PRESERVADA) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -219,8 +219,16 @@
                 <div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div>
             </div>
             <div class="card-small">
+                <span class="label">⛽ % Comb. Mês</span>
+                <div class="value-med text-orange" id="dash-fuel-pct">0%</div>
+            </div>
+            <div class="card-small">
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red" id="dash-food-val">R$ 0,00</div>
+            </div>
+            <div class="card-small">
+                <span class="label">🛠️ Manutenção</span>
+                <div class="value-med text-red" id="dash-maint-val">R$ 0,00</div>
             </div>
             <div class="card-small">
                 <span class="label">🟣 Aluguel (Pago)</span>
@@ -295,6 +303,10 @@
             <div class="card-small">
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red" id="day-food-val">R$ 0,00</div>
+            </div>
+            <div class="card-small">
+                <span class="label">🛠️ Manutenção</span>
+                <div class="value-med text-red" id="day-maint-val">R$ 0,00</div>
             </div>
             <div class="card-small">
                 <span class="label">🟣 Aluguel Pago</span>
@@ -381,7 +393,7 @@
 
     <div id="wizard-overlay" class="hidden">
         <div class="wizard-top">
-            <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/9</span>
+            <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/10</span>
             <button onclick="goBack()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
         </div>
         <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
@@ -411,6 +423,7 @@
             { id: 'rentPaid', title: 'Aluguel (Hoje)', icon: '🟣', label: 'Quanto separou hoje?', type: 'number' },
             { id: 'fuel', title: 'Combustível', icon: '⛽', label: 'Total gasto no posto', type: 'number' },
             { id: 'food', title: 'Alimentação', icon: '🍔', label: 'Lanches e Refeições', type: 'number' },
+            { id: 'maintenance', title: 'Manutenção', icon: '🛠️', label: 'Gastos com limpeza ou peças', type: 'number' },
             { id: 'km', title: 'KM Rodados', icon: '🛣️', label: 'Quilometragem do dia', type: 'number' },
             { id: 'hours', title: 'Horas Online', icon: '⏱️', label: 'Tempo Conectado (HH:MM)', type: 'time' },
             { id: 'rides', title: 'Viagens', icon: '🔢', label: 'Quantidade de corridas', type: 'number' }
@@ -478,16 +491,11 @@
         function openRentConfig() {
             window.history.pushState({modal: 'rent'}, "", "");
             document.getElementById('modal-rent').classList.remove('hidden');
-            
-            // Trava no mês que o motorista está visualizando no Dash
             rentCalendarDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1); 
-            
             const config = getRentConfigForMonth(rentCalendarDate.getMonth(), rentCalendarDate.getFullYear());
             document.getElementById('input-total-rent').value = config.total || '';
             tempOffDays = (config.offDays || []).map(Number);
-            
-            renderRentCalendar(); 
-            updateRentPreview();
+            renderRentCalendar(); updateRentPreview();
         }
 
         function renderRentCalendar() {
@@ -503,7 +511,6 @@
                 const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
                 const hasRecord = db.some(item => item.date === checkDateStr && (item.rentPaid||0) > 0);
                 const loopDate = new Date(y, m, i);
-                
                 if (loopDate < today) { dayDiv.classList.add('past-date'); }
                 else {
                     if (tempOffDays.includes(i)) dayDiv.classList.add('off');
@@ -525,26 +532,29 @@
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
             const data = db.filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
-            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
+            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0, tMaint=0;
             data.forEach(item => {
-                tFuel += (item.fuel||0); tFood += (item.food||0); tRent += (item.rentPaid||0);
+                tFuel += (item.fuel||0); tFood += (item.food||0); tRent += (item.rentPaid||0); tMaint += (item.maintenance||0);
                 tRev += (item.uber||0) + (item.pop||0); tKm += (item.km||0);
                 let h = item.hours || 0;
                 if(!h && item.hoursFormatted) { const [hh,mm] = item.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
                 tHours += h;
             });
-            const profit = tRev - (tFuel + tFood + tRent);
+            const profit = tRev - (tFuel + tFood + tRent + tMaint);
             document.getElementById('dash-profit').innerText = formatMoney(profit);
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
-            document.getElementById('dash-exp').innerText = formatMoney(tFuel + tFood + tRent);
+            document.getElementById('dash-exp').innerText = formatMoney(tFuel + tFood + tRent + tMaint);
             document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
             document.getElementById('dash-food-val').innerText = formatMoney(tFood);
             document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
+            document.getElementById('dash-maint-val').innerText = formatMoney(tMaint);
             document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
             document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? profit / tHours : 0);
             document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
             
-            // Puxa o aluguel específico deste mês
+            const fuelPctMes = (tRev > 0 ? (tFuel / tRev) * 100 : 0).toFixed(1);
+            document.getElementById('dash-fuel-pct').innerText = fuelPctMes + '%';
+
             const currentMonthConfig = getRentConfigForMonth(m, y);
             document.getElementById('dash-rent-target').innerText = formatMoney(currentMonthConfig.total);
         }
@@ -553,7 +563,7 @@
         function openDayDetail(index) {
             window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
             const d = getDB()[index]; if(!d) return;
-            const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+            const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
             
             let h = d.hours || 0;
             if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
@@ -561,9 +571,10 @@
             document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
             document.getElementById('day-profit').innerText = formatMoney(luc);
             document.getElementById('day-rev').innerText = formatMoney(rec);
-            document.getElementById('day-exp').innerText = formatMoney((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+            document.getElementById('day-exp').innerText = formatMoney((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
             document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
             document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
+            document.getElementById('day-maint-val').innerText = formatMoney(d.maintenance || 0);
             document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
             document.getElementById('day-uber').innerText = formatMoney(d.uber||0);
             document.getElementById('day-pop').innerText = formatMoney(d.pop||0);
@@ -573,10 +584,7 @@
             document.getElementById('day-hourly-val').innerText = formatMoney(h > 0 ? luc / h : 0);
             document.getElementById('day-km-val').innerText = formatMoney((d.km||0) > 0 ? rec / d.km : 0);
 
-            // Cálculo da meta baseado no mês do registro
-            const parts = d.date.split('/'); 
-            const detailMonth = parseInt(parts[1]) - 1;
-            const detailYear = parseInt(parts[2]);
+            const parts = d.date.split('/'); const detailMonth = parseInt(parts[1]) - 1; const detailYear = parseInt(parts[2]);
             const dayConfig = getRentConfigForMonth(detailMonth, detailYear);
             const res = calculateTargetLogic(dayConfig.total, dayConfig.offDays, new Date(detailYear, detailMonth, parts[0]));
             
@@ -610,7 +618,7 @@
                 folder.innerHTML = `<span class="folder-title">📂 ${g.label}</span><span>▼</span>`;
                 const itemsDiv = document.createElement('div'); itemsDiv.className = 'days-list';
                 g.items.forEach(d => {
-                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0));
+                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
                     const div = document.createElement('div'); div.className = 'history-item';
                     div.innerHTML = `<div onclick="openDayDetail(${d.originalIndex})" style="flex:1;"><div class="date-badge">${d.date}</div><div class="sub-info">Lucro: ${formatMoney(luc)}</div></div><button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>`;
                     itemsDiv.appendChild(div);
@@ -624,28 +632,19 @@
             window.history.pushState({modal: 'wizard'}, "", "");
             let refDate = new Date();
             if(indexToEdit !== null) { 
-                editingIndex = indexToEdit; 
-                tempData = {...getDB()[indexToEdit]}; 
-                const p = tempData.date.split('/'); 
-                refDate = new Date(p[2], p[1]-1, p[0]); 
+                editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); 
+            } else { 
+                editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0] }; const p = tempData.customDate.split('-'); refDate = new Date(p[0], p[1]-1, p[2]);
             }
-            else { 
-                editingIndex = null; 
-                tempData = { customDate: new Date().toISOString().split('T')[0] }; 
-                const p = tempData.customDate.split('-');
-                refDate = new Date(p[0], p[1]-1, p[2]);
-            }
-            
             const configWizard = getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear());
             const res = calculateTargetLogic(configWizard.total, configWizard.offDays, refDate);
-            
             if(editingIndex === null) tempData.rentPaid = res.target;
             currentStep = 0; toggleWizard(true); renderStep();
         }
         function renderStep() {
-            const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/9`;
-            document.getElementById('progress-bar').style.width = `${((currentStep+1)/9)*100}%`;
-            document.getElementById('btn-next').innerText = currentStep === 8 ? 'SALVAR' : 'PRÓXIMO';
+            const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/10`;
+            document.getElementById('progress-bar').style.width = `${((currentStep+1)/10)*100}%`;
+            document.getElementById('btn-next').innerText = currentStep === 9 ? 'SALVAR' : 'PRÓXIMO';
             let html = `<div class="step-icon-circle">${s.icon}</div><h2>${s.title}</h2><p style="color:#888;">${s.label}</p>`;
             html += s.type === 'date' ? `<input type="date" id="inp-val" class="step-input" value="${tempData.customDate}">` : s.type === 'time' ? `<input type="time" id="inp-val" class="step-input" value="${tempData.hoursFormatted||''}">` : `<input type="number" id="inp-val" class="step-input" placeholder="0" value="${tempData[s.id]||''}">`;
             document.getElementById('wizard-content').innerHTML = html;
@@ -656,7 +655,7 @@
             if(s.type === 'date') tempData.customDate = el.value;
             else if(s.type === 'time') { tempData.hoursFormatted = el.value; const [h,m] = (el.value||"0:0").split(':').map(Number); tempData.hours = h+(m/60); }
             else tempData[s.id] = skip ? 0 : parseFloat(el.value)||0;
-            if(currentStep < 8) { currentStep++; renderStep(); } else saveEntry();
+            if(currentStep < 9) { currentStep++; renderStep(); } else saveEntry();
         }
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
@@ -676,15 +675,9 @@
         }
         function saveRentConfig() {
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const m = rentCalendarDate.getMonth();
-            const y = rentCalendarDate.getFullYear();
-            
-            const configs = getRentConfigs();
-            configs[`${m}-${y}`] = { total, offDays: tempOffDays };
-            
-            saveRentConfigs(configs);
-            closeRentConfig(); 
-            renderDashboard();
+            const m = rentCalendarDate.getMonth(); const y = rentCalendarDate.getFullYear();
+            const configs = getRentConfigs(); configs[`${m}-${y}`] = { total, offDays: tempOffDays };
+            saveRentConfigs(configs); closeRentConfig(); renderDashboard();
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
         function askDelete(i) { itemToDeleteIndex = i; document.getElementById('modal-delete').classList.remove('hidden'); }
@@ -726,12 +719,8 @@
                     document.getElementById('view-dashboard').classList.remove('hidden');
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
-                            if (doc.data().history) {
-                                localStorage.setItem(DB_KEY, JSON.stringify(doc.data().history));
-                            }
-                            if (doc.data().rentConfigs) {
-                                localStorage.setItem(RENT_DB_KEY, JSON.stringify(doc.data().rentConfigs));
-                            }
+                            if (doc.data().history) localStorage.setItem(DB_KEY, JSON.stringify(doc.data().history));
+                            if (doc.data().rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(doc.data().rentConfigs));
                             renderDashboard(); 
                         }
                     });
@@ -753,14 +742,7 @@
             }
         };
 
-        window.syncToCloud = function() { 
-            if(auth?.currentUser) {
-                db.collection("users").doc(auth.currentUser.uid).set({ 
-                    history: getDB(),
-                    rentConfigs: getRentConfigs() 
-                }, { merge: true }); 
-            }
-        };
+        window.syncToCloud = function() { if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs() }, { merge: true }); };
         window.onload = function() { window.history.pushState({page: 'home'}, "", ""); window.onpopstate = () => handleBackButton(); renderDashboard(); };
     </script>
 </body>
