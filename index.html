@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestão Motorista V28 - Final</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL (ORIGINAL PRESERVADA) --- */
+        /* --- CONFIGURAÇÃO VISUAL (ORIGINAL) --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -451,30 +451,41 @@
             return configs[`${m}-${y}`] || { total: 0, offDays: [] };
         }
 
-        // --- LÓGICA DE ALUGUEL ---
+        // --- LÓGICA DE ALUGUEL (CORRIGIDA) ---
         function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
             if (!offDaysArray) offDaysArray = [];
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
+            
             const m = referenceDate.getMonth(), y = referenceDate.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let startDay = 1;
+            
+            // Corrige a contagem para ignorar dias passados no mês atual
+            if (y === today.getFullYear() && m === today.getMonth()) {
+                startDay = today.getDate();
+            } else if (y < today.getFullYear() || (y === today.getFullYear() && m < today.getMonth())) {
+                startDay = daysInMonth + 1;
+            }
+
             let plannedWorkDays = 0;
-            for (let i = 1; i <= daysInMonth; i++) { if (!offDaysArray.includes(i)) plannedWorkDays++; }
+            for (let i = startDay; i <= daysInMonth; i++) { 
+                if (!offDaysArray.includes(i)) plannedWorkDays++; 
+            }
+
             const db = getDB();
-            let paidSoFar = 0, paymentsCount = 0;
-            const daysWithPayment = new Set();
+            let paidSoFar = 0;
             db.forEach(item => {
                 const parts = item.date.split('/');
                 if (parseInt(parts[1])-1 === m && parseInt(parts[2]) === y) {
-                    const val = (item.rentPaid || 0);
-                    if (val > 0) {
-                        paidSoFar += val;
-                        if (!daysWithPayment.has(parts[0])) { paymentsCount++; daysWithPayment.add(parts[0]); }
-                    }
+                    paidSoFar += (item.rentPaid || 0);
                 }
             });
+
             const remaining = Math.max(0, totalRent - paidSoFar);
-            const realRemainingDays = Math.max(0, plannedWorkDays - paymentsCount);
-            return { target: realRemainingDays > 0 ? remaining / realRemainingDays : remaining, remaining, daysLeft: realRemainingDays };
+            return { target: plannedWorkDays > 0 ? remaining / plannedWorkDays : remaining, remaining, daysLeft: plannedWorkDays };
         }
 
         // --- FUNÇÕES DE NAVEGAÇÃO ---
