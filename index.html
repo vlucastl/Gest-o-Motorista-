@@ -460,12 +460,15 @@
             return configs[`${m}-${y}`] || { total: 0, offDays: [] };
         }
 
-        // LÓGICA ATUALIZADA: Desconta dias passados e dia atual se houver registro
-        function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
+        // LÓGICA CORRIGIDA: Usa a data real de hoje para contar dias restantes
+        function calculateTargetLogic(totalRent, offDaysArray, monthRef = new Date()) {
             if (!offDaysArray) offDaysArray = [];
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             
-            const m = referenceDate.getMonth(), y = referenceDate.getFullYear();
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const m = monthRef.getMonth(), y = monthRef.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
             const db = getDB();
             
@@ -479,22 +482,33 @@
             });
             const remainingMoney = Math.max(0, totalRent - paidSoFar);
 
-            // 2. Calcula Dias Restantes (Apenas de hoje em diante)
-            let remainingDaysCount = 0;
-            const todayNum = referenceDate.getDate();
+            // 2. Determina a partir de qual dia começar a contar (Hoje ou dia 1º de um mês futuro)
+            let startDay = 1;
+            let isCurrentMonth = (m === today.getMonth() && y === today.getFullYear());
             
-            for (let i = todayNum; i <= daysInMonth; i++) {
+            if (isCurrentMonth) {
+                startDay = today.getDate();
+            } else if (new Date(y, m, 1) < today) {
+                // Se for mês passado, não há dias "restantes" para trabalhar
+                return { target: 0, remaining: remainingMoney, daysLeft: 0 };
+            }
+
+            // 3. Conta dias de trabalho configurados (verdes) a partir do dia de início
+            let remainingDaysCount = 0;
+            for (let i = startDay; i <= daysInMonth; i++) {
                 if (!offDaysArray.includes(i)) {
                     remainingDaysCount++;
                 }
             }
 
-            // 3. Subtrai o dia atual se já houver um registro de hoje no banco
-            const dateStr = `${todayNum.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
-            const hasRecordToday = db.some(item => item.date === dateStr);
-            
-            if (hasRecordToday && !offDaysArray.includes(todayNum) && remainingDaysCount > 0) {
-                remainingDaysCount--;
+            // 4. Subtrai o dia atual se houver registro hoje (apenas para o mês atual)
+            if (isCurrentMonth) {
+                const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
+                const hasRecordToday = db.some(item => item.date === dateStr);
+                // Se o dia atual é um dia de trabalho mas já foi registrado, removemos ele dos "restantes"
+                if (hasRecordToday && !offDaysArray.includes(today.getDate()) && remainingDaysCount > 0) {
+                    remainingDaysCount--;
+                }
             }
 
             return { 
