@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V28 - Final</title>
+    <title>Gestão Motorista V28 - Corrigido</title>
     <style>
         /* --- CONFIGURAÇÃO VISUAL --- */
         :root {
@@ -63,7 +63,7 @@
             width: 100%; 
             background: rgba(28, 28, 30, 0.8); 
             border: 1px solid #333; 
-            padding: 16px 45px 16px 45px; /* Ajustado para ícone de olho */
+            padding: 16px 45px 16px 45px; 
             border-radius: 12px; 
             color: #fff; 
             font-size: 16px; 
@@ -120,6 +120,8 @@
         .perf-val { font-size: 16px; font-weight: bold; color: #fff; margin-top: 5px; }
         .perf-icon { font-size: 20px; margin-bottom: 5px; }
 
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -152,7 +154,7 @@
     <div id="wait-screen" class="hidden">
         <div class="login-logo">⏳</div>
         <div class="login-title">Acesso Pendente</div>
-        <div class="login-subtitle">Sua conta foi criada! Para garantir a qualidade, estamos liberando o acesso manualmente.</div>
+        <div class="login-subtitle">Sua conta foi criada! Estamos liberando o acesso manualmente.</div>
         <div style="width:100%; max-width:400px;">
             <button class="btn btn-primary" onclick="window.open('https://wa.me/5551992897769?text=Olá, criei minha conta no Gestão Pro e gostaria de solicitar a liberação!')">SOLICITAR LIBERAÇÃO</button>
             <button class="btn btn-text" style="margin-top:15px; width:100%;" onclick="handleLogout()">Sair da Conta</button>
@@ -161,7 +163,7 @@
 
     <div id="view-dashboard" class="hidden">
         <div class="header-nav">
-            <div id="user-greeting" style="text-align: left; flex: 1;">
+            <div id="user-greeting">
                 <span style="font-size: 10px; color: var(--text-gray); display: block;">Olá,</span>
                 <span id="user-email-display" style="font-size: 12px; font-weight: bold; color: var(--primary-color);">...</span>
             </div>
@@ -173,6 +175,7 @@
             <button class="btn-icon-nav" onclick="changeMonth(1)">▶</button>
             <button class="btn-icon-nav" onclick="handleLogout()" style="color: var(--danger-color); font-size: 16px;" title="Sair">🚪</button>
         </div>
+        
         <div class="summary-grid">
             <div class="card-rent-config" onclick="openRentConfig()">
                 <div class="rent-info-left">
@@ -217,6 +220,7 @@
                 <div class="value-med text-purple" id="dash-rent-val">R$ 0,00</div>
             </div>
         </div>
+
         <div class="performance-section">
             <div class="section-title">Estatísticas do Mês</div>
             <div class="perf-grid">
@@ -299,12 +303,14 @@
             <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Planejar Aluguel</div>
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Valor TOTAL do Aluguel (Mês)</label>
             <input type="number" id="input-total-rent" class="step-input" style="background: #1c1c1e; border: 1px solid #333; color: #fff; font-size: 18px; padding:10px; width:100%; border-radius:12px; text-align:center; margin-bottom:15px;" placeholder="Ex: 3000" oninput="updateRentPreview()">
+            
             <div class="calendar-wrapper">
                 <div class="calendar-header">
                     <div style="font-size:14px; font-weight:bold; color:#fff; text-transform: uppercase;" id="cal-month-title">Mês Atual</div>
                 </div>
                 <div id="rent-calendar" class="calendar-grid"></div>
             </div>
+
             <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid var(--rent-color); text-align:left;">
                 <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
                     <span style="color:#aaa;">Falta Pagar:</span>
@@ -327,9 +333,9 @@
     </div>
 
     <div id="modal-delete" class="modal-overlay hidden">
-        <div class="modal-box">
+        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333;">
             <div style="font-size:40px; margin-bottom:10px;">🗑️</div>
-            <div class="modal-title">Apagar Registro?</div>
+            <div class="modal-title" style="margin-bottom:20px;">Apagar Registro?</div>
             <div class="modal-btns" style="display: flex; gap: 10px; flex-direction: column;">
                 <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
                 <button class="btn btn-danger" onclick="confirmDelete()">Apagar</button>
@@ -337,7 +343,7 @@
         </div>
     </div>
 
-    <div id="wizard-overlay" class="hidden">
+    <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
         <div class="wizard-top" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
             <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/10</span>
             <button onclick="handleBackButton()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
@@ -366,7 +372,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
         const steps = [
             { id: 'customDate', title: 'Data', icon: '📅', label: 'Qual a data do registro?', type: 'date' },
             { id: 'uber', title: 'Ganhos Uber', icon: '🚗', label: 'Valor total feito na Uber', type: 'number' },
@@ -388,16 +393,13 @@
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
-        // FUNÇÕES DE MOSTRAR SENHA E LOGOUT
         function togglePasswordVisibility() {
             const passInput = document.getElementById('login-pass');
             const toggleBtn = document.getElementById('toggle-password');
             if (passInput.type === 'password') {
-                passInput.type = 'text';
-                toggleBtn.innerText = '🔒';
+                passInput.type = 'text'; toggleBtn.innerText = '🔒';
             } else {
-                passInput.type = 'password';
-                toggleBtn.innerText = '👁️';
+                passInput.type = 'password'; toggleBtn.innerText = '👁️';
             }
         }
 
@@ -407,23 +409,13 @@
                     localStorage.removeItem(DB_KEY);
                     localStorage.removeItem(RENT_DB_KEY);
                     window.location.reload();
-                }).catch(e => alert("Erro ao sair: " + e.message));
+                });
             }
         }
 
-        // FUNÇÕES DE BANCO DE DADOS E RENT
-        function getRentConfigs() {
-            try { return JSON.parse(localStorage.getItem(RENT_DB_KEY)) || {}; }
-            catch { return {}; }
-        }
-        function saveRentConfigs(configs) {
-            localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
-            if(window.syncToCloud) window.syncToCloud();
-        }
-        function getRentConfigForMonth(m, y) {
-            const configs = getRentConfigs();
-            return configs[`${m}-${y}`] || { total: 0, offDays: [] };
-        }
+        function getRentConfigs() { try { return JSON.parse(localStorage.getItem(RENT_DB_KEY)) || {}; } catch { return {}; } }
+        function saveRentConfigs(configs) { localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs)); if(window.syncToCloud) window.syncToCloud(); }
+        function getRentConfigForMonth(m, y) { const configs = getRentConfigs(); return configs[`${m}-${y}`] || { total: 0, offDays: [] }; }
 
         function calculateTargetLogic(totalRent, offDaysArray, monthRef = new Date()) {
             if (!offDaysArray) offDaysArray = [];
@@ -534,7 +526,6 @@
             window.history.pushState({modal: 'detail'}, "", ""); currentDetailIndex = index;
             const d = getDB()[index]; if(!d) return;
             const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
-            let h = d.hours || 0; if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
             document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
             document.getElementById('day-profit').innerText = formatMoney(luc);
             document.getElementById('day-rev').innerText = formatMoney(rec);
@@ -543,9 +534,7 @@
             document.getElementById('day-food-val').innerText = formatMoney(d.food||0);
             document.getElementById('day-maint-val').innerText = formatMoney(d.maintenance || 0);
             document.getElementById('day-rent-val').innerText = formatMoney(d.rentPaid||0);
-            const parts = d.date.split('/'); const detailMonth = parseInt(parts[1]) - 1; const detailYear = parseInt(parts[2]);
-            const dayConfig = getRentConfigForMonth(detailMonth, detailYear);
-            const res = calculateTargetLogic(dayConfig.total, dayConfig.offDays, new Date(detailYear, detailMonth, parts[0]));
+            const parts = d.date.split('/'); const res = calculateTargetLogic(getRentConfigForMonth(parts[1]-1, parts[2]).total, getRentConfigForMonth(parts[1]-1, parts[2]).offDays, new Date(parts[2], parts[1]-1, parts[0]));
             document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
             document.getElementById('day-rent-math-expl').innerText = `Faltam ${formatMoney(res.remaining)} para os ${res.daysLeft} dias restantes`;
             document.getElementById('view-day-detail').classList.remove('hidden');
@@ -595,11 +584,11 @@
             let refDate = new Date();
             if(indexToEdit !== null) { editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); }
             else { editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0] }; const p = tempData.customDate.split('-'); refDate = new Date(p[0], p[1]-1, p[2]); }
-            const configWizard = getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear());
-            const res = calculateTargetLogic(configWizard.total, configWizard.offDays, refDate);
+            const res = calculateTargetLogic(getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).total, getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).offDays, refDate);
             if(editingIndex === null) tempData.rentPaid = res.target;
             currentStep = 0; toggleWizard(true); renderStep();
         }
+
         function renderStep() {
             const s = steps[currentStep]; document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/10`;
             document.getElementById('progress-bar').style.width = `${((currentStep+1)/10)*100}%`;
@@ -609,6 +598,7 @@
             document.getElementById('wizard-content').innerHTML = html;
             setTimeout(()=>document.getElementById('inp-val').focus(),100);
         }
+
         function nextStep(skip) {
             const el = document.getElementById('inp-val'), s = steps[currentStep];
             if(s.type === 'date') tempData.customDate = el.value;
@@ -616,6 +606,7 @@
             else tempData[s.id] = skip ? 0 : parseFloat(el.value)||0;
             if(currentStep < 9) { currentStep++; renderStep(); } else saveEntry();
         }
+
         function saveEntry() {
             const db = getDB(), d = new Date(tempData.customDate+'T12:00:00');
             tempData.date = d.toLocaleDateString('pt-BR');
@@ -623,6 +614,7 @@
             saveDB(db); if(window.syncToCloud) window.syncToCloud();
             toggleWizard(false); renderDashboard(); openDayDetail(editingIndex!==null?editingIndex:0);
         }
+
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
         function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
         function updateRentPreview() {
@@ -632,6 +624,7 @@
             document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
             document.getElementById('rent-debug-days').innerText = res.daysLeft;
         }
+
         function saveRentConfig() {
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
             const m = rentCalendarDate.getMonth(); const y = rentCalendarDate.getFullYear();
@@ -649,7 +642,6 @@
             else { btnMain.innerText = "ENTRAR"; txtToggle.innerText = "Não tem conta?"; btnToggle.innerText = "Criar agora"; }
         }
 
-        // FIREBASE E OBSERVER
         const firebaseConfig = {
             apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U",
             authDomain: "uber-gestao.firebaseapp.com",
@@ -671,9 +663,7 @@
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     document.getElementById('login-screen').style.display = 'none';
-                    // Atualiza saudação e e-mail
                     document.getElementById('user-email-display').innerText = user.email.split('@')[0];
-                    
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
                             const data = doc.data();
@@ -684,15 +674,12 @@
                                 if (data.rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(data.rentConfigs));
                                 renderDashboard(); 
                             } else {
-                                document.getElementById('view-dashboard').classList.add('hidden');
                                 document.getElementById('wait-screen').classList.remove('hidden');
                             }
                         }
                     });
                 } else {
                     document.getElementById('login-screen').style.display = 'flex';
-                    document.getElementById('wait-screen').classList.add('hidden');
-                    document.getElementById('view-dashboard').classList.add('hidden');
                 }
             });
         }
