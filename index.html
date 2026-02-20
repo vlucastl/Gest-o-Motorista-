@@ -187,7 +187,7 @@
         <div class="login-title">Acesso Pendente</div>
         <div class="login-subtitle">Sua conta foi criada! Para garantir a qualidade, estamos liberando o acesso manualmente.</div>
         <div style="width:100%; max-width:400px;">
-            <button class="btn btn-primary" onclick="window.open('https://wa.me/SEUNUMERO?text=Olá, criei minha conta no Gestão Pro e gostaria de solicitar a liberação!')">SOLICITAR LIBERAÇÃO</button>
+            <button class="btn btn-primary" onclick="window.open('https://wa.me/5551992897769?text=Olá, criei minha conta no Gestão Pro e gostaria de solicitar a liberação!')">SOLICITAR LIBERAÇÃO</button>
             <button class="btn btn-text" style="margin-top:15px; width:100%;" onclick="auth.signOut()">Sair da Conta</button>
         </div>
     </div>
@@ -460,29 +460,48 @@
             return configs[`${m}-${y}`] || { total: 0, offDays: [] };
         }
 
+        // LÓGICA ATUALIZADA: Desconta dias passados e dia atual se houver registro
         function calculateTargetLogic(totalRent, offDaysArray, referenceDate = new Date()) {
             if (!offDaysArray) offDaysArray = [];
             if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
+            
             const m = referenceDate.getMonth(), y = referenceDate.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-            let plannedWorkDays = 0;
-            for (let i = 1; i <= daysInMonth; i++) { if (!offDaysArray.includes(i)) plannedWorkDays++; }
             const db = getDB();
-            let paidSoFar = 0, paymentsCount = 0;
-            const daysWithPayment = new Set();
+            
+            // 1. Calcula quanto já foi pago no mês
+            let paidSoFar = 0;
             db.forEach(item => {
                 const parts = item.date.split('/');
                 if (parseInt(parts[1])-1 === m && parseInt(parts[2]) === y) {
-                    const val = (item.rentPaid || 0);
-                    if (val > 0) {
-                        paidSoFar += val;
-                        if (!daysWithPayment.has(parts[0])) { paymentsCount++; daysWithPayment.add(parts[0]); }
-                    }
+                    paidSoFar += (item.rentPaid || 0);
                 }
             });
-            const remaining = Math.max(0, totalRent - paidSoFar);
-            const realRemainingDays = Math.max(0, plannedWorkDays - paymentsCount);
-            return { target: realRemainingDays > 0 ? remaining / realRemainingDays : remaining, remaining, daysLeft: realRemainingDays };
+            const remainingMoney = Math.max(0, totalRent - paidSoFar);
+
+            // 2. Calcula Dias Restantes (Apenas de hoje em diante)
+            let remainingDaysCount = 0;
+            const todayNum = referenceDate.getDate();
+            
+            for (let i = todayNum; i <= daysInMonth; i++) {
+                if (!offDaysArray.includes(i)) {
+                    remainingDaysCount++;
+                }
+            }
+
+            // 3. Subtrai o dia atual se já houver um registro de hoje no banco
+            const dateStr = `${todayNum.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
+            const hasRecordToday = db.some(item => item.date === dateStr);
+            
+            if (hasRecordToday && !offDaysArray.includes(todayNum) && remainingDaysCount > 0) {
+                remainingDaysCount--;
+            }
+
+            return { 
+                target: remainingDaysCount > 0 ? remainingMoney / remainingDaysCount : remainingMoney, 
+                remaining: remainingMoney, 
+                daysLeft: remainingDaysCount 
+            };
         }
 
         function handleBackButton() {
@@ -719,20 +738,16 @@
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     document.getElementById('login-screen').style.display = 'none';
-                    
-                    // NOVA LÓGICA DE SEGURANÇA: Checa se está autorizado
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
                             const data = doc.data();
                             if (data.autorizado === true) {
-                                // LIBERADO: Mostra o Dashboard
                                 document.getElementById('wait-screen').classList.add('hidden');
                                 document.getElementById('view-dashboard').classList.remove('hidden');
                                 if (data.history) localStorage.setItem(DB_KEY, JSON.stringify(data.history));
                                 if (data.rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(data.rentConfigs));
                                 renderDashboard(); 
                             } else {
-                                // PENDENTE: Mostra tela de espera
                                 document.getElementById('view-dashboard').classList.add('hidden');
                                 document.getElementById('wait-screen').classList.remove('hidden');
                             }
@@ -752,7 +767,6 @@
             btn.innerText = "Carregando..."; btn.disabled = true;
             if (window.isRegisterMode) {
                 auth.createUserWithEmailAndPassword(email, pass)
-                // NOVO: Adiciona 'autorizado: false' na criação
                 .then(cred => db.collection("users").doc(cred.user.uid).set({ email, history: [], rentConfigs: {}, autorizado: false }))
                 .catch(e => { alert(e.message); btn.disabled = false; btn.innerText = "CRIAR CONTA"; });
             } else {
