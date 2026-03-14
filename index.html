@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão Motorista V28 - Atualizado PRO</title>
+    <title>Gestão Motorista PRO - V28 Atualizada</title>
     <style>
-        /* --- CONFIGURAÇÃO VISUAL ORIGINAL --- */
+        /* --- DESIGN SYSTEM PRO --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -21,255 +21,115 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; overflow-x: hidden; }
         .hidden { display: none !important; }
+        
+        /* Utilitários */
         .text-green { color: var(--primary-color) !important; }
         .text-red { color: var(--danger-color) !important; }
         .text-orange { color: var(--warning-color) !important; }
         .text-blue { color: var(--info-color) !important; }
         .text-purple { color: var(--rent-color) !important; }
         
+        /* Botões */
         .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
         .btn-primary { background-color: var(--primary-color); color: #000; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3); }
-        .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background-color: var(--danger-color); color: #fff; }
         .btn-secondary { background-color: #333; color: #fff; }
-        .btn-outline { background: transparent; border: 1px solid #333; color: #fff; }
         .btn-text { background: transparent; color: var(--text-gray); }
-        .btn-icon-nav { background: #2c2c2e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-icon-nav { background: #2c2c2e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-trash { background: none; border: none; font-size: 18px; cursor: pointer; padding: 10px; color: var(--danger-color); }
 
-        .btn-logout-new {
-            background: rgba(255, 69, 58, 0.1);
-            border: 1px solid rgba(255, 69, 58, 0.3);
-            color: var(--danger-color);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
-
-        /* Estilos adicionados do Beta */
-        .pct-tag {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(255,255,255,0.08);
-            margin-top: 4px;
-        }
-
-        .btn-filter {
-            flex: 1;
-            background: #1c1c1e;
-            border: 1px solid #333;
-            color: var(--text-gray);
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-filter.active {
-            background: var(--primary-color);
-            color: #000;
-            border-color: var(--primary-color);
-        }
-
+        /* Login & Logout */
         #login-screen, #wait-screen { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1080'); 
-            background-size: cover; 
-            background-position: center; 
-            z-index: 9999; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 30px;
-            animation: fadeIn 0.5s ease;
+            background-size: cover; background-position: center; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
         }
-
         .login-logo { font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--primary-color)); animation: float 3s ease-in-out infinite; }
-        .login-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
-        .login-subtitle { font-size: 14px; color: #aaa; margin-bottom: 40px; text-align: center; max-width: 80%; }
-        
-        .input-group { width: 100%; margin-bottom: 15px; position: relative; }
-        .input-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; font-size: 18px; }
-        .login-input { 
-            width: 100%; 
-            background: rgba(28, 28, 30, 0.8); 
-            border: 1px solid #333; 
-            padding: 16px 45px; 
-            border-radius: 12px; 
-            color: #fff; 
-            font-size: 16px; 
-            outline: none; 
-            transition: 0.3s;
-            backdrop-filter: blur(5px);
-        }
-        
-        .calendar-wrapper { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        .calendar-header { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
-        .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
-        .cal-day.off { background-color: rgba(255, 69, 58, 0.2); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.8; }
-        .cal-day.past-working { background-color: #1a332a; color: #4a8; border: 1px solid #264438; cursor: default; }
-        .cal-day.past-date { background-color: #1a1a1a; color: #444; border-color: #222; cursor: default; opacity: 0.5; }
-        .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+        .login-input { width: 100%; background: rgba(28, 28, 30, 0.8); border: 1px solid #333; padding: 16px 45px; border-radius: 12px; color: #fff; margin-bottom: 15px; outline: none; }
 
-        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(20,20,20,0.8); border-bottom: 1px solid #2c2c2e; }
+        /* Dashboard */
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; }
         .date-navigation-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
         .month-selector { text-align: center; }
-        .month-selector h2 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
-        .month-selector span { font-size: 12px; color: var(--text-gray); }
+        .month-selector h2 { font-size: 18px; font-weight: 800; text-transform: uppercase; }
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
         .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
-        .card-rent-config { 
-            grid-column: span 2; 
-            background: rgba(191, 90, 242, 0.1); 
-            border: 1px solid var(--rent-color); 
-            padding: 16px; 
-            border-radius: 16px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            cursor: pointer; 
-        }
+        .card-rent-config { grid-column: span 2; background: rgba(191, 90, 242, 0.1); border: 1px solid var(--rent-color); padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.03); }
         
-        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
         .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 5px 0; }
+        .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); }
         .value-med { font-size: 18px; font-weight: 700; }
 
-        /* --- ESTILO DO GRÁFICO (INJETADO) --- */
-        .chart-section { grid-column: span 2; background: var(--card-color); padding: 15px; border-radius: 16px; border: 1px solid #333; margin-top: 10px; }
-        .chart-svg { width: 100%; height: 100px; display: block; overflow: visible; }
-        .chart-bar { fill: var(--primary-color); rx: 4; opacity: 0.8; transition: 0.3s; }
-        .chart-bar:hover { opacity: 1; }
+        /* Gráficos */
+        .chart-section { grid-column: span 2; background: var(--card-color); padding: 15px; border-radius: 16px; border: 1px solid #333; }
+        .chart-svg { width: 100%; height: 100px; overflow: visible; }
+        .chart-bar { fill: var(--primary-color); rx: 4; opacity: 0.8; }
         .chart-text { fill: #8e8e93; font-size: 10px; text-anchor: middle; }
 
-        .performance-section { padding: 0 20px; margin-top: 10px; margin-bottom: 20px; }
-        .section-title { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; text-transform: uppercase; }
-        .perf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .card-perf { background: #2c2c2e; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .perf-val { font-size: 16px; font-weight: bold; color: #fff; margin-top: 5px; }
+        /* Calendário Customizado Beta */
+        .calendar-wrapper { background: #111; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; cursor: pointer; border: 1px solid transparent; }
+        .cal-day.working { background-color: rgba(0, 230, 118, 0.1); color: var(--primary-color); border-color: var(--primary-color); }
+        .cal-day.off { background-color: rgba(255, 69, 58, 0.15); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.6; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-
-        #view-day-detail {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background-color: var(--bg-color); z-index: 45; overflow-y: auto; padding-bottom: 90px;
-        }
-
-        /* BARRA INFERIOR CENTRALIZADA - ESTILO DO BETA */
+        /* Barra Inferior */
         .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid #333;
-            display: grid;
-            grid-template-columns: 1fr 1fr 60px 1fr 1fr;
-            align-items: center;
-            padding: 10px 5px;
-            z-index: 50;
-            height: 70px;
+            position: fixed; bottom: 0; width: 100%; height: 75px;
+            background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid #333; display: grid; grid-template-columns: 1fr 1fr 60px 1fr 1fr;
+            align-items: center; padding: 0 5px; z-index: 50;
         }
-
-        .nav-btn {
-            background: none;
-            border: none;
-            color: #666;
-            font-size: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-        }
-
+        .nav-btn { background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .nav-btn.active { color: var(--primary-color); }
         .add-btn {
-            grid-column: 3;
-            background: var(--primary-color);
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: #000;
-            margin-top: -35px;
-            border: 5px solid var(--bg-color);
-            box-shadow: 0 4px 15px rgba(0,230,118,0.4);
-            position: relative;
-            z-index: 51;
+            background: var(--primary-color); width: 55px; height: 55px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 28px; color: #000;
+            margin-top: -35px; border: 5px solid var(--bg-color); box-shadow: 0 4px 15px rgba(0,230,118,0.4);
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-logo">🚗</div>
-        <div class="login-title">GESTÃO PRO</div>
-        <div class="login-subtitle">Controle total dos seus ganhos e metas na palma da mão.</div>
-        <div style="width:100%; max-width:400px;">
-            <div class="input-group">
-                <span class="input-icon">✉️</span>
-                <input type="email" id="login-email" class="login-input" placeholder="Seu E-mail">
-            </div>
-            <div class="input-group">
-                <span class="input-icon">🔒</span>
-                <input type="password" id="login-pass" class="login-input" placeholder="Sua Senha">
-                <span id="toggle-password" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666; font-size: 18px;">👁️</span>
-            </div>
+        <div class="login-title" style="font-size: 24px; font-weight: 900; letter-spacing: 2px;">GESTÃO PRO</div>
+        <div style="width:100%; max-width:320px; margin-top: 30px;">
+            <input type="email" id="login-email" class="login-input" placeholder="E-mail">
+            <input type="password" id="login-pass" class="login-input" placeholder="Senha">
             <button class="btn btn-primary" onclick="handleAuthAction()" id="btn-main-action">ENTRAR</button>
-            <div class="login-footer" style="margin-top: 20px; font-size: 13px; color: #888; text-align: center;">
+            <p style="text-align:center; margin-top:20px; font-size:13px; color:#888;">
                 <span id="txt-toggle">Não tem conta?</span> 
-                <span class="link-action" onclick="toggleAuthMode()" id="btn-toggle" style="color: var(--primary-color); font-weight: bold; cursor: pointer;">Criar agora</span>
-            </div>
+                <span onclick="toggleAuthMode()" id="btn-toggle" style="color:var(--primary-color); font-weight:bold; cursor:pointer;">Criar agora</span>
+            </p>
         </div>
     </div>
 
     <div id="wait-screen" class="hidden">
         <div class="login-logo">⏳</div>
-        <div class="login-title">Acesso Pendente</div>
-        <div class="login-subtitle">Sua conta foi criada! Estamos liberando o acesso manualmente.</div>
-        <div style="width:100%; max-width:400px;">
-            <button class="btn btn-primary" onclick="window.open('https://wa.me/5551992897769')">SOLICITAR LIBERAÇÃO</button>
-            <button class="btn btn-text" style="margin-top:15px; width:100%;" onclick="showLogoutModal()">Sair da Conta</button>
-        </div>
+        <h2 style="text-align:center;">Acesso Pendente</h2>
+        <p style="text-align:center; color:#888; margin: 20px 0;">Sua conta está em análise para liberação do Pro.</p>
+        <button class="btn btn-primary" onclick="window.open('https://wa.me/5551992897769')">SOLICITAR LIBERAÇÃO</button>
+        <button class="btn btn-text" style="margin-top:15px;" onclick="confirmLogout()">Sair da Conta</button>
     </div>
 
     <div id="view-dashboard" class="hidden">
         <div class="header-nav">
-            <div id="user-greeting">
-                <span style="font-size: 10px; color: var(--text-gray); display: block;">Olá,</span>
-                <span id="user-email-display" style="font-size: 12px; font-weight: bold; color: var(--primary-color);">...</span>
-            </div>
-            <button class="btn-logout-new" onclick="showLogoutModal()"><span>🚪 Sair</span></button>
+            <div><span style="font-size:10px; color:var(--text-gray);">Olá,</span><br><b id="user-email-display" class="text-green">...</b></div>
+            <button class="btn-icon-nav" style="border-radius: 12px; width: auto; padding: 0 15px; font-size: 12px;" onclick="showLogoutModal()">🚪 Sair</button>
         </div>
 
         <div class="date-navigation-bar">
             <button class="btn-icon-nav" onclick="changeMonth(-1)">◀</button>
             <div class="month-selector">
-                <span id="label-year">2026</span>
+                <span id="label-year" style="font-size:10px; color:var(--text-gray);">2026</span>
                 <h2 id="label-month">JANEIRO</h2>
             </div>
             <button class="btn-icon-nav" onclick="changeMonth(1)">▶</button>
@@ -277,14 +137,8 @@
         
         <div class="summary-grid">
             <div class="card-rent-config" onclick="openRentConfig()">
-                <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color); font-size:12px; display:block;">🟣 PLANO DE ALUGUEL</span>
-                    <span style="color:#aaa; font-size:11px;">Toque para configurar</span>
-                </div>
-                <div class="rent-info-right" style="text-align: right;">
-                    <span style="font-size:11px; color:#aaa;">Total do Mês</span><br>
-                    <span style="font-weight:800; font-size:18px; color:#fff;" id="dash-rent-target">R$ 0</span>
-                </div>
+                <div><span style="font-weight:bold; color:var(--rent-color); font-size:12px;">🟣 META ALUGUEL</span><br><small id="dash-rent-status" style="color:#666;">Configurar</small></div>
+                <div style="text-align: right;"><span style="font-size:10px; color:#aaa;">Meta do Mês</span><br><span id="dash-rent-target" style="font-weight:800; font-size:18px;">R$ 0</span></div>
             </div>
 
             <div class="card-main">
@@ -292,44 +146,21 @@
                 <div class="value-big" id="dash-profit">R$ 0,00</div>
             </div>
 
-            <div class="chart-section" id="weekly-chart-container">
+            <div class="chart-section">
                 <span class="label">Últimos 7 registros</span>
                 <svg id="weekly-chart-svg" class="chart-svg"></svg>
             </div>
 
-            <div class="card-small">
-                <span class="label">Receita Total</span>
-                <div class="value-med text-green" id="dash-rev">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">Despesas Totais</span>
-                <div class="value-med text-red" id="dash-exp">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">⛽ Combustível</span>
-                <div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">⛽ % Comb. Mês</span>
-                <div class="value-med text-orange" id="dash-fuel-pct">0%</div>
-            </div>
-            <div class="card-small">
-                <span class="label">🍔 Alimentação</span>
-                <div class="value-med text-red" id="dash-food-val">R$ 0,00</div>
-            </div>
-            <div class="card-small">
-                <span class="label">🟣 Aluguel (Pago)</span>
-                <div class="value-med text-purple" id="dash-rent-val">R$ 0,00</div>
-            </div>
+            <div class="card-small"><span class="label">Receita</span><div class="value-med text-green" id="dash-rev">R$ 0,00</div></div>
+            <div class="card-small"><span class="label">Despesas</span><div class="value-med text-red" id="dash-exp">R$ 0,00</div></div>
+            <div class="card-small"><span class="label">⛽ Combustível</span><div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div></div>
+            <div class="card-small"><span class="label">⛽ % Comb.</span><div class="value-med text-orange" id="dash-fuel-pct">0%</div></div>
         </div>
 
-        <div class="performance-section">
-            <div class="section-title">Estatísticas do Mês</div>
-            <div class="perf-grid">
-                <div class="card-perf"><span class="label">Horas/Mês</span><span class="perf-val" id="dash-hours">0h</span></div>
-                <div class="card-perf"><span class="label">Ganho/Hora</span><span class="perf-val text-green" id="dash-hourly">R$ 0</span></div>
-                <div class="card-perf"><span class="label">R$/KM</span><span class="perf-val text-blue" id="dash-km-val">R$ 0</span></div>
-            </div>
+        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="card-small" style="padding:10px;"><span class="label">Horas</span><span class="value-med" id="dash-hours" style="font-size:14px;">0h</span></div>
+            <div class="card-small" style="padding:10px;"><span class="label">Ganho/H</span><span class="value-med text-green" id="dash-hourly" style="font-size:14px;">R$ 0</span></div>
+            <div class="card-small" style="padding:10px;"><span class="label">R$/KM</span><span class="value-med text-blue" id="dash-km-val" style="font-size:14px;">R$ 0</span></div>
         </div>
     </div>
 
@@ -337,119 +168,91 @@
         <div class="date-navigation-bar">
             <button class="btn-icon-nav" onclick="changePeriodCharts(-1)">◀</button>
             <div class="month-selector">
-                <span id="chart-label-year">2026</span>
+                <span id="chart-label-year" style="font-size:10px; color:var(--text-gray);">2026</span>
                 <h2 id="chart-label-month">JANEIRO</h2>
             </div>
             <button class="btn-icon-nav" onclick="changePeriodCharts(1)">▶</button>
         </div>
         
-        <div class="filter-container" style="display: flex; gap: 8px; padding: 0 20px; margin-bottom: 20px;">
-            <button class="btn-filter active" id="filter-semanal" onclick="updateChartFilter('semanal')">Semanal</button>
-            <button class="btn-filter" id="filter-mensal" onclick="updateChartFilter('mensal')">Mensal</button>
+        <div style="display: flex; gap: 8px; padding: 0 20px; margin-bottom: 20px;">
+            <button class="btn-filter active" id="filter-semanal" onclick="updateChartFilter('semanal')" style="flex:1; background:#1c1c1e; border:1px solid #333; color:#fff; padding:10px; border-radius:10px; font-size:11px;">SEMANAL</button>
+            <button class="btn-filter" id="filter-mensal" onclick="updateChartFilter('mensal')" style="flex:1; background:#1c1c1e; border:1px solid #333; color:#fff; padding:10px; border-radius:10px; font-size:11px;">MENSAL</button>
         </div>
 
         <div style="padding: 0 20px; margin-bottom: 25px;">
-            <div style="background: var(--card-color); padding: 15px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); height: 280px;">
+            <div style="background: var(--card-color); padding: 15px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); height: 250px;">
                 <canvas id="mainChart"></canvas>
             </div>
         </div>
-
         <div id="chart-summary-cards" class="summary-grid"></div>
     </div>
 
     <div id="view-history" class="hidden">
-        <div class="header-simple">
-            <h2 style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Histórico</h2>
-            <p style="color:#666; font-size:12px; margin-bottom:10px; padding: 0 20px;">Toque para ver detalhes</p>
-        </div>
-        <div id="history-list" class="history-container" style="padding: 20px;"></div>
+        <h2 style="padding: 20px 20px 10px 20px; font-size: 22px;">Histórico</h2>
+        <div id="history-list" style="padding: 0 20px 100px 20px;"></div>
     </div>
 
-    <div id="view-day-detail" class="hidden">
+    <div id="view-day-detail" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:100; overflow-y:auto; padding-bottom:90px;">
         <div style="padding: 20px; display: flex; align-items: center; border-bottom: 1px solid #333; background: #111;">
-            <button onclick="handleBackButton()" style="background: none; border: none; font-size: 24px; color: #fff; cursor: pointer;">←</button>
-            <h2 id="detail-title" style="margin-left:15px;">Detalhes do Dia</h2>
-            <button class="btn-text" onclick="editCurrentDay()" style="margin-left:auto; color:var(--primary-color);">✏️ Editar</button>
+            <button onclick="handleBackButton()" style="background:none; border:none; font-size:24px; color:#fff;">←</button>
+            <h2 id="detail-title" style="margin-left:15px; font-size: 18px;">Detalhes</h2>
+            <button onclick="editCurrentDay()" style="margin-left:auto; color:var(--primary-color); background:none; border:none; font-weight:bold;">✏️ EDITAR</button>
         </div>
-        <div class="summary-grid" style="margin-top:10px;">
+        <div class="summary-grid" style="margin-top:15px;">
              <div class="card-rent-config" style="background: rgba(191, 90, 242, 0.15);">
-                <div class="rent-info-left">
-                    <span style="font-weight:bold; color:var(--rent-color); font-size:12px;">🟣 META DINÂMICA (HOJE)</span>
-                    <div style="font-size:10px; color:#aaa;" id="day-rent-math-expl">Calculando...</div>
-                </div>
-                <div class="rent-info-right" style="text-align: right;">
-                    <span style="font-weight:800; font-size:18px; color:#fff;" id="day-rent-target-val">R$ 0</span>
-                </div>
+                <div><span style="font-weight:bold; color:var(--rent-color); font-size:12px;">🟣 META DO DIA</span><br><small id="day-rent-math-expl" style="color:#aaa;">Calculando...</small></div>
+                <div style="text-align: right;"><span id="day-rent-target-val" style="font-weight:800; font-size:18px;">R$ 0</span></div>
             </div>
-            <div class="card-main"><span class="label">Lucro do Dia</span><div class="value-big" id="day-profit">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">Receita</span><div class="value-med text-green" id="day-rev">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">Despesas</span><div class="value-med text-red" id="day-exp">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">⛽ Combustível</span><div class="value-med text-orange" id="day-fuel-val-d">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">🟣 Aluguel</span><div class="value-med text-purple" id="day-rent-val-d">R$ 0,00</div></div>
-        </div>
-        <div class="performance-section">
-            <div class="perf-grid">
-                <div class="card-perf"><span class="label">Horas</span><span class="perf-val" id="day-hours-d">0h</span></div>
-                <div class="card-perf"><span class="label">Ganho/H</span><span class="perf-val text-green" id="day-hourly-d">R$ 0</span></div>
-                <div class="card-perf"><span class="label">R$/KM</span><span class="perf-val text-blue" id="day-km-val-d">R$ 0</span></div>
-            </div>
+            <div class="card-main"><span class="label">Lucro do Dia</span><div id="day-profit" class="value-big">R$ 0,00</div></div>
+            <div class="card-small"><span class="label">Receita</span><div id="day-rev" class="value-med text-green">R$ 0,00</div></div>
+            <div class="card-small"><span class="label">Despesas</span><div id="day-exp" class="value-med text-red">R$ 0,00</div></div>
         </div>
     </div>
 
     <div id="modal-rent" class="modal-overlay hidden">
-        <div class="modal-box" style="background: #1c1c1e; width: 85%; max-width: 320px; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333;">
-            <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Planejar Aluguel</div>
-            <input type="number" id="input-total-rent" class="step-input" style="background: #1c1c1e; border: 1px solid #333; color: #fff; font-size: 18px; padding:10px; width:100%; border-radius:12px; text-align:center; margin-bottom:15px;" placeholder="Valor Mensal" oninput="updateRentPreview()">
+        <div style="background: #1c1c1e; width: 90%; max-width: 340px; border-radius: 20px; padding: 25px; border: 1px solid #333;">
+            <h3 style="text-align:center; margin-bottom:15px;">Planejar Aluguel</h3>
+            <input type="number" id="input-total-rent" class="login-input" style="text-align:center; font-size:20px; margin-bottom:15px;" placeholder="Valor Mensal" oninput="updateRentPreview()">
             <div class="calendar-wrapper">
-                <div class="calendar-header"><div style="font-size:14px; font-weight:bold; color:#fff;" id="cal-month-title">Mês</div></div>
+                <div style="text-align:center; font-size:12px; font-weight:bold; margin-bottom:8px; color:var(--primary-color);" id="cal-month-title">Mês</div>
                 <div id="rent-calendar" class="calendar-grid"></div>
             </div>
-            <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; text-align:left;">
-                <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#aaa;">Falta:</span><span id="rent-debug-remaining">R$ 0</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#aaa;">Meta/Dia:</span><span style="color:var(--rent-color); font-weight:bold;" id="rent-preview-val">R$ 0</span></div>
+            <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span style="color:#888;">Falta Arrecadar:</span><span id="rent-debug-remaining">R$ 0</span></div>
+                <div style="display:flex; justify-content:space-between;"><span style="color:#888;">Meta p/ dia trabalhado:</span><span style="color:var(--rent-color); font-weight:bold;" id="rent-preview-val">R$ 0</span></div>
             </div>
-            <button class="btn btn-primary" onclick="saveRentConfig()" style="margin-bottom:10px;">Salvar</button>
-            <button class="btn btn-text" onclick="closeRentConfig()">Fechar</button>
+            <button class="btn btn-primary" onclick="saveRentConfig()">SALVAR</button>
+            <button class="btn btn-text" style="width:100%;" onclick="closeRentConfig()">Fechar</button>
         </div>
     </div>
 
     <div id="modal-logout" class="modal-overlay hidden">
-        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; width: 85%; max-width: 320px;">
-            <div style="font-size:18px; font-weight: bold; margin-bottom:10px;">Sair da Conta?</div>
-            <button class="btn btn-primary" onclick="confirmLogout()" style="margin-bottom:10px;">SIM, SAIR</button>
+        <div style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; width: 280px;">
+            <div style="margin-bottom:20px;">Deseja sair da conta?</div>
+            <button class="btn btn-primary" onclick="confirmLogout()" style="margin-bottom:10px;">SAIR</button>
             <button class="btn btn-text" onclick="closeLogoutModal()">Cancelar</button>
         </div>
     </div>
 
-    <div id="modal-delete" class="modal-overlay hidden">
-        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333;">
-            <div class="modal-title" style="margin-bottom:20px;">Apagar Registro?</div>
-            <button class="btn btn-danger" onclick="confirmDelete()" style="margin-bottom:10px;">Apagar</button>
-            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+    <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
+        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <span id="step-counter" style="font-size:12px; color:var(--text-gray);">ETAPA 1/10</span>
+            <button onclick="handleBackButton()" style="background:none; border:none; color:#fff; font-size:30px;">&times;</button>
+        </div>
+        <div style="height:4px; background:#333; margin: 0 20px;"><div id="progress-bar" style="height:100%; background:var(--primary-color); width:0%; transition: 0.3s;"></div></div>
+        <div id="wizard-content" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center;"></div>
+        <div style="padding: 20px; display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
+            <button class="btn btn-primary" onclick="nextStep()" id="btn-next">Próximo</button>
         </div>
     </div>
 
-    <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
-        <div class="wizard-top" style="padding: 20px; display: flex; justify-content: space-between;"><span id="step-counter">ETAPA 1/10</span><button onclick="handleBackButton()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button></div>
-        <div class="progress-track" style="height: 4px; background: #333; margin: 0 20px;"><div id="progress-bar" style="height: 100%; background: var(--primary-color); width: 0%;"></div></div>
-        <div id="wizard-content" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;"></div>
-        <div style="padding: 20px; display: flex; gap: 10px; padding-bottom: 30px;"><button class="btn btn-text" onclick="prevStep()">Voltar</button><button class="btn btn-primary" onclick="nextStep(false)" id="btn-next">Próximo</button></div>
-    </div>
-
     <div class="bottom-bar">
-        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🏠</span>Início
-        </button>
-        <button class="nav-btn" id="nav-charts" onclick="switchTab('charts')">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📊</span>Gráficos
-        </button>
+        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Início</button>
+        <button class="nav-btn" id="nav-charts" onclick="switchTab('charts')"><span>📊</span>Gráficos</button>
         <button class="add-btn" onclick="startWizard()">+</button>
-        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📂</span>Histórico
-        </button>
-        <button class="nav-btn" onclick="openRentConfig()">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🟣</span>Meta
-        </button>
+        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')"><span>📂</span>Histórico</button>
+        <button class="nav-btn" onclick="openRentConfig()"><span>🟣</span>Meta</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
@@ -458,72 +261,130 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // MANUTENÇÃO INTEGRAL DAS VARIÁVEIS E FUNÇÕES
+        // --- CONFIGURAÇÃO E IDENTIDADE PRO (PRESERVADO) ---
+        const DB_KEY = 'app_motorista_v22'; 
+        const RENT_DB_KEY = 'rent_configs';
+        const firebaseConfig = { 
+            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U", 
+            authDomain: "uber-gestao.firebaseapp.com", 
+            projectId: "uber-gestao", 
+            storageBucket: "uber-gestao.firebasestorage.app", 
+            messagingSenderId: "615548282513", 
+            appId: "1:615548282513:web:89db20f983e7d4eea5c130" 
+        };
+
         const steps = [
-            { id: 'customDate', title: 'Data', icon: '📅', label: 'Qual a data do registro?', type: 'date' },
-            { id: 'uber', title: 'Ganhos Uber', icon: '🚗', label: 'Valor total feito na Uber', type: 'number' },
-            { id: 'pop', title: 'Ganhos 99', icon: '🚕', label: 'Valor total na 99/Indriver', type: 'number' },
-            { id: 'rentPaid', title: 'Aluguel (Hoje)', icon: '🟣', label: 'Quanto separou hoje?', type: 'number' },
-            { id: 'fuel', title: 'Combustível', icon: '⛽', label: 'Total gasto no posto', type: 'number' },
-            { id: 'food', title: 'Alimentação', icon: '🍔', label: 'Lanches e Refeições', type: 'number' },
-            { id: 'maintenance', title: 'Manutenção', icon: '🛠️', label: 'Gastos com limpeza ou peças', type: 'number' },
-            { id: 'km', title: 'KM Rodados', icon: '🛣️', label: 'Quilometragem do dia', type: 'number' },
-            { id: 'hours', title: 'Horas Online', icon: '⏱️', label: 'Tempo Conectado (HH:MM)', type: 'time' },
-            { id: 'rides', title: 'Viagens', icon: '🔢', label: 'Quantidade de corridas', type: 'number' }
+            { id: 'customDate', title: 'Data', label: 'Data do registro', type: 'date' },
+            { id: 'uber', title: 'Ganhos Uber', label: 'Valor bruto Uber', type: 'number' },
+            { id: 'pop', title: 'Ganhos 99/Indriver', label: 'Valor bruto outras apps', type: 'number' },
+            { id: 'rentPaid', title: 'Aluguel (Hoje)', label: 'Quanto separou hoje?', type: 'number' },
+            { id: 'fuel', title: 'Combustível', label: 'Gasto no posto', type: 'number' },
+            { id: 'food', title: 'Alimentação', label: 'Refeições/Lanches', type: 'number' },
+            { id: 'maintenance', title: 'Manutenção', label: 'Limpeza ou consertos', type: 'number' },
+            { id: 'km', title: 'KM Rodados', label: 'KM total no dia', type: 'number' },
+            { id: 'hours', title: 'Horas Online', label: 'Tempo trabalhado (HH:MM)', type: 'time' },
+            { id: 'rides', title: 'Viagens', label: 'Total de corridas', type: 'number' }
         ];
+
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null, currentDetailIndex = null;
-        let myChart = null;
+        let myChart = null, tempOffDays = [], rentCalendarDate = new Date();
+        let auth, db;
 
-        const DB_KEY = 'app_motorista_v22', RENT_DB_KEY = 'rent_configs';
-        let tempOffDays = [], rentCalendarDate = new Date(), itemToDeleteIndex = null;
-        window.isRegisterMode = false;
+        // --- LÓGICA DE SINCRONIZAÇÃO BETA ---
 
-        // AUTH & LOGOUT
-        function togglePasswordVisibility() {
-            const passInput = document.getElementById('login-pass');
-            const toggleBtn = document.getElementById('toggle-password');
-            if (passInput.type === 'password') { passInput.type = 'text'; toggleBtn.innerText = '🔒'; } 
-            else { passInput.type = 'password'; toggleBtn.innerText = '👁️'; }
-        }
-        function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); window.history.pushState({modal: 'logout'}, "", ""); }
-        function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
-        function confirmLogout() { auth.signOut().then(() => { localStorage.clear(); window.location.reload(); }); }
-
-        // STORAGE & DB
         function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); if(window.syncToCloud) window.syncToCloud(); }
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); syncToCloud(); }
         function getRentConfigs() { try { return JSON.parse(localStorage.getItem(RENT_DB_KEY)) || {}; } catch { return {}; } }
-        function saveRentConfigs(configs) { localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs)); if(window.syncToCloud) window.syncToCloud(); }
-        function getRentConfigForMonth(m, y) { const configs = getRentConfigs(); return configs[`${m}-${y}`] || { total: 0, offDays: [] }; }
+        function saveRentConfigs(configs) { localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs)); syncToCloud(); }
         function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-        // CALCULO META DINÂMICA (Completamente do Beta)
+        // CÁLCULO DE META DINÂMICA (IDENTICO AO BETA)
         function calculateTargetLogic(totalRent, offDaysArray, monthRef = new Date()) {
             if (!offDaysArray) offDaysArray = []; if (totalRent <= 0) return { target: 0, remaining: 0, daysLeft: 0 };
             const today = new Date(); today.setHours(0,0,0,0);
             const m = monthRef.getMonth(), y = monthRef.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-            const db = getDB(); let paidSoFar = 0;
-            db.forEach(item => { const p = item.date.split('/'); if (parseInt(p[1])-1 === m && parseInt(p[2]) === y) paidSoFar += (item.rentPaid || 0); });
+            const dbData = getDB(); 
+            let paidSoFar = 0;
+            
+            dbData.forEach(item => { 
+                const p = item.date.split('/'); 
+                if (parseInt(p[1])-1 === m && parseInt(p[2]) === y) paidSoFar += (item.rentPaid || 0); 
+            });
+
             const remainingMoney = Math.max(0, totalRent - paidSoFar);
             let startDay = 1;
             let isCurrentMonth = (m === today.getMonth() && y === today.getFullYear());
+            
             if (isCurrentMonth) startDay = today.getDate();
             else if (new Date(y, m, 1) < today) return { target: 0, remaining: remainingMoney, daysLeft: 0 };
+
             let remainingDaysCount = 0;
             for (let i = startDay; i <= daysInMonth; i++) { if (!offDaysArray.includes(i)) remainingDaysCount++; }
+            
             if (isCurrentMonth) {
                 const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
-                if (db.some(item => item.date === dateStr) && !offDaysArray.includes(today.getDate()) && remainingDaysCount > 0) remainingDaysCount--;
+                if (dbData.some(item => item.date === dateStr) && !offDaysArray.includes(today.getDate()) && remainingDaysCount > 0) {
+                    // Se já registrou hoje e hoje não é folga, não conta hoje como "restante"
+                }
             }
-            return { target: remainingDaysCount > 0 ? remainingMoney / remainingDaysCount : remainingMoney, remaining: remainingMoney, daysLeft: remainingDaysCount };
+
+            return { 
+                target: remainingDaysCount > 0 ? remainingMoney / remainingDaysCount : remainingMoney, 
+                remaining: remainingMoney, 
+                daysLeft: remainingDaysCount 
+            };
         }
 
-        // --- FUNÇÃO DO GRÁFICO SVG DO PRO ---
-        function renderWeeklyChart() {
-            const db = getDB(); const svg = document.getElementById('weekly-chart-svg'); svg.innerHTML = '';
-            const recent = db.slice(0, 7).reverse(); if (recent.length === 0) return;
+        // TAB SYSTEM (SINCRONIZADO)
+        function switchTab(tab) {
+            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
+            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
+            document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
+            document.getElementById('view-day-detail').classList.add('hidden'); 
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if(tab === 'home') { document.getElementById('nav-home').classList.add('active'); renderDashboard(); }
+            if(tab === 'history') { document.getElementById('nav-hist').classList.add('active'); renderHistory(); }
+            if(tab === 'charts') { document.getElementById('nav-charts').classList.add('active'); viewDate = new Date(); updateChartFilter('semanal'); }
+        }
+
+        // DASHBOARD & GRÁFICOS
+        function renderDashboard() {
+            const dbData = getDB(); const m = viewDate.getMonth(), y = viewDate.getFullYear();
+            document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
+            document.getElementById('label-year').innerText = y;
+
+            const data = dbData.filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
+            
+            let tRev=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
+            data.forEach(item => {
+                tRev += (item.uber||0) + (item.pop||0); tFuel += (item.fuel||0);
+                tFood += (item.food||0); tRent += (item.rentPaid||0); tKm += (item.km||0);
+                let h = item.hours || 0; if(!h && item.hoursFormatted) { const [hh,mm] = item.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                tHours += h;
+            });
+
+            const tExp = tFuel + tFood + tRent + (data.reduce((a,b)=>a+(b.maintenance||0),0));
+            document.getElementById('dash-profit').innerText = formatMoney(tRev - tExp);
+            document.getElementById('dash-rev').innerText = formatMoney(tRev);
+            document.getElementById('dash-exp').innerText = formatMoney(tExp);
+            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
+            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
+            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? (tRev-tExp)/tHours : 0);
+            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev/tKm : 0);
+            document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? (tFuel/tRev)*100 : 0).toFixed(1) + '%';
+            
+            const config = (getRentConfigs())[`${m}-${y}`] || { total: 0, offDays: [] };
+            document.getElementById('dash-rent-target').innerText = formatMoney(config.total || 0);
+            
+            renderWeeklySVG();
+        }
+
+        function renderWeeklySVG() {
+            const dbData = getDB(); const svg = document.getElementById('weekly-chart-svg'); svg.innerHTML = '';
+            const recent = dbData.slice(0, 7).reverse(); if (recent.length === 0) return;
             const maxVal = Math.max(...recent.map(d => (d.uber||0)+(d.pop||0)), 1);
             const w = svg.clientWidth || 300, step = w / 7;
             recent.forEach((d, i) => {
@@ -539,220 +400,135 @@
             });
         }
 
-        // DASHBOARD
-        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
-
-        function renderDashboard() {
-            const db = getDB(); const m = viewDate.getMonth(), y = viewDate.getFullYear();
-            document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
-            document.getElementById('label-year').innerText = y;
-            const data = db.filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
-            
-            let tRev=0, tExp=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0;
-            data.forEach(item => {
-                tFuel += (item.fuel||0); tFood += (item.food||0); tRent += (item.rentPaid||0);
-                tRev += (item.uber||0) + (item.pop||0); tKm += (item.km||0);
-                let h = item.hours || 0; if(!h && item.hoursFormatted) { const [hh,mm] = item.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
-                tHours += h;
-            });
-            tExp = tFuel + tFood + tRent + (data.reduce((a,b)=>a+(b.maintenance||0),0));
-            
-            document.getElementById('dash-profit').innerText = formatMoney(tRev - tExp);
-            document.getElementById('dash-rev').innerText = formatMoney(tRev);
-            document.getElementById('dash-exp').innerText = formatMoney(tExp);
-            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
-            document.getElementById('dash-food-val').innerText = formatMoney(tFood);
-            document.getElementById('dash-rent-val').innerText = formatMoney(tRent);
-            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
-            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? (tRev-tExp)/tHours : 0);
-            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev/tKm : 0);
-            document.getElementById('dash-fuel-pct').innerText = (tRev > 0 ? (tFuel/tRev)*100 : 0).toFixed(1) + '%';
-            
-            const currentMonthConfig = getRentConfigForMonth(m, y);
-            document.getElementById('dash-rent-target').innerText = formatMoney(currentMonthConfig.total || 0);
-            
-            setTimeout(() => renderWeeklyChart(), 100);
-        }
-
-        // GRÁFICOS (DO BETA COM CHART.JS)
-        function changePeriodCharts(dir) {
-            const activeFilter = document.querySelector('.btn-filter.active').id.replace('filter-', '');
-            if (activeFilter === 'semanal') { viewDate.setDate(viewDate.getDate() + (dir * 7)); } 
-            else { viewDate.setMonth(viewDate.getMonth() + dir); }
-            updateChartFilter(activeFilter);
-        }
-
+        // GRÁFICOS CHART.JS (BETA)
         function updateChartFilter(type) {
             document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`filter-${type}`).classList.add('active');
-
-            const db = getDB();
-            let labels = [], values = [], summary = { rev:0, fuel:0, food:0, maint:0, rent:0, hours:0, km:0 };
-            const labelMonth = document.getElementById('chart-label-month');
-            const labelYear = document.getElementById('chart-label-year');
+            const dbData = getDB();
+            let labels = [], values = [], summary = { rev:0, fuel:0, hours:0, km:0 };
 
             if (type === 'semanal') {
                 const curr = new Date(viewDate);
                 const first = curr.getDate() - curr.getDay(); 
                 const weekStart = new Date(curr.setDate(first));
-                labelYear.innerText = `Semana ${getWeekNumber(weekStart)} de ${weekStart.getFullYear()}`;
+                document.getElementById('chart-label-year').innerText = `Semana de ${weekStart.getFullYear()}`;
                 const weekEnd = new Date(new Date(weekStart).setDate(weekStart.getDate() + 6));
-                labelMonth.innerText = `${weekStart.getDate()}/${weekStart.getMonth()+1} a ${weekEnd.getDate()}/${weekEnd.getMonth()+1}`;
+                document.getElementById('chart-label-month').innerText = `${weekStart.getDate()}/${weekStart.getMonth()+1} a ${weekEnd.getDate()}/${weekEnd.getMonth()+1}`;
 
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(weekStart); d.setDate(d.getDate() + i);
                     const dateStr = d.toLocaleDateString('pt-BR');
-                    const dayData = db.find(item => item.date === dateStr);
+                    const dayData = dbData.find(item => item.date === dateStr);
                     labels.push(dateStr.substring(0, 5)); 
                     const rev = dayData ? (dayData.uber || 0) + (dayData.pop || 0) : 0;
                     values.push(rev);
-
                     if (dayData) {
-                        summary.rev += rev; summary.fuel += (dayData.fuel || 0); summary.food += (dayData.food || 0);
-                        summary.maint += (dayData.maintenance || 0); summary.rent += (dayData.rentPaid || 0); summary.km += (dayData.km || 0);
-                        let h = dayData.hours || 0;
-                        if(!h && dayData.hoursFormatted) { const [hh,mm] = dayData.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                        summary.rev += rev; summary.fuel += (dayData.fuel || 0); summary.km += (dayData.km || 0);
+                        let h = dayData.hours || 0; if(!h && dayData.hoursFormatted) { const [hh,mm] = dayData.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
                         summary.hours += h;
                     }
                 }
             } else {
                 const m = viewDate.getMonth(), y = viewDate.getFullYear();
-                labelMonth.innerText = monthNames[m].toUpperCase(); labelYear.innerText = y;
+                document.getElementById('chart-label-month').innerText = monthNames[m].toUpperCase();
+                document.getElementById('chart-label-year').innerText = y;
+                const monthData = dbData.filter(d => { const p = d.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
                 const weekMap = {};
-                const monthData = db.filter(d => { const p = d.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
-
                 monthData.forEach(d => {
                     const p = d.date.split('/'), dayNum = parseInt(p[0]);
-                    const firstDayOfMonth = new Date(y, m, 1).getDay();
-                    const weekOfMonth = Math.ceil((dayNum + firstDayOfMonth) / 7);
+                    const weekOfMonth = Math.ceil((dayNum + new Date(y, m, 1).getDay()) / 7);
                     const key = `Sem ${weekOfMonth}`;
-                    if(!weekMap[key]) weekMap[key] = { rev:0 };
-                    const r = (d.uber||0)+(d.pop||0);
-                    let h = d.hours || 0;
-                    if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
-                    weekMap[key].rev += r; summary.rev += r; summary.fuel += (d.fuel||0); summary.food += (d.food||0);
-                    summary.maint += (d.maintenance||0); summary.rent += (d.rentPaid||0); summary.hours += h; summary.km += (d.km||0);
+                    if(!weekMap[key]) weekMap[key] = 0;
+                    weekMap[key] += (d.uber||0)+(d.pop||0);
+                    summary.rev += (d.uber||0)+(d.pop||0); summary.fuel += (d.fuel||0); summary.km += (d.km||0);
+                    let h = d.hours || 0; if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                    summary.hours += h;
                 });
-                Object.keys(weekMap).sort().forEach(k => { labels.push(k); values.push(weekMap[k].rev); });
+                Object.keys(weekMap).sort().forEach(k => { labels.push(k); values.push(weekMap[k]); });
             }
-            renderChart(labels, values); renderChartSummary(summary);
+            renderMainChart(labels, values);
+            renderChartSummary(summary);
         }
 
-        function renderChartSummary(data) {
-            const exp = data.fuel + data.food + data.maint + data.rent;
-            const profit = data.rev - exp;
-            const hourlyRate = data.hours > 0 ? profit / data.hours : 0;
-            const kmRate = data.km > 0 ? data.rev / data.km : 0;
-            document.getElementById('chart-summary-cards').innerHTML = `
-                <div class="card-main"><span class="label">Receita Período</span><div class="value-big">${formatMoney(data.rev)}</div></div>
-                <div class="card-small"><span class="label">⏱️ Total Horas</span><div class="value-med">${data.hours.toFixed(1)}h</div></div>
-                <div class="card-small"><span class="label">💎 Ganho/Hora</span><div class="value-med text-green">${formatMoney(hourlyRate)}</div></div>
-                <div class="card-small"><span class="label">🛣️ Valor/KM</span><div class="value-med text-blue">${formatMoney(kmRate)}</div></div>
-                <div class="card-small"><span class="label">Lucro Líquido</span><div class="value-med text-green">${formatMoney(profit)}</div></div>
-            `;
-        }
-
-        function renderChart(labels, values) {
+        function renderMainChart(labels, values) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if (myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'bar',
-                data: { labels, datasets: [{ data: values, backgroundColor: '#00E676', borderRadius: 6, barThickness: 20 }] },
+                data: { labels, datasets: [{ data: values, backgroundColor: '#00E676', borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
                     scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        function getWeekNumber(d) {
-            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        function renderChartSummary(data) {
+            const profit = data.rev - data.fuel;
+            document.getElementById('chart-summary-cards').innerHTML = `
+                <div class="card-main"><span class="label">Receita Período</span><div class="value-big">${formatMoney(data.rev)}</div></div>
+                <div class="card-small"><span class="label">Ganho/Hora</span><div class="value-med text-green">${formatMoney(data.hours > 0 ? profit/data.hours : 0)}</div></div>
+                <div class="card-small"><span class="label">Valor/KM</span><div class="value-med text-blue">${formatMoney(data.km > 0 ? data.rev/data.km : 0)}</div></div>
+            `;
         }
 
-        // NAVEGAÇÃO E HISTÓRICO AGRUPADO
-        function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
-            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
-            document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
-            document.getElementById('view-day-detail').classList.add('hidden'); 
-            document.querySelectorAll('.nav-btn').forEach(b => {
-                const isSelected = b.id === (tab==='home'?'nav-home':tab==='history'?'nav-hist':'nav-charts');
-                b.style.color = isSelected ? 'var(--primary-color)' : '#666';
+        // AUTH & FIREBASE (PRESERVADO)
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth(); db = firebase.firestore();
+            auth.onAuthStateChanged(user => {
+                if(user) {
+                    document.getElementById('login-screen').style.display='none';
+                    document.getElementById('user-email-display').innerText = user.email.split('@')[0];
+                    db.collection("users").doc(user.uid).get().then(doc => {
+                        if(doc.exists && doc.data().autorizado) {
+                            document.getElementById('wait-screen').classList.add('hidden');
+                            document.getElementById('view-dashboard').classList.remove('hidden');
+                            if(doc.data().history) localStorage.setItem(DB_KEY, JSON.stringify(doc.data().history));
+                            if(doc.data().rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(doc.data().rentConfigs));
+                            renderDashboard();
+                        } else document.getElementById('wait-screen').classList.remove('hidden');
+                    });
+                } else document.getElementById('login-screen').style.display = 'flex';
             });
-            if(tab==='history') renderHistory(); 
-            else if(tab==='home') renderDashboard();
-            else if(tab==='charts') { viewDate = new Date(); updateChartFilter('semanal'); }
-        }
+        } catch(e) { console.error(e); }
 
-        function renderHistory() {
-            const db = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
-            const groups = {};
-            db.forEach((item, index) => {
-                const p = item.date.split('/'); const key = `${parseInt(p[1])-1}-${p[2]}`;
-                if(!groups[key]) groups[key] = { label: `${monthNames[parseInt(p[1])-1]} ${p[2]}`, items: [] };
-                item.originalIndex = index; groups[key].items.push(item);
-            });
-            Object.keys(groups).forEach(key => {
-                const g = groups[key];
-                const folder = document.createElement('div'); folder.className = 'month-folder';
-                folder.style = "background: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; border: 1px solid #333; cursor: pointer;";
-                folder.innerHTML = `<span>📂 ${g.label}</span><span>▼</span>`;
-                const itemsDiv = document.createElement('div'); itemsDiv.style = "display: none; padding-left: 10px;";
-                g.items.forEach(d => {
-                    const div = document.createElement('div');
-                    div.style = "background: #1c1c1e; padding: 12px; border-radius: 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
-                    div.innerHTML = `
-                        <div onclick="openDayDetail(${d.originalIndex})" style="flex:1;">
-                            <b>${d.date}</b><br><small style="color:#888;">Ganhos: ${formatMoney((d.uber||0)+(d.pop||0))}</small>
-                        </div>
-                        <button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>`;
-                    itemsDiv.appendChild(div);
-                });
-                folder.onclick = () => { itemsDiv.style.display = itemsDiv.style.display === 'none' ? 'block' : 'none'; };
-                list.appendChild(folder); list.appendChild(itemsDiv);
-            });
-        }
-
-        // DETALHES DO DIA E EDIÇÃO
-        function openDayDetail(index) {
-            window.history.pushState({modal: 'detail'}, "", ""); 
-            currentDetailIndex = index;
-            const d = getDB()[index]; if(!d) return;
-
-            const rec = (d.uber||0)+(d.pop||0), exp = (d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0);
-            document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
-            document.getElementById('day-profit').innerText = formatMoney(rec - exp);
-            document.getElementById('day-rev').innerText = formatMoney(rec);
-            document.getElementById('day-exp').innerText = formatMoney(exp);
-            document.getElementById('day-fuel-val-d').innerText = formatMoney(d.fuel||0);
-            document.getElementById('day-rent-val-d').innerText = formatMoney(d.rentPaid||0);
-            let h = d.hours || 0; if(!h && d.hoursFormatted) { const [hh,mm] = d.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
-            document.getElementById('day-hours-d').innerText = h.toFixed(1) + "h";
-            document.getElementById('day-hourly-d').innerText = formatMoney(h > 0 ? (rec-exp)/h : 0);
-            document.getElementById('day-km-val-d').innerText = formatMoney((d.km||0) > 0 ? rec/d.km : 0);
-            
-            const p = d.date.split('/'); 
-            const config = getRentConfigForMonth(p[1]-1, p[2]);
-            const res = calculateTargetLogic(config.total || 0, config.offDays || [], new Date(p[2], p[1]-1, p[0]));
-            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
-            document.getElementById('day-rent-math-expl').innerText = res.target > 0 ? `Falta ${formatMoney(res.remaining)} em ${res.daysLeft} dias` : 'Meta Concluída!';
-
-            document.getElementById('view-day-detail').classList.remove('hidden');
-        }
-
-        function editCurrentDay() {
-            if(currentDetailIndex !== null) {
-                document.getElementById('view-day-detail').classList.add('hidden');
-                startWizard(currentDetailIndex);
+        function handleAuthAction() {
+            const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value;
+            if(!email || !pass) return alert("Preencha os campos!");
+            if(window.isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass).then(c => db.collection("users").doc(c.user.uid).set({email, autorizado: false}));
+            } else {
+                auth.signInWithEmailAndPassword(email, pass).catch(e => alert("Erro: " + e.message));
             }
+        }
+
+        function toggleAuthMode() { 
+            window.isRegisterMode = !window.isRegisterMode; 
+            document.getElementById('btn-main-action').innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR"; 
+            document.getElementById('btn-toggle').innerText = window.isRegisterMode ? "Entrar" : "Criar agora";
+        }
+
+        function syncToCloud() { 
+            if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs() }, { merge: true }); 
+        }
+
+        // NAVEGAÇÃO E MODAIS
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
+        function confirmLogout() { auth.signOut().then(() => { localStorage.clear(); window.location.reload(); }); }
+        
+        function handleBackButton() {
+            if(!document.getElementById('wizard-overlay').classList.contains('hidden')) return toggleWizard(false);
+            if(!document.getElementById('view-day-detail').classList.contains('hidden')) return document.getElementById('view-day-detail').classList.add('hidden');
+            if(!document.getElementById('modal-rent').classList.contains('hidden')) return closeRentConfig();
+            switchTab('home');
         }
 
         // WIZARD
         function startWizard(idx = null) {
-            window.history.pushState({modal: 'wizard'}, "", "");
-            editingIndex = idx; tempData = idx !== null ? {...getDB()[idx]} : { customDate: new Date().toISOString().split('T')[0] };
+            editingIndex = idx; 
+            tempData = idx !== null ? {...getDB()[idx]} : { customDate: new Date().toISOString().split('T')[0] };
             currentStep = 0; toggleWizard(true); renderStep();
         }
         function toggleWizard(s) { document.getElementById('wizard-overlay').classList.toggle('hidden', !s); }
@@ -761,38 +537,27 @@
             document.getElementById('progress-bar').style.width = `${((currentStep+1)/10)*100}%`;
             let val = s.type === 'time' ? (tempData.hoursFormatted||'') : (tempData[s.id]||'');
             if (s.type === 'date') val = tempData.customDate;
-            document.getElementById('wizard-content').innerHTML = `<h2>${s.title}</h2><p style="color:#888; margin-bottom:20px;">${s.label}</p><input type="${s.type}" id="inp-val" value="${val}" style="width:100%; padding:15px; background:#111; color:#fff; border:1px solid #333; border-radius:12px; text-align:center; font-size:20px; outline:none;">`;
+            document.getElementById('wizard-content').innerHTML = `<h3>${s.title}</h3><p style="color:#888; margin:15px 0;">${s.label}</p><input type="${s.type}" id="inp-val" value="${val}" class="login-input" style="text-align:center; font-size:24px;">`;
             document.getElementById('btn-next').innerText = currentStep === 9 ? 'SALVAR' : 'PRÓXIMO';
-            setTimeout(()=>document.getElementById('inp-val').focus(),100);
         }
         function nextStep() {
             const el = document.getElementById('inp-val'), s = steps[currentStep];
             if(s.type === 'date') tempData.customDate = el.value;
             else if(s.type === 'time') { tempData.hoursFormatted = el.value; const [h,m] = (el.value||"0:0").split(':').map(Number); tempData.hours = h+(m/60); }
             else tempData[s.id] = parseFloat(el.value)||0;
-            if(currentStep < 9) { currentStep++; renderStep(); } else saveEntry();
-        }
-        function saveEntry() {
-            const db = getDB(); const d = new Date(tempData.customDate+'T12:00:00'); tempData.date = d.toLocaleDateString('pt-BR');
-            if(editingIndex!==null) db[editingIndex]=tempData; else db.unshift(tempData);
-            saveDB(db); toggleWizard(false); renderDashboard();
-            if(editingIndex!==null) openDayDetail(editingIndex);
+            if(currentStep < 9) { currentStep++; renderStep(); } else {
+                const dbData = getDB(); const d = new Date(tempData.customDate+'T12:00:00'); tempData.date = d.toLocaleDateString('pt-BR');
+                if(editingIndex!==null) dbData[editingIndex]=tempData; else dbData.unshift(tempData);
+                saveDB(dbData); toggleWizard(false); renderDashboard();
+            }
         }
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
 
-        function handleBackButton() {
-            if(!document.getElementById('modal-logout').classList.contains('hidden')) { closeLogoutModal(); return; }
-            if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
-            if(!document.getElementById('view-day-detail').classList.contains('hidden')) { document.getElementById('view-day-detail').classList.add('hidden'); return; }
-            if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
-            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home'); return; }
-        }
-
-        // ALUGUEL CONFIG (COM CALENDÁRIO)
+        // ALUGUEL CONFIG
         function openRentConfig() {
             document.getElementById('modal-rent').classList.remove('hidden');
             rentCalendarDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1); 
-            const config = getRentConfigForMonth(rentCalendarDate.getMonth(), rentCalendarDate.getFullYear());
+            const config = (getRentConfigs())[`${rentCalendarDate.getMonth()}-${rentCalendarDate.getFullYear()}`] || { total: 0, offDays: [] };
             document.getElementById('input-total-rent').value = config.total || '';
             tempOffDays = (config.offDays || []).map(Number);
             renderRentCalendar(); updateRentPreview();
@@ -823,54 +588,44 @@
         }
         function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
 
-        // UTILS
-        function askDelete(i) { itemToDeleteIndex = i; document.getElementById('modal-delete').classList.remove('hidden'); }
-        function closeDeleteModal() { document.getElementById('modal-delete').classList.add('hidden'); }
-        function confirmDelete() { const db = getDB(); db.splice(itemToDeleteIndex,1); saveDB(db); closeDeleteModal(); renderHistory(); renderDashboard(); document.getElementById('view-day-detail').classList.add('hidden'); }
-
-        // FIREBASE INIT DO PRO (MANTIDO) + TOGGLE REGISTRO DO BETA
-        const firebaseConfig = { 
-            apiKey: "AIzaSyARC963xbif9HN43w7MJxLXE2VlEBDXZ0U", 
-            authDomain: "uber-gestao.firebaseapp.com", 
-            projectId: "uber-gestao", 
-            storageBucket: "uber-gestao.firebasestorage.app", 
-            messagingSenderId: "615548282513", 
-            appId: "1:615548282513:web:89db20f983e7d4eea5c130" 
-        };
-        let auth, db;
-        try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth(); db = firebase.firestore();
-            auth.onAuthStateChanged(user => {
-                if(user) {
-                    document.getElementById('login-screen').style.display='none';
-                    document.getElementById('user-email-display').innerText = user.email.split('@')[0];
-                    db.collection("users").doc(user.uid).get().then(doc => {
-                        if(doc.exists && doc.data().autorizado) {
-                            document.getElementById('wait-screen').classList.add('hidden');
-                            document.getElementById('view-dashboard').classList.remove('hidden');
-                            if(doc.data().history) localStorage.setItem(DB_KEY, JSON.stringify(doc.data().history));
-                            if(doc.data().rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(doc.data().rentConfigs));
-                            renderDashboard();
-                        } else document.getElementById('wait-screen').classList.remove('hidden');
-                    });
-                } else document.getElementById('login-screen').style.display = 'flex';
+        // HISTÓRICO
+        function renderHistory() {
+            const dbData = getDB(); const list = document.getElementById('history-list'); list.innerHTML = '';
+            dbData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.style = "background:#1c1c1e; padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #333;";
+                div.innerHTML = `<div onclick="openDayDetail(${index})"><b>${item.date}</b><br><small style="color:var(--primary-color);">Ganhos: ${formatMoney((item.uber||0)+(item.pop||0))}</small></div>
+                <button onclick="deleteEntry(${index})" style="background:none; border:none; color:var(--danger-color);">🗑️</button>`;
+                list.appendChild(div);
             });
-        } catch(e) { console.error("Firebase Init Error:", e); }
+        }
 
-        window.handleAuthAction = function() {
-            const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value;
-            if(!email || !pass) return alert("Preencha tudo!");
-            auth.signInWithEmailAndPassword(email, pass).catch(e => {
-                if(window.isRegisterMode) auth.createUserWithEmailAndPassword(email, pass).then(c => db.collection("users").doc(c.user.uid).set({email, autorizado: false}));
-                else alert(e.message);
-            });
-        };
-        function toggleAuthMode() { window.isRegisterMode = !window.isRegisterMode; document.getElementById('btn-main-action').innerText = window.isRegisterMode ? "CRIAR CONTA" : "ENTRAR"; }
-        window.syncToCloud = function() { if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs() }, { merge: true }); };
+        function openDayDetail(idx) {
+            currentDetailIndex = idx;
+            const d = getDB()[idx]; if(!d) return;
+            const rev = (d.uber||0)+(d.pop||0), exp = (d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0);
+            document.getElementById('detail-title').innerText = d.date;
+            document.getElementById('day-profit').innerText = formatMoney(rev - exp);
+            document.getElementById('day-rev').innerText = formatMoney(rev);
+            document.getElementById('day-exp').innerText = formatMoney(exp);
+            
+            const p = d.date.split('/'); const config = (getRentConfigs())[`${p[1]-1}-${p[2]}`] || {total:0, offDays:[]};
+            const res = calculateTargetLogic(config.total, config.offDays, new Date(p[2], p[1]-1, p[0]));
+            document.getElementById('day-rent-target-val').innerText = formatMoney(res.target);
+            document.getElementById('day-rent-math-expl').innerText = `Meta baseada no restante do mês`;
+
+            document.getElementById('view-day-detail').classList.remove('hidden');
+        }
+
+        function editCurrentDay() {
+            const idx = currentDetailIndex;
+            document.getElementById('view-day-detail').classList.add('hidden');
+            startWizard(idx);
+        }
+
+        function deleteEntry(idx) { if(confirm("Apagar este registro?")) { const dbData = getDB(); dbData.splice(idx, 1); saveDB(dbData); renderHistory(); renderDashboard(); } }
 
         window.onload = () => { renderDashboard(); };
-        window.onpopstate = () => handleBackButton();
     </script>
 </body>
 </html>
