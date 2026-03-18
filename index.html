@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gestão Motorista V28 - BETA FULL</title>
     <style>
+        /* --- CONFIGURAÇÃO VISUAL --- */
         :root {
             --bg-color: #000000;
             --card-color: #1c1c1e;
@@ -28,8 +29,10 @@
         
         .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
         .btn-primary { background-color: var(--primary-color); color: #000; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3); }
+        .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background-color: var(--danger-color); color: #fff; }
         .btn-secondary { background-color: #333; color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid #333; color: #fff; }
         .btn-text { background: transparent; color: var(--text-gray); }
         .btn-icon-nav { background: #2c2c2e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-trash { background: none; border: none; font-size: 18px; cursor: pointer; padding: 10px; color: var(--danger-color); }
@@ -46,302 +49,865 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
+
+        .pct-tag {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.08);
+            margin-top: 4px;
+        }
+
+        .btn-filter {
+            flex: 1;
+            background: #1c1c1e;
+            border: 1px solid #333;
+            color: var(--text-gray);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-filter.active {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
         }
 
         #login-screen, #wait-screen { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1000&auto=format&fit=crop'); 
-            background-size: cover; background-position: center; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px;
+            background-size: cover; 
+            background-position: center; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
         }
 
-        .login-input { 
-            width: 100%; background: rgba(28, 28, 30, 0.8); border: 1px solid #333; 
-            padding: 16px 20px; border-radius: 12px; color: #fff; font-size: 16px; margin-bottom: 15px;
-        }
+        .login-logo { font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--primary-color)); animation: float 3s ease-in-out infinite; }
+        .login-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .login-subtitle { font-size: 14px; color: #aaa; margin-bottom: 40px; text-align: center; max-width: 80%; }
         
-        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2c2c2e; }
-        .date-navigation-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+        .input-group { width: 100%; margin-bottom: 15px; position: relative; }
+        .input-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; font-size: 18px; }
+        .login-input { 
+            width: 100%; 
+            background: rgba(28, 28, 30, 0.8); 
+            border: 1px solid #333; 
+            padding: 16px 45px 16px 45px; 
+            border-radius: 12px; 
+            color: #fff; 
+            font-size: 16px; 
+            outline: none; 
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .login-input:focus { border-color: var(--primary-color); background: rgba(28, 28, 30, 1); box-shadow: 0 0 10px rgba(0, 230, 118, 0.1); }
+        
+        .calendar-wrapper { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
+        .calendar-header { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
+        .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
+        .cal-day.off { background-color: rgba(255, 69, 58, 0.2); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.8; }
+        .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
+
+        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(20,20,20,0.8); border-bottom: 1px solid #2c2c2e; }
+        .date-navigation-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(180deg, rgba(28,28,30,0.5) 0%, transparent 100%); }
         .month-selector { text-align: center; }
+        .month-selector h2 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+        .month-selector span { font-size: 12px; color: var(--text-gray); }
+
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
         
         .card-main { 
-            grid-column: span 2; background: linear-gradient(145deg, #242426 0%, #111112 100%); 
-            padding: 24px; border-radius: 20px; text-align: center; border: 1px solid rgba(0, 230, 118, 0.15);
+            grid-column: span 2; 
+            background: linear-gradient(145deg, #242426 0%, #111112 100%); 
+            padding: 24px; 
+            border-radius: 20px; 
+            text-align: center; 
+            border: 1px solid rgba(0, 230, 118, 0.15);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         }
         
         .card-rent-config { 
-            grid-column: span 2; background: rgba(191, 90, 242, 0.08); border: 1px solid rgba(191, 90, 242, 0.3); 
-            padding: 20px; border-radius: 20px; cursor: pointer;
+            grid-column: span 2; 
+            background: rgba(191, 90, 242, 0.08); 
+            border: 1px solid rgba(191, 90, 242, 0.3); 
+            padding: 20px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            backdrop-filter: blur(10px);
         }
 
-        .rent-progress-container { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; margin: 12px 0; overflow: hidden; }
-        .rent-progress-bar { height: 100%; background: var(--rent-color); width: 0%; border-radius: 4px; transition: 0.5s; }
+        .rent-progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .rent-progress-bar {
+            height: 100%;
+            background: var(--rent-color);
+            width: 0%; 
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 10px var(--rent-color);
+        }
         
-        .card-small { background: var(--card-color); padding: 16px; border-radius: 18px; text-align: center; }
-        .label { font-size: 11px; color: var(--text-gray); text-transform: uppercase; font-weight: 600; }
-        .value-big { font-size: 38px; font-weight: 900; color: var(--primary-color); }
+        .card-small { 
+            background: var(--card-color); 
+            padding: 16px; 
+            border-radius: 18px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+        .value-big { font-size: 38px; font-weight: 900; color: var(--primary-color); margin: 5px 0; letter-spacing: -1px; }
         .value-med { font-size: 19px; font-weight: 700; }
 
-        .bottom-bar {
-            position: fixed; bottom: 0; width: 100%; background: rgba(20, 20, 20, 0.95);
-            backdrop-filter: blur(10px); border-top: 1px solid #333;
-            display: grid; grid-template-columns: 1fr 1fr 60px 1fr 1fr; align-items: center; padding: 10px 5px; z-index: 50; height: 70px;
+        .performance-section { padding: 0 20px; margin-top: 15px; margin-bottom: 25px; }
+        .section-title { font-size: 13px; color: var(--text-gray); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        .perf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .card-perf { background: #1c1c1e; padding: 14px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.03); }
+        .perf-val { font-size: 15px; font-weight: 800; color: #fff; margin-top: 6px; }
+        .perf-icon { font-size: 22px; margin-bottom: 2px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+
+        #view-day-detail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            z-index: 45; 
+            overflow-y: auto;
+            padding-bottom: 90px;
         }
 
-        .nav-btn { background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center; }
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #333;
+            display: grid;
+            grid-template-columns: 1fr 1fr 60px 1fr 1fr;
+            align-items: center;
+            padding: 10px 5px;
+            z-index: 50;
+            height: 70px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
         .nav-btn.active { color: var(--primary-color); }
 
         .add-btn {
-            grid-column: 3; background: var(--primary-color); width: 55px; height: 55px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 28px; color: #000;
-            margin-top: -35px; border: 5px solid var(--bg-color); box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+            grid-column: 3;
+            background: var(--primary-color);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #000;
+            margin-top: -35px;
+            border: 5px solid var(--bg-color);
+            box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+            position: relative;
+            z-index: 51;
         }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 45; overflow-y: auto; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div style="font-size: 60px; margin-bottom: 10px;">🚗</div>
-        <div style="font-size: 28px; font-weight: 900; margin-bottom: 40px;">PRO BETA FULL</div>
-        <div style="width:100%; max-width:400px; padding: 0 20px;">
-            <input type="email" id="login-email" class="login-input" placeholder="E-mail">
-            <input type="password" id="login-pass" class="login-input" placeholder="Senha">
+        <div class="login-logo">🚗</div>
+        <div class="login-title" id="login-title-text">PRO BETA FULL</div>
+        <div class="login-subtitle">Controle total dos seus ganhos e metas na palma da mão.</div>
+        <div style="width:100%; max-width:400px;">
+            <div class="input-group">
+                <span class="input-icon">✉️</span>
+                <input type="email" id="login-email" class="login-input" placeholder="Seu E-mail">
+            </div>
+            <div class="input-group">
+                <span class="input-icon">🔒</span>
+                <input type="password" id="login-pass" class="login-input" placeholder="Sua Senha">
+                <span id="toggle-password" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666; font-size: 18px;">👁️</span>
+            </div>
             <button class="btn btn-primary" onclick="handleAuthAction()" id="btn-main-action">ENTRAR</button>
-            <div style="margin-top: 20px; font-size: 13px; color: #888; text-align: center;">
+            <div class="login-footer" style="margin-top: 20px; font-size: 13px; color: #888; text-align: center;">
                 <span id="txt-toggle">Não tem conta?</span> 
-                <span onclick="toggleAuthMode()" id="btn-toggle" style="color: var(--primary-color); font-weight: bold; cursor: pointer;">Criar agora</span>
+                <span class="link-action" onclick="toggleAuthMode()" id="btn-toggle" style="color: var(--primary-color); font-weight: bold; cursor: pointer;">Criar agora</span>
             </div>
         </div>
     </div>
 
     <div id="wait-screen" class="hidden">
-        <div style="font-size: 60px;">⏳</div>
-        <div style="font-size: 24px; font-weight: 900;">Acesso Pendente</div>
-        <p style="text-align:center; color:#888; padding: 20px;">Seu cadastro foi realizado. Aguarde a liberação do administrador.</p>
-        <button class="btn btn-primary" onclick="window.location.reload()">VERIFICAR ACESSO</button>
-        <button class="btn btn-text" onclick="confirmLogout()">Sair da Conta</button>
+        <div class="login-logo">⏳</div>
+        <div class="login-title">Acesso Pendente</div>
+        <div class="login-subtitle">Usuário registrado no Beta! Libere o acesso no Console do Firebase.</div>
+        <div style="width:100%; max-width:400px;">
+            <button class="btn btn-primary" onclick="window.location.reload()">VERIFICAR ACESSO</button>
+            <button class="btn btn-text" style="margin-top:15px; width:100%;" onclick="showLogoutModal()">Sair da Conta</button>
+        </div>
     </div>
 
     <div id="view-dashboard" class="hidden">
         <div class="header-nav">
-            <div>
-                <span style="font-size: 10px; color: var(--text-gray);">Bem-vindo,</span>
-                <div id="user-email-display" style="font-size: 14px; font-weight: bold; color: var(--primary-color);">...</div>
+            <div id="user-greeting">
+                <span style="font-size: 10px; color: var(--text-gray); display: block;">Olá,</span>
+                <span id="user-email-display" style="font-size: 12px; font-weight: bold; color: var(--primary-color);">...</span>
             </div>
-            <button class="btn-logout-new" onclick="showLogoutModal()">🚪 Sair</button>
+            <button class="btn-logout-new" onclick="showLogoutModal()">
+                <span>🚪 Sair</span>
+            </button>
         </div>
 
         <div class="date-navigation-bar">
             <button class="btn-icon-nav" onclick="changeMonth(-1)">◀</button>
             <div class="month-selector">
-                <span id="label-year" style="font-size: 12px; color: var(--text-gray);">2026</span>
-                <h2 id="label-month" style="font-size: 18px; font-weight: 800;">JANEIRO</h2>
+                <span id="label-year">2026</span>
+                <h2 id="label-month">JANEIRO</h2>
             </div>
             <button class="btn-icon-nav" onclick="changeMonth(1)">▶</button>
         </div>
         
-        <div class="summary-grid">
+        <div class="summary-grid" id="main-dashboard-grid">
             <div class="card-main">
-                <span class="label">Faturamento Mensal</span>
+                <span class="label">Faturamento Bruto Mensal</span>
                 <div class="value-big" id="dash-rev">R$ 0,00</div>
             </div>
 
             <div class="card-rent-config" onclick="openRentConfig()">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-weight:bold; color:var(--rent-color); font-size:11px;">🟣 ALUGUEL</span>
-                    <span id="dash-rent-pct-text" style="font-weight:900; font-size:22px;">0%</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <span style="font-weight:bold; color:var(--rent-color); font-size:11px; display:block; text-transform: uppercase;">🟣 Aluguel</span>
+                        <span id="dash-rent-status-text" style="color:#aaa; font-size:11px;">Carregando meta...</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span id="dash-rent-pct-text" style="font-weight:900; font-size:22px; color:#fff;">0%</span>
+                    </div>
                 </div>
-                <div class="rent-progress-container"><div class="rent-progress-bar" id="dash-rent-progress-bar"></div></div>
-                <span id="dash-rent-status-text" style="color:#aaa; font-size:11px;">Carregando...</span>
+                <div class="rent-progress-container">
+                    <div class="rent-progress-bar" id="dash-rent-progress-bar"></div>
+                </div>
             </div>
 
-            <div class="card-small"><span class="label">Lucro Líquido</span><div class="value-med text-green" id="dash-profit">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">Custo Total</span><div class="value-med text-red" id="dash-exp">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">⛽ Combustível</span><div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div></div>
-            <div class="card-small"><span class="label">🟣 Aluguel Pago</span><div class="value-med text-purple" id="dash-rent-paid-val">R$ 0,00</div></div>
+            <div class="card-small">
+                <span class="label">Lucro Líquido</span>
+                <div class="value-med text-green" id="dash-profit">R$ 0,00</div>
+                <div class="pct-tag text-green" id="dash-profit-pct">0%</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">Custo Total</span>
+                <div class="value-med text-red" id="dash-exp">R$ 0,00</div>
+                <div class="pct-tag text-red" id="dash-exp-pct">0%</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">⛽ Combustível</span>
+                <div class="value-med text-orange" id="dash-fuel-val">R$ 0,00</div>
+                <div class="pct-tag text-orange" id="dash-fuel-pct">0%</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">🟣 Aluguel Pago</span>
+                <div class="value-med text-purple" id="dash-rent-paid-val">R$ 0,00</div>
+                <div class="pct-tag text-purple" id="dash-rent-paid-pct">0%</div>
+            </div>
         </div>
+
+        <div class="performance-section">
+            <div class="section-title">Performance Mensal</div>
+            <div class="perf-grid">
+                <div class="card-perf">
+                    <span class="perf-icon">⏱️</span>
+                    <span class="label">Horas</span>
+                    <span class="perf-val" id="dash-hours">0h</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">💎</span>
+                    <span class="label">G/Hora</span>
+                    <span class="perf-val text-green" id="dash-hourly">R$ 0</span>
+                </div>
+                <div class="card-perf">
+                    <span class="perf-icon">🛣️</span>
+                    <span class="label">R$/KM</span>
+                    <span class="perf-val text-blue" id="dash-km-val">R$ 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-charts" class="hidden">
+        <div class="date-navigation-bar">
+            <button class="btn-icon-nav" onclick="changePeriodCharts(-1)">◀</button>
+            <div class="month-selector">
+                <span id="chart-label-year">2026</span>
+                <h2 id="chart-label-month">JANEIRO</h2>
+            </div>
+            <button class="btn-icon-nav" onclick="changePeriodCharts(1)">▶</button>
+        </div>
+        
+        <div class="filter-container" style="display: flex; gap: 8px; padding: 0 20px; margin-bottom: 20px;">
+            <button class="btn-filter active" id="filter-semanal" onclick="updateChartFilter('semanal')">Semanal</button>
+            <button class="btn-filter" id="filter-mensal" onclick="updateChartFilter('mensal')">Mensal</button>
+        </div>
+
+        <div style="padding: 0 20px; margin-bottom: 25px;">
+            <div style="background: var(--card-color); padding: 15px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); height: 280px;">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <div id="chart-summary-cards" class="summary-grid"></div>
     </div>
 
     <div id="view-history" class="hidden">
-        <h2 style="padding: 20px;">Histórico</h2>
-        <div id="history-list" style="padding: 0 20px;"></div>
+        <div class="header-simple">
+            <h2 style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Histórico</h2>
+            <p style="color:#666; font-size:12px; margin-bottom:10px; padding: 0 20px;">Toque para ver detalhes</p>
+        </div>
+        <div id="history-list" class="history-container" style="padding: 20px;"></div>
     </div>
 
-    <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; padding: 20px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
-            <span id="step-counter" style="color:#666;">ETAPA 1/10</span>
-            <button onclick="closeWizard()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
+    <div id="view-day-detail" class="hidden">
+        <div class="header-nav">
+            <button class="btn-back" onclick="closeDayDetail()" style="background: none; border: none; font-size: 24px; color: #fff; cursor: pointer;">←</button>
+            <div style="text-align: center; flex: 1;">
+                <span style="font-size: 10px; color: var(--text-gray); display: block;">Resumo do Dia</span>
+                <span id="detail-day-label" style="font-size: 14px; font-weight: bold; color: var(--primary-color);">00/00/0000</span>
+            </div>
+            <button class="btn-text" onclick="editCurrentDay()" style="color:var(--primary-color); font-weight:bold;">✏️</button>
         </div>
-        <div id="wizard-content" style="height: 60%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;"></div>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="prevStep()">Voltar</button>
-            <button class="btn btn-primary" onclick="nextStep()" id="btn-next">Próximo</button>
+
+        <div class="summary-grid">
+            <div class="card-main">
+                <span class="label">Faturamento Bruto</span>
+                <div class="value-big" id="day-rev-val">R$ 0,00</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">Lucro Líquido</span>
+                <div class="value-med text-green" id="day-profit-val">R$ 0,00</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">Custo Total</span>
+                <div class="value-med text-red" id="day-exp-val">R$ 0,00</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">⛽ Combustível</span>
+                <div class="value-med text-orange" id="day-fuel-val-card">R$ 0,00</div>
+            </div>
+
+            <div class="card-small">
+                <span class="label">🟣 Aluguel Pago</span>
+                <div class="value-med text-purple" id="day-rent-val-card">R$ 0,00</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-rent" class="modal-overlay hidden">
+        <div class="modal-box" style="background: #1c1c1e; width: 85%; max-width: 320px; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333;">
+            <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Planejar Aluguel</div>
+            <input type="number" id="input-total-rent" class="step-input" style="background: #1c1c1e; border: 1px solid #333; color: #fff; font-size: 18px; padding:10px; width:100%; border-radius:12px; text-align:center; margin-bottom:15px;" placeholder="Valor Mensal" oninput="updateRentPreview()">
+            <div class="calendar-wrapper">
+                <div id="rent-calendar" class="calendar-grid"></div>
+            </div>
+            <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; text-align:left;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#aaa;">Falta:</span><span id="rent-debug-remaining">R$ 0</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:12px;"><span style="color:#aaa;">Meta/Dia:</span><span style="color:var(--rent-color); font-weight:bold;" id="rent-preview-val">R$ 0</span></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveRentConfig()" style="margin-bottom:10px;">Salvar</button>
+            <button class="btn btn-text" onclick="closeRentConfig()">Fechar</button>
         </div>
     </div>
 
     <div id="modal-logout" class="modal-overlay hidden">
-        <div style="background: #1c1c1e; padding: 25px; border-radius: 18px; text-align: center; width: 80%;">
-            <p style="margin-bottom: 20px;">Deseja mesmo sair?</p>
-            <button class="btn btn-danger" onclick="confirmLogout()" style="margin-bottom:10px;">SAIR</button>
+        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; width: 85%; max-width: 320px;">
+            <div class="modal-title" style="margin-bottom:10px; font-size: 18px; font-weight: bold;">Sair?</div>
+            <button class="btn btn-primary" onclick="confirmLogout()" style="margin-bottom:10px;">SIM, SAIR</button>
             <button class="btn btn-text" onclick="closeLogoutModal()">Cancelar</button>
         </div>
     </div>
 
+    <div id="modal-delete" class="modal-overlay hidden">
+        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333;">
+            <div class="modal-title" style="margin-bottom:20px;">Apagar Registro?</div>
+            <button class="btn btn-danger" onclick="confirmDelete()" style="margin-bottom:10px;">Apagar</button>
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
+        <div class="wizard-top" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/10</span>
+            <button onclick="handleBackButton()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
+        </div>
+        <div class="progress-track" style="height: 4px; background: #333; margin: 0 20px; border-radius: 2px;"><div class="progress-fill" id="progress-bar" style="height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s;"></div></div>
+        <div class="wizard-body" id="wizard-content" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;"></div>
+        <div class="wizard-actions" style="padding: 20px; display: flex; gap: 10px; padding-bottom: 30px;">
+            <button class="btn btn-text" style="width:auto;" onclick="prevStep()">Voltar</button>
+            <button class="btn btn-primary" onclick="nextStep()" id="btn-next">Próximo</button>
+        </div>
+    </div>
+
     <div class="bottom-bar">
-        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><span>🏠</span>Início</button>
-        <button class="nav-btn" onclick="switchTab('charts')"><span>📊</span>Gráficos</button>
+        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🏠</span>Início
+        </button>
+        <button class="nav-btn" id="nav-charts" onclick="switchTab('charts')">
+            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📊</span>Gráficos
+        </button>
         <button class="add-btn" onclick="startWizard()">+</button>
-        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')"><span>📂</span>Histórico</button>
-        <button class="nav-btn" onclick="openRentConfig()"><span>🟣</span>Meta</button>
+        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')">
+            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📂</span>Histórico
+        </button>
+        <button class="nav-btn" onclick="openRentConfig()">
+            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🟣</span>Meta
+        </button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
+        const steps = [
+            { id: 'customDate', title: 'Data', icon: '📅', label: 'Data do registro?', type: 'date' },
+            { id: 'uber', title: 'Uber', icon: '🚗', label: 'Valor Uber', type: 'number' },
+            { id: 'pop', title: '99/Outros', icon: '🚕', label: 'Valor 99/InDrive', type: 'number' },
+            { id: 'rentPaid', title: 'Aluguel', icon: '🟣', label: 'Quanto separou hoje?', type: 'number' },
+            { id: 'fuel', title: 'Combustível', icon: '⛽', label: 'Total gasto', type: 'number' },
+            { id: 'food', title: 'Alimentação', icon: '🍔', label: 'Gastos com comida', type: 'number' },
+            { id: 'maintenance', title: 'Manutenção', icon: '🛠️', label: 'Limpeza ou peças', type: 'number' },
+            { id: 'km', title: 'KM Rodados', icon: '🛣️', label: 'Quilometragem do dia', type: 'number' },
+            { id: 'hours', title: 'Horas Online', icon: '⏱️', label: 'Tempo (HH:MM)', type: 'time' },
+            { id: 'rides', title: 'Viagens', icon: '🔢', label: 'Quantidade de corridas', type: 'number' }
+        ];
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null, currentDetailIndex = null;
+        let myChart = null;
+
         const DB_KEY = 'app_motorista_BETA_FULL'; 
         const RENT_DB_KEY = 'rent_configs_BETA';
-        const steps = [
-            { id: 'customDate', title: 'Data', type: 'date' },
-            { id: 'uber', title: 'Valor Uber', type: 'number' },
-            { id: 'pop', title: 'Valor 99/Outros', type: 'number' },
-            { id: 'rentPaid', title: 'Aluguel do Dia', type: 'number' },
-            { id: 'fuel', title: 'Combustível', type: 'number' },
-            { id: 'food', title: 'Alimentação', type: 'number' },
-            { id: 'maintenance', title: 'Manutenção', type: 'number' },
-            { id: 'km', title: 'KM Rodados', type: 'number' },
-            { id: 'hours', title: 'Tempo (HH:MM)', type: 'time' },
-            { id: 'rides', title: 'Viagens', type: 'number' }
-        ];
+        let tempOffDays = []; 
+        let itemToDeleteIndex = null;
+        window.isRegisterMode = false;
 
-        let currentStep = 0, tempData = {}, viewDate = new Date(), isRegisterMode = false;
-
-        // --- RESGATE DE DADOS CRÍTICO ---
-        function getDB() {
-            // Tenta pegar da chave principal
-            let data = localStorage.getItem(DB_KEY);
-            
-            // Se estiver vazio, faz a busca profunda em chaves antigas
-            if (!data || data === '[]') {
-                const keys = ['app_motorista', 'motorista_db', 'appMotoristaDB', 'gestao_motorista_data'];
-                for (let k of keys) {
-                    let oldData = localStorage.getItem(k);
-                    if (oldData && oldData !== '[]') {
-                        localStorage.setItem(DB_KEY, oldData);
-                        return JSON.parse(oldData);
-                    }
-                }
-            }
-            return JSON.parse(data || '[]');
+        // AUTH & UI UTILS
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('login-pass');
+            passInput.type = passInput.type === 'password' ? 'text' : 'password';
         }
 
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+        function toggleAuthMode() {
+            window.isRegisterMode = !window.isRegisterMode;
+            document.getElementById('btn-main-action').innerText = window.isRegisterMode ? 'CRIAR CONTA' : 'ENTRAR';
+            document.getElementById('txt-toggle').innerText = window.isRegisterMode ? 'Já tem conta?' : 'Não tem conta?';
+            document.getElementById('btn-toggle').innerText = window.isRegisterMode ? 'Fazer Login' : 'Criar agora';
+            document.getElementById('login-title-text').innerText = window.isRegisterMode ? 'NOVA CONTA' : 'PRO BETA FULL';
+        }
 
-        // --- DASHBOARD ---
-        function renderDashboard() {
-            const dbArr = getDB();
-            const m = viewDate.getMonth(), y = viewDate.getFullYear();
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        function handleAuthAction() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-main-action');
             
+            if(!email || !pass) { alert('Por favor, preencha e-mail e senha.'); return; }
+
+            btn.innerText = "AGUARDE...";
+            btn.disabled = true;
+
+            if (window.isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(cred => db.collection("users").doc(cred.user.uid).set({ email: email, autorizado: false, criadoEm: firebase.firestore.FieldValue.serverTimestamp() }))
+                    .then(() => {
+                        alert('Conta criada com sucesso! Aguarde a liberação do administrador para acessar o Beta.');
+                        btn.innerText = "CRIAR CONTA"; btn.disabled = false;
+                    })
+                    .catch(error => { alert('Erro ao criar conta: ' + error.message); btn.innerText = "CRIAR CONTA"; btn.disabled = false; });
+            } else {
+                auth.signInWithEmailAndPassword(email, pass).catch(error => {
+                    alert('Erro ao entrar. Verifique seus dados: ' + error.message);
+                    btn.innerText = "ENTRAR"; btn.disabled = false;
+                });
+            }
+        }
+
+        function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); window.history.pushState({modal: 'logout'}, "", ""); }
+        function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
+        
+        // CORREÇÃO CRÍTICA AQUI: O botão de sair NÃO limpa mais o localStorage!
+        function confirmLogout() { 
+            auth.signOut().then(() => { 
+                window.location.reload(); 
+            }); 
+        }
+        
+        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+        // --- SISTEMA DE RESGATE DE DADOS (STORAGE) ---
+        function getDB() { 
+            try { 
+                let data = localStorage.getItem(DB_KEY);
+                // Se não achar os dados na gaveta nova, procura nas gavetas antigas e faz o resgate
+                if (!data) {
+                    data = localStorage.getItem('app_motorista') || localStorage.getItem('motorista_db') || localStorage.getItem('appMotoristaDB');
+                    if (data) localStorage.setItem(DB_KEY, data); // Salva na chave nova
+                }
+                return JSON.parse(data) || []; 
+            } catch { return []; } 
+        }
+        
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); if(window.syncToCloud) window.syncToCloud(); }
+        
+        function getRentConfigs() { 
+            try { 
+                let data = localStorage.getItem(RENT_DB_KEY);
+                if (!data) {
+                    data = localStorage.getItem('rent_configs') || localStorage.getItem('rentConfigsDB');
+                    if (data) localStorage.setItem(RENT_DB_KEY, data);
+                }
+                return JSON.parse(data) || {}; 
+            } catch { return {}; } 
+        }
+        
+        function getRentConfigForMonth(m, y) { return getRentConfigs()[`${m}-${y}`] || { total: 0, offDays: [] }; }
+
+        // DASHBOARD LÓGICA
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+
+        function renderDashboard() {
+            const dbArr = getDB(); const m = viewDate.getMonth(), y = viewDate.getFullYear();
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
-
-            const data = dbArr.filter(item => {
-                const p = item.date.split('/');
-                return parseInt(p[1]) - 1 === m && parseInt(p[2]) === y;
-            });
-
-            let tRev=0, tFuel=0, tRent=0, tExp=0;
-            data.forEach(i => {
-                tRev += (i.uber||0) + (i.pop||0);
-                tFuel += (i.fuel||0);
-                tRent += (i.rentPaid||0);
-                tExp += (i.fuel||0) + (i.food||0) + (i.rentPaid||0) + (i.maintenance||0);
-            });
-
-            document.getElementById('dash-rev').innerText = tRev.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            document.getElementById('dash-profit').innerText = (tRev - tExp).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            document.getElementById('dash-exp').innerText = tExp.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            document.getElementById('dash-fuel-val').innerText = tFuel.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            document.getElementById('dash-rent-paid-val').innerText = tRent.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             
-            // Meta Aluguel
-            const rentConf = JSON.parse(localStorage.getItem(RENT_DB_KEY) || '{}')[`${m}-${y}`] || {total:0};
-            const target = rentConf.total || 0;
-            const pct = target > 0 ? Math.min(100, (tRent/target)*100) : 0;
-            document.getElementById('dash-rent-pct-text').innerText = Math.floor(pct) + "%";
-            document.getElementById('dash-rent-progress-bar').style.width = pct + "%";
-            document.getElementById('dash-rent-status-text').innerText = target > 0 ? `Faltam ${(target-tRent).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}` : "Sem meta definida";
+            const data = dbArr.filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
+            
+            let tRev=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0, tMaint=0;
+            data.forEach(item => {
+                tFuel += (item.fuel||0); tFood += (item.food||0); tRent += (item.rentPaid||0); tMaint += (item.maintenance||0);
+                tRev += (item.uber||0) + (item.pop||0); tKm += (item.km||0);
+                let h = item.hours || 0; if(!h && item.hoursFormatted) { const [hh,mm] = item.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                tHours += h;
+            });
+
+            const tExp = tFuel + tFood + tRent + tMaint;
+            const profit = tRev - tExp;
+
+            document.getElementById('dash-rev').innerText = formatMoney(tRev);
+            document.getElementById('dash-profit').innerText = formatMoney(profit);
+            document.getElementById('dash-exp').innerText = formatMoney(tExp);
+            document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
+            document.getElementById('dash-rent-paid-val').innerText = formatMoney(tRent);
+
+            const calcPct = (val) => tRev > 0 ? ((val / tRev) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('dash-profit-pct').innerText = calcPct(profit);
+            document.getElementById('dash-exp-pct').innerText = calcPct(tExp);
+            document.getElementById('dash-fuel-pct').innerText = calcPct(tFuel);
+            document.getElementById('dash-rent-paid-pct').innerText = calcPct(tRent);
+
+            const currentMonthConfig = getRentConfigForMonth(m, y);
+            const rentTarget = currentMonthConfig.total || 0;
+            const rentPct = rentTarget > 0 ? Math.min(100, (tRent / rentTarget) * 100) : 0;
+            document.getElementById('dash-rent-pct-text').innerText = Math.floor(rentPct) + "%";
+            document.getElementById('dash-rent-progress-bar').style.width = rentPct + "%";
+            const remaining = Math.max(0, rentTarget - tRent);
+            document.getElementById('dash-rent-status-text').innerText = remaining > 0 ? `Faltam ${formatMoney(remaining)}` : "Quitado! 🎉";
+
+            document.getElementById('dash-hours').innerText = tHours.toFixed(1) + "h";
+            document.getElementById('dash-hourly').innerText = formatMoney(tHours > 0 ? profit / tHours : 0);
+            document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
         }
+
+        // --- FUNÇÕES DE META DE ALUGUEL ---
+        function openRentConfig() {
+            document.getElementById('modal-rent').classList.remove('hidden');
+            window.history.pushState({modal: 'rent'}, "", "");
+            const conf = getRentConfigForMonth(viewDate.getMonth(), viewDate.getFullYear());
+            document.getElementById('input-total-rent').value = conf.total || '';
+            tempOffDays = conf.offDays || [];
+            renderRentCalendar();
+            updateRentPreview();
+        }
+
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
+        
+        function renderRentCalendar() {
+            const grid = document.getElementById('rent-calendar');
+            grid.innerHTML = '';
+            const m = viewDate.getMonth(), y = viewDate.getFullYear();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            for(let i=1; i<=daysInMonth; i++) {
+                const div = document.createElement('div');
+                div.className = `cal-day ${tempOffDays.includes(i) ? 'off' : 'working'}`;
+                div.innerText = i;
+                div.onclick = () => {
+                    if(tempOffDays.includes(i)) tempOffDays = tempOffDays.filter(d => d !== i);
+                    else tempOffDays.push(i);
+                    renderRentCalendar();
+                    updateRentPreview();
+                };
+                grid.appendChild(div);
+            }
+        }
+
+        function updateRentPreview() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const m = viewDate.getMonth(), y = viewDate.getFullYear();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const workDays = daysInMonth - tempOffDays.length;
+            const perDay = workDays > 0 ? total / workDays : 0;
+            document.getElementById('rent-preview-val').innerText = formatMoney(perDay);
+            
+            let rentPaid = 0;
+            getDB().filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; })
+                 .forEach(item => rentPaid += (item.rentPaid||0));
+                 
+            const rem = Math.max(0, total - rentPaid);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(rem);
+        }
+
+        function saveRentConfig() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const configs = getRentConfigs();
+            configs[`${viewDate.getMonth()}-${viewDate.getFullYear()}`] = { total, offDays: tempOffDays };
+            localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
+            closeRentConfig();
+            renderDashboard();
+        }
+
+        // --- HISTÓRICO E DETALHES ---
+        function openDayDetail(index) {
+            currentDetailIndex = index;
+            const data = getDB()[index];
+            document.getElementById('detail-day-label').innerText = data.date;
+            const rev = (data.uber||0) + (data.pop||0);
+            const exp = (data.fuel||0) + (data.food||0) + (data.rentPaid||0) + (data.maintenance||0);
+            document.getElementById('day-rev-val').innerText = formatMoney(rev);
+            document.getElementById('day-profit-val').innerText = formatMoney(rev - exp);
+            document.getElementById('day-exp-val').innerText = formatMoney(exp);
+            document.getElementById('day-fuel-val-card').innerText = formatMoney(data.fuel||0);
+            document.getElementById('day-rent-val-card').innerText = formatMoney(data.rentPaid||0);
+            document.getElementById('view-day-detail').classList.remove('hidden');
+            window.history.pushState({modal: 'detail'}, "", "");
+        }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
+        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
 
         function renderHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
-            getDB().forEach((item, idx) => {
-                const rev = (item.uber||0) + (item.pop||0);
+            const dbArr = getDB();
+            dbArr.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.style.cssText = "background:#1c1c1e; padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between;";
-                div.innerHTML = `<div><b style="color:var(--primary-color)">${item.date}</b><br><span>${rev.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span></div><button onclick="deleteItem(${idx})" style="background:none; border:none; color:red;">🗑️</button>`;
+                div.style.cssText = "background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
+                const rev = (item.uber||0) + (item.pop||0);
+                div.innerHTML = `
+                    <div onclick="openDayDetail(${index})" style="flex:1;">
+                        <span style="color:var(--primary-color); font-weight:bold; display:block;">${item.date}</span>
+                        <span style="font-size:14px;">${formatMoney(rev)}</span>
+                    </div>
+                    <button class="btn-trash" onclick="openDeleteModal(${index})">🗑️</button>
+                `;
                 list.appendChild(div);
             });
         }
 
-        function deleteItem(idx) {
-            if(confirm("Apagar esse dia?")) {
-                let db = getDB(); db.splice(idx, 1); saveDB(db);
-                renderDashboard(); renderHistory();
-            }
+        function openDeleteModal(idx) {
+            itemToDeleteIndex = idx;
+            document.getElementById('modal-delete').classList.remove('hidden');
+            window.history.pushState({modal: 'delete'}, "", "");
+        }
+        function closeDeleteModal() { document.getElementById('modal-delete').classList.add('hidden'); }
+        function confirmDelete() {
+            const dbArr = getDB();
+            dbArr.splice(itemToDeleteIndex, 1);
+            saveDB(dbArr);
+            closeDeleteModal();
+            renderDashboard();
+            renderHistory();
         }
 
-        // --- NAVEGAÇÃO ---
+        // GRÁFICOS
+        function changePeriodCharts(dir) {
+            viewDate.setMonth(viewDate.getMonth() + dir);
+            document.getElementById('chart-label-month').innerText = monthNames[viewDate.getMonth()].toUpperCase();
+            document.getElementById('chart-label-year').innerText = viewDate.getFullYear();
+            updateChartFilter(document.getElementById('filter-semanal').classList.contains('active') ? 'semanal' : 'mensal');
+        }
+
+        function updateChartFilter(type) {
+            document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${type}`).classList.add('active');
+            
+            const db = getDB();
+            let labels = [], values = [], summary = { rev:0, fuel:0, food:0, maint:0, rent:0, hours:0, km:0 };
+            
+            if (type === 'semanal') {
+                const curr = new Date(viewDate);
+                const first = curr.getDate() - curr.getDay(); 
+                const weekStart = new Date(curr.setDate(first));
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(weekStart); d.setDate(d.getDate() + i);
+                    const dateStr = d.toLocaleDateString('pt-BR');
+                    const dayData = db.find(item => item.date === dateStr);
+                    labels.push(dateStr.substring(0, 5));
+                    const r = dayData ? (dayData.uber||0)+(dayData.pop||0) : 0;
+                    values.push(r);
+                    if(dayData) { summary.rev += r; summary.fuel += (dayData.fuel||0); summary.hours += (dayData.hours||0); summary.km += (dayData.km||0); }
+                }
+            } else {
+                const m = viewDate.getMonth(), y = viewDate.getFullYear();
+                const weekMap = { "Sem 1": 0, "Sem 2": 0, "Sem 3": 0, "Sem 4": 0, "Sem 5": 0 };
+                db.filter(d => {
+                    const p = d.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y;
+                }).forEach(d => {
+                    const dayNum = parseInt(d.date.split('/')[0]);
+                    const weekIdx = Math.ceil(dayNum / 7);
+                    const key = `Sem ${Math.min(weekIdx, 5)}`;
+                    const r = (d.uber||0)+(d.pop||0);
+                    weekMap[key] += r;
+                    summary.rev += r; summary.fuel += (d.fuel||0); summary.hours += (d.hours||0); summary.km += (d.km||0);
+                });
+                labels = Object.keys(weekMap).filter(k => weekMap[k] > 0);
+                values = Object.values(weekMap).filter(v => v > 0);
+            }
+            renderChart(labels, values);
+            renderChartSummary(summary);
+        }
+
+        function renderChart(labels, values) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ data: values, backgroundColor: '#00E676', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderChartSummary(data) {
+            const container = document.getElementById('chart-summary-cards');
+            container.innerHTML = `
+                <div class="card-main"><span class="label">Receita Período</span><div class="value-big">${formatMoney(data.rev)}</div></div>
+                <div class="card-small"><span class="label">⏱️ Total Horas</span><div class="value-med">${(data.hours||0).toFixed(1)}h</div></div>
+                <div class="card-small"><span class="label">🛣️ Valor/KM</span><div class="value-med text-blue">${formatMoney(data.km > 0 ? data.rev / data.km : 0)}</div></div>
+            `;
+        }
+
+        // NAVEGAÇÃO
         function switchTab(tab) {
             document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
             document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
+            document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(tab === 'home') { document.getElementById('nav-home').classList.add('active'); renderDashboard(); }
-            if(tab === 'history') { document.getElementById('nav-hist').classList.add('active'); renderHistory(); }
+            
+            if(tab === 'home') document.getElementById('nav-home').classList.add('active');
+            if(tab === 'charts') document.getElementById('nav-charts').classList.add('active');
+            if(tab === 'history') document.getElementById('nav-hist').classList.add('active');
+
+            if(tab === 'charts') updateChartFilter('semanal');
+            if(tab === 'history') renderHistory();
+            if(tab === 'home') renderDashboard();
         }
 
-        function startWizard() { 
-            tempData = { customDate: new Date().toISOString().split('T')[0] }; 
-            currentStep = 0; 
-            document.getElementById('wizard-overlay').classList.remove('hidden'); 
-            renderStep(); 
+        function startWizard(index = null) {
+            editingIndex = index;
+            tempData = index !== null ? {...getDB()[index]} : { customDate: new Date().toISOString().split('T')[0] };
+            currentStep = 0; document.getElementById('wizard-overlay').classList.remove('hidden'); renderStep();
         }
-        function closeWizard() { document.getElementById('wizard-overlay').classList.add('hidden'); }
-        
+
         function renderStep() {
             const s = steps[currentStep];
             document.getElementById('step-counter').innerText = `ETAPA ${currentStep+1}/10`;
-            document.getElementById('wizard-content').innerHTML = `<h3>${s.title}</h3><input type="${s.type}" id="inp-wiz" class="login-input" style="text-align:center" autofocus>`;
-            document.getElementById('btn-next').innerText = currentStep === 9 ? 'SALVAR' : 'Próximo';
+            document.getElementById('progress-bar').style.width = `${((currentStep+1)/10)*100}%`;
+            let val = tempData[s.id] || '';
+            if(s.type === 'time' && tempData.hoursFormatted) val = tempData.hoursFormatted;
+            
+            document.getElementById('wizard-content').innerHTML = `
+                <h2 style="font-size:24px; margin-bottom:10px;">${s.icon} ${s.title}</h2>
+                <p style="color:#888; margin-bottom:20px;">${s.label}</p>
+                <input type="${s.type}" id="inp-val" class="login-input" value="${val}" autofocus>
+            `;
+            document.getElementById('btn-next').innerText = currentStep === 9 ? 'SALVAR' : 'PRÓXIMO';
         }
 
         function nextStep() {
-            const val = document.getElementById('inp-wiz').value;
-            const s = steps[currentStep];
-            tempData[s.id] = s.type === 'number' ? parseFloat(val)||0 : val;
+            const el = document.getElementById('inp-val'), s = steps[currentStep];
+            if(s.type === 'time') {
+                tempData.hoursFormatted = el.value;
+                const [h,m] = el.value.split(':').map(Number); tempData.hours = h + (m/60);
+            } else {
+                tempData[s.id] = s.type === 'number' ? parseFloat(el.value)||0 : el.value;
+            }
 
             if(currentStep < 9) { currentStep++; renderStep(); }
             else {
                 const db = getDB();
-                const d = tempData.customDate.split('-');
-                tempData.date = `${d[2]}/${d[1]}/${d[0]}`;
-                db.unshift(tempData); saveDB(db);
-                closeWizard(); renderDashboard();
+                const dParts = tempData.customDate.split('-');
+                tempData.date = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+                if(editingIndex !== null) db[editingIndex] = tempData; else db.unshift(tempData);
+                saveDB(db); document.getElementById('wizard-overlay').classList.add('hidden');
+                renderDashboard();
+                if(!document.getElementById('view-history').classList.contains('hidden')) renderHistory();
             }
         }
 
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
 
-        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function handleBackButton() {
+            document.querySelectorAll('.modal-overlay, #wizard-overlay, #view-day-detail').forEach(el => el.classList.add('hidden'));
+        }
 
-        // --- AUTH ---
+        // FIREBASE BÁSICO
         const firebaseConfig = {
             apiKey: "AIzaSyCjPBa7QRMxkXlxVgLUSIPelpeF1o3YJyk",
             authDomain: "gestao-motorista-beta.firebaseapp.com",
@@ -350,51 +916,34 @@
             messagingSenderId: "230375051149",
             appId: "1:230375051149:web:3b77ea02bf91a523a0b7c4"
         };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('user-email-display').innerText = user.email;
-                db.collection("users").doc(user.uid).get().then(doc => {
-                    if(doc.exists && doc.data().autorizado) {
-                        document.getElementById('wait-screen').classList.add('hidden');
-                        document.getElementById('view-dashboard').classList.remove('hidden');
-                        renderDashboard(); // Carrega os dados assim que autoriza
-                    } else {
-                        document.getElementById('wait-screen').classList.remove('hidden');
-                    }
-                });
-            } else {
-                document.getElementById('login-screen').classList.remove('hidden');
-            }
-        });
-
-        function handleAuthAction() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            if(isRegisterMode) {
-                auth.createUserWithEmailAndPassword(email, pass).then(cred => {
-                    db.collection("users").doc(cred.user.uid).set({email, autorizado: false});
-                });
-            } else {
-                auth.signInWithEmailAndPassword(email, pass);
-            }
+        let auth, db;
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth(); db = firebase.firestore();
+            auth.onAuthStateChanged(user => {
+                if(user) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('user-email-display').innerText = user.email.split('@')[0];
+                    db.collection("users").doc(user.uid).get().then(doc => {
+                        if(doc.exists && doc.data().autorizado) {
+                            document.getElementById('wait-screen').classList.add('hidden');
+                            document.getElementById('view-dashboard').classList.remove('hidden');
+                            renderDashboard();
+                        } else document.getElementById('wait-screen').classList.remove('hidden');
+                    });
+                } else {
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('wait-screen').classList.add('hidden');
+                    document.getElementById('view-dashboard').classList.add('hidden');
+                }
+            });
         }
 
-        function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            document.getElementById('btn-main-action').innerText = isRegisterMode ? 'CRIAR CONTA' : 'ENTRAR';
-        }
-
-        function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); }
-        function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
-        function confirmLogout() { auth.signOut().then(() => window.location.reload()); }
-
-        // Inicialização
-        window.onload = () => { renderDashboard(); };
+        window.onload = () => { 
+            document.getElementById('chart-label-month').innerText = monthNames[viewDate.getMonth()].toUpperCase();
+            document.getElementById('chart-label-year').innerText = viewDate.getFullYear();
+        };
+        window.onpopstate = () => handleBackButton();
     </script>
 </body>
 </html>
