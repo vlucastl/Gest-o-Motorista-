@@ -126,7 +126,6 @@
         .cal-day.off { background-color: rgba(255, 69, 58, 0.2); color: var(--danger-color); border-color: var(--danger-color); opacity: 0.8; }
         .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
         
-        /* ESTILO PARA DIAS PASSADOS */
         .cal-day.passed {
             background-color: #111 !important;
             color: #444 !important;
@@ -438,22 +437,18 @@
                 <span class="label">Faturamento Bruto</span>
                 <div class="value-big" id="day-rev-val">R$ 0,00</div>
             </div>
-
             <div class="card-small">
                 <span class="label">Lucro Líquido</span>
                 <div class="value-med text-green" id="day-profit-val">R$ 0,00</div>
             </div>
-
             <div class="card-small">
                 <span class="label">Custo Total</span>
                 <div class="value-med text-red" id="day-exp-val">R$ 0,00</div>
             </div>
-
             <div class="card-small">
                 <span class="label">⛽ Combustível</span>
                 <div class="value-med text-orange" id="day-fuel-val-card">R$ 0,00</div>
             </div>
-
             <div class="card-small">
                 <span class="label">🟣 Aluguel Pago</span>
                 <div class="value-med text-purple" id="day-rent-val-card">R$ 0,00</div>
@@ -550,6 +545,7 @@
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
+        // --- AUTH E UI HELPERS ---
         function togglePasswordVisibility() {
             const passInput = document.getElementById('login-pass');
             passInput.type = passInput.type === 'password' ? 'text' : 'password';
@@ -585,6 +581,7 @@
         function confirmLogout() { auth.signOut().then(() => { window.location.reload(); }); }
         function formatMoney(n) { return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
+        // --- DATABASE LOGIC ---
         function getDB() { 
             try { 
                 let data = localStorage.getItem(DB_KEY);
@@ -600,6 +597,7 @@
         }
         function getRentConfigForMonth(m, y) { return getRentConfigs()[`${m}-${y}`] || { total: 0, offDays: [] }; }
 
+        // --- SYNC LOGIC (MELHORADA) ---
         window.syncToCloud = async function() {
             const user = auth.currentUser;
             if (!user) return;
@@ -621,8 +619,13 @@
                 const doc = await db.collection("users").doc(user.uid).get();
                 if (doc.exists) {
                     const cloudData = doc.data();
-                    if (cloudData.historico && cloudData.historico !== "[]") localStorage.setItem(DB_KEY, cloudData.historico);
-                    if (cloudData.config_aluguel && cloudData.config_aluguel !== "{}") localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                    // Proteção: Só sobrescreve se houver dados válidos na nuvem
+                    if (cloudData.historico && cloudData.historico !== "[]" && cloudData.historico !== "") {
+                        localStorage.setItem(DB_KEY, cloudData.historico);
+                    }
+                    if (cloudData.config_aluguel && cloudData.config_aluguel !== "{}" && cloudData.config_aluguel !== "") {
+                        localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                    }
                     return true;
                 }
             } catch (e) { console.error("Erro ao baixar dados:", e); }
@@ -637,6 +640,7 @@
             }
         }
 
+        // --- DASHBOARD E CALENDÁRIO ---
         function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
 
         function renderDashboard() {
@@ -739,6 +743,7 @@
             refreshAllViews();
         }
 
+        // --- HISTORY E DETAIL ---
         function openDayDetail(index) {
             currentDetailIndex = index;
             const data = getDB()[index];
@@ -785,6 +790,7 @@
             refreshAllViews();
         }
 
+        // --- CHARTS LOGIC ---
         function changePeriodCharts(dir) {
             viewDate.setMonth(viewDate.getMonth() + dir);
             document.getElementById('chart-label-month').innerText = monthNames[viewDate.getMonth()].toUpperCase();
@@ -853,6 +859,7 @@
             if(tab === 'home') renderDashboard();
         }
 
+        // --- WIZARD FLOW ---
         function startWizard(index = null) {
             editingIndex = index;
             tempData = index !== null ? {...getDB()[index]} : { customDate: new Date().toISOString().split('T')[0] };
@@ -894,6 +901,7 @@
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
         function handleBackButton() { document.querySelectorAll('.modal-overlay, #wizard-overlay, #view-day-detail').forEach(el => el.classList.add('hidden')); }
 
+        // --- FIREBASE INITIALIZATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyCjPBa7QRMxkXlxVgLUSIPelpeF1o3YJyk",
             authDomain: "gestao-motorista-beta.firebaseapp.com",
@@ -906,19 +914,30 @@
         if (typeof firebase !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth(); db = firebase.firestore();
+            
+            // --- OBSERVAR ESTADO DE LOGIN (CORREÇÃO DE SINCRONISMO) ---
             auth.onAuthStateChanged(async user => {
                 if(user) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('user-email-display').innerText = user.email.split('@')[0];
-                    db.collection("users").doc(user.uid).get().then(async doc => {
+                    
+                    try {
+                        const doc = await db.collection("users").doc(user.uid).get();
                         if(doc.exists && doc.data().autorizado) {
                             document.getElementById('wait-screen').classList.add('hidden');
                             document.getElementById('view-dashboard').classList.remove('hidden');
+                            
+                            // Aguarda baixar os dados antes de mostrar qualquer coisa
                             await fetchFromCloud();
-                            viewDate = new Date(); // Garante o mês atual
+                            viewDate = new Date(); 
                             refreshAllViews();
-                        } else document.getElementById('wait-screen').classList.remove('hidden');
-                    }).catch(() => refreshAllViews());
+                        } else {
+                            document.getElementById('wait-screen').classList.remove('hidden');
+                        }
+                    } catch (err) {
+                        console.error("Erro na autorização:", err);
+                        refreshAllViews();
+                    }
                 } else {
                     document.getElementById('login-screen').style.display = 'flex';
                     document.getElementById('wait-screen').classList.add('hidden');
