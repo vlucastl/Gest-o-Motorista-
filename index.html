@@ -584,29 +584,30 @@
         function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); window.history.pushState({modal: 'logout'}, "", ""); }
         function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
         
-        // CORREÇÃO CRÍTICA AQUI: O botão de sair NÃO limpa mais o localStorage!
         function confirmLogout() { 
             auth.signOut().then(() => { 
                 window.location.reload(); 
             }); 
         }
         
-        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function formatMoney(n) { return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-        // --- SISTEMA DE RESGATE DE DADOS (STORAGE) ---
+        // --- SISTEMA DE RESGATE E SINCRONIZAÇÃO DE DADOS ---
         function getDB() { 
             try { 
                 let data = localStorage.getItem(DB_KEY);
-                // Se não achar os dados na gaveta nova, procura nas gavetas antigas e faz o resgate
                 if (!data) {
-                    data = localStorage.getItem('app_motorista') || localStorage.getItem('motorista_db') || localStorage.getItem('appMotoristaDB');
-                    if (data) localStorage.setItem(DB_KEY, data); // Salva na chave nova
+                    data = localStorage.getItem('app_motorista') || localStorage.getItem('motorista_db');
+                    if (data) localStorage.setItem(DB_KEY, data);
                 }
                 return JSON.parse(data) || []; 
             } catch { return []; } 
         }
         
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); if(window.syncToCloud) window.syncToCloud(); }
+        function saveDB(data) { 
+            localStorage.setItem(DB_KEY, JSON.stringify(data)); 
+            if(window.syncToCloud) window.syncToCloud(); 
+        }
         
         function getRentConfigs() { 
             try { 
@@ -621,6 +622,34 @@
         
         function getRentConfigForMonth(m, y) { return getRentConfigs()[`${m}-${y}`] || { total: 0, offDays: [] }; }
 
+        // SINCRONIZAÇÃO COM FIRESTORE
+        window.syncToCloud = async function() {
+            const user = auth.currentUser;
+            if (!user) return;
+            const dbData = getDB();
+            const rentData = getRentConfigs();
+            try {
+                await db.collection("users").doc(user.uid).set({
+                    historico: JSON.stringify(dbData),
+                    config_aluguel: JSON.stringify(rentData),
+                    lastSync: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) { console.error("Erro na sincronização:", e); }
+        };
+
+        async function fetchFromCloud() {
+            const user = auth.currentUser;
+            if (!user) return;
+            try {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists) {
+                    const cloudData = doc.data();
+                    if (cloudData.historico) localStorage.setItem(DB_KEY, cloudData.historico);
+                    if (cloudData.config_aluguel) localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                }
+            } catch (e) { console.error("Erro ao baixar dados do cloud:", e); }
+        }
+
         // DASHBOARD LÓGICA
         function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
 
@@ -629,13 +658,21 @@
             document.getElementById('label-month').innerText = monthNames[m].toUpperCase();
             document.getElementById('label-year').innerText = y;
             
-            const data = dbArr.filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; });
+            const data = dbArr.filter(item => { 
+                const p = item.date.split('/'); 
+                return parseInt(p[1])-1 === m && parseInt(p[2]) === y; 
+            });
             
             let tRev=0, tFuel=0, tFood=0, tRent=0, tHours=0, tKm=0, tMaint=0;
             data.forEach(item => {
-                tFuel += (item.fuel||0); tFood += (item.food||0); tRent += (item.rentPaid||0); tMaint += (item.maintenance||0);
-                tRev += (item.uber||0) + (item.pop||0); tKm += (item.km||0);
-                let h = item.hours || 0; if(!h && item.hoursFormatted) { const [hh,mm] = item.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                tFuel += Number(item.fuel||0); tFood += Number(item.food||0); tRent += Number(item.rentPaid||0); tMaint += Number(item.maintenance||0);
+                tRev += Number(item.uber||0) + Number(item.pop||0); tKm += Number(item.km||0);
+                
+                let h = 0; 
+                if(item.hoursFormatted && item.hoursFormatted.includes(':')) { 
+                    const [hh,mm] = item.hoursFormatted.split(':').map(Number); 
+                    h = hh + (mm/60); 
+                } else { h = Number(item.hours || 0); }
                 tHours += h;
             });
 
@@ -708,8 +745,10 @@
             document.getElementById('rent-preview-val').innerText = formatMoney(perDay);
             
             let rentPaid = 0;
-            getDB().filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; })
-                 .forEach(item => rentPaid += (item.rentPaid||0));
+            getDB().filter(item => { 
+                const p = item.date.split('/'); 
+                return parseInt(p[1])-1 === m && parseInt(p[2]) === y; 
+            }).forEach(item => rentPaid += (Number(item.rentPaid)||0));
                  
             const rem = Math.max(0, total - rentPaid);
             document.getElementById('rent-debug-remaining').innerText = formatMoney(rem);
@@ -720,6 +759,7 @@
             const configs = getRentConfigs();
             configs[`${viewDate.getMonth()}-${viewDate.getFullYear()}`] = { total, offDays: tempOffDays };
             localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
+            window.syncToCloud();
             closeRentConfig();
             renderDashboard();
         }
@@ -729,13 +769,13 @@
             currentDetailIndex = index;
             const data = getDB()[index];
             document.getElementById('detail-day-label').innerText = data.date;
-            const rev = (data.uber||0) + (data.pop||0);
-            const exp = (data.fuel||0) + (data.food||0) + (data.rentPaid||0) + (data.maintenance||0);
+            const rev = (Number(data.uber)||0) + (Number(data.pop)||0);
+            const exp = (Number(data.fuel)||0) + (Number(data.food)||0) + (Number(data.rentPaid)||0) + (Number(data.maintenance)||0);
             document.getElementById('day-rev-val').innerText = formatMoney(rev);
             document.getElementById('day-profit-val').innerText = formatMoney(rev - exp);
             document.getElementById('day-exp-val').innerText = formatMoney(exp);
-            document.getElementById('day-fuel-val-card').innerText = formatMoney(data.fuel||0);
-            document.getElementById('day-rent-val-card').innerText = formatMoney(data.rentPaid||0);
+            document.getElementById('day-fuel-val-card').innerText = formatMoney(Number(data.fuel)||0);
+            document.getElementById('day-rent-val-card').innerText = formatMoney(Number(data.rentPaid)||0);
             document.getElementById('view-day-detail').classList.remove('hidden');
             window.history.pushState({modal: 'detail'}, "", "");
         }
@@ -749,7 +789,7 @@
             dbArr.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.style.cssText = "background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
-                const rev = (item.uber||0) + (item.pop||0);
+                const rev = (Number(item.uber)||0) + (Number(item.pop)||0);
                 div.innerHTML = `
                     <div onclick="openDayDetail(${index})" style="flex:1;">
                         <span style="color:var(--primary-color); font-weight:bold; display:block;">${item.date}</span>
@@ -789,7 +829,7 @@
             document.getElementById(`filter-${type}`).classList.add('active');
             
             const db = getDB();
-            let labels = [], values = [], summary = { rev:0, fuel:0, food:0, maint:0, rent:0, hours:0, km:0 };
+            let labels = [], values = [], summary = { rev:0, fuel:0, hours:0, km:0 };
             
             if (type === 'semanal') {
                 const curr = new Date(viewDate);
@@ -800,9 +840,12 @@
                     const dateStr = d.toLocaleDateString('pt-BR');
                     const dayData = db.find(item => item.date === dateStr);
                     labels.push(dateStr.substring(0, 5));
-                    const r = dayData ? (dayData.uber||0)+(dayData.pop||0) : 0;
+                    const r = dayData ? (Number(dayData.uber)||0)+(Number(dayData.pop)||0) : 0;
                     values.push(r);
-                    if(dayData) { summary.rev += r; summary.fuel += (dayData.fuel||0); summary.hours += (dayData.hours||0); summary.km += (dayData.km||0); }
+                    if(dayData) { 
+                        summary.rev += r; summary.fuel += Number(dayData.fuel||0); 
+                        summary.hours += Number(dayData.hours||0); summary.km += Number(dayData.km||0); 
+                    }
                 }
             } else {
                 const m = viewDate.getMonth(), y = viewDate.getFullYear();
@@ -813,9 +856,10 @@
                     const dayNum = parseInt(d.date.split('/')[0]);
                     const weekIdx = Math.ceil(dayNum / 7);
                     const key = `Sem ${Math.min(weekIdx, 5)}`;
-                    const r = (d.uber||0)+(d.pop||0);
+                    const r = (Number(d.uber)||0)+(Number(d.pop)||0);
                     weekMap[key] += r;
-                    summary.rev += r; summary.fuel += (d.fuel||0); summary.hours += (d.hours||0); summary.km += (d.km||0);
+                    summary.rev += r; summary.fuel += Number(d.fuel||0); 
+                    summary.hours += Number(d.hours||0); summary.km += Number(d.km||0);
                 });
                 labels = Object.keys(weekMap).filter(k => weekMap[k] > 0);
                 values = Object.values(weekMap).filter(v => v > 0);
@@ -895,7 +939,8 @@
                 const dParts = tempData.customDate.split('-');
                 tempData.date = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
                 if(editingIndex !== null) db[editingIndex] = tempData; else db.unshift(tempData);
-                saveDB(db); document.getElementById('wizard-overlay').classList.add('hidden');
+                saveDB(db); 
+                document.getElementById('wizard-overlay').classList.add('hidden');
                 renderDashboard();
                 if(!document.getElementById('view-history').classList.contains('hidden')) renderHistory();
             }
@@ -907,7 +952,7 @@
             document.querySelectorAll('.modal-overlay, #wizard-overlay, #view-day-detail').forEach(el => el.classList.add('hidden'));
         }
 
-        // FIREBASE BÁSICO
+        // FIREBASE BÁSICO E SINCRONIZAÇÃO INICIAL
         const firebaseConfig = {
             apiKey: "AIzaSyCjPBa7QRMxkXlxVgLUSIPelpeF1o3YJyk",
             authDomain: "gestao-motorista-beta.firebaseapp.com",
@@ -924,10 +969,12 @@
                 if(user) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('user-email-display').innerText = user.email.split('@')[0];
-                    db.collection("users").doc(user.uid).get().then(doc => {
+                    db.collection("users").doc(user.uid).get().then(async doc => {
                         if(doc.exists && doc.data().autorizado) {
                             document.getElementById('wait-screen').classList.add('hidden');
                             document.getElementById('view-dashboard').classList.remove('hidden');
+                            // Baixa os dados da nuvem ao abrir para garantir visibilidade
+                            await fetchFromCloud();
                             renderDashboard();
                         } else document.getElementById('wait-screen').classList.remove('hidden');
                     });
