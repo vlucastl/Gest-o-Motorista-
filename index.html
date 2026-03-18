@@ -540,7 +540,7 @@
         let myChart = null;
 
         const DB_KEY = 'app_motorista_BETA_FULL'; 
-        const RENT_DB_KEY = 'rent_configs_BETA';
+        const RRENT_DB_KEY = 'rent_configs_BETA';
         let tempOffDays = []; 
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
@@ -589,27 +589,34 @@
             } catch { return []; } 
         }
         function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); window.syncToCloud(); }
+        
         function getRentConfigs() { 
             try { 
-                let data = localStorage.getItem(RENT_DB_KEY);
+                let data = localStorage.getItem(RRENT_DB_KEY);
                 return (data && data !== "undefined" && data !== "null") ? JSON.parse(data) : {}; 
             } catch { return {}; } 
         }
         function getRentConfigForMonth(m, y) { return getRentConfigs()[`${m}-${y}`] || { total: 0, offDays: [] }; }
 
-        // --- SYNC LOGIC (MELHORADA) ---
+        // --- SYNC LOGIC (CORRIGIDA) ---
         window.syncToCloud = async function() {
             const user = auth.currentUser;
             if (!user) return;
-            const dbData = getDB();
-            const rentData = getRentConfigs();
+            
+            // Forçamos a captura exata do estado atual do localStorage antes do envio
+            const currentHistory = localStorage.getItem(DB_KEY) || "[]";
+            const currentRent = localStorage.getItem(RRENT_DB_KEY) || "{}";
+            
             try {
                 await db.collection("users").doc(user.uid).set({
-                    historico: JSON.stringify(dbData),
-                    config_aluguel: JSON.stringify(rentData),
+                    historico: currentHistory,
+                    config_aluguel: currentRent,
                     lastSync: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-            } catch (e) { console.error("Erro na sincronização:", e); }
+                console.log("Sincronização com Cloud concluída com sucesso.");
+            } catch (e) { 
+                console.error("Erro na sincronização Cloud:", e); 
+            }
         };
 
         async function fetchFromCloud() {
@@ -619,16 +626,20 @@
                 const doc = await db.collection("users").doc(user.uid).get();
                 if (doc.exists) {
                     const cloudData = doc.data();
-                    // Proteção: Só sobrescreve se houver dados válidos na nuvem
-                    if (cloudData.historico && cloudData.historico !== "[]" && cloudData.historico !== "") {
+                    
+                    // SEGURANÇA: Só atualiza o local se o dado remoto for válido
+                    if (cloudData.historico && cloudData.historico !== "[]" && cloudData.historico !== "null") {
                         localStorage.setItem(DB_KEY, cloudData.historico);
                     }
-                    if (cloudData.config_aluguel && cloudData.config_aluguel !== "{}" && cloudData.config_aluguel !== "") {
-                        localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                    if (cloudData.config_aluguel && cloudData.config_aluguel !== "{}" && cloudData.config_aluguel !== "null") {
+                        localStorage.setItem(RRENT_DB_KEY, cloudData.config_aluguel);
                     }
+                    console.log("Dados baixados da Cloud.");
                     return true;
                 }
-            } catch (e) { console.error("Erro ao baixar dados:", e); }
+            } catch (e) { 
+                console.error("Erro ao baixar dados Cloud:", e); 
+            }
             return false;
         }
 
@@ -737,7 +748,7 @@
             const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
             const configs = getRentConfigs();
             configs[`${viewDate.getMonth()}-${viewDate.getFullYear()}`] = { total, offDays: tempOffDays };
-            localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
+            localStorage.setItem(RRENT_DB_KEY, JSON.stringify(configs));
             window.syncToCloud();
             closeRentConfig();
             refreshAllViews();
@@ -915,7 +926,6 @@
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth(); db = firebase.firestore();
             
-            // --- OBSERVAR ESTADO DE LOGIN (CORREÇÃO DE SINCRONISMO) ---
             auth.onAuthStateChanged(async user => {
                 if(user) {
                     document.getElementById('login-screen').style.display = 'none';
@@ -927,7 +937,7 @@
                             document.getElementById('wait-screen').classList.add('hidden');
                             document.getElementById('view-dashboard').classList.remove('hidden');
                             
-                            // Aguarda baixar os dados antes de mostrar qualquer coisa
+                            // Fluxo Crítico: Sincroniza dados antes de renderizar
                             await fetchFromCloud();
                             viewDate = new Date(); 
                             refreshAllViews();
@@ -935,7 +945,7 @@
                             document.getElementById('wait-screen').classList.remove('hidden');
                         }
                     } catch (err) {
-                        console.error("Erro na autorização:", err);
+                        console.error("Erro na autorização Firebase:", err);
                         refreshAllViews();
                     }
                 } else {
