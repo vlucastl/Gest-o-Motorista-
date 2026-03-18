@@ -120,7 +120,7 @@
         .login-input:focus { border-color: var(--primary-color); background: rgba(28, 28, 30, 1); box-shadow: 0 0 10px rgba(0, 230, 118, 0.1); }
         
         .calendar-wrapper { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        .calendar-header { display: flex; justify(center; align-items: center; margin-bottom: 10px; }
+        .calendar-header { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
         .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
@@ -240,6 +240,8 @@
             cursor: pointer;
         }
 
+        .nav-btn.active { color: var(--primary-color); }
+
         .add-btn {
             grid-column: 3;
             background: var(--primary-color);
@@ -266,7 +268,7 @@
 
     <div id="login-screen">
         <div class="login-logo">🚗</div>
-        <div class="login-title">PRO BETA FULL</div>
+        <div class="login-title" id="login-title-text">PRO BETA FULL</div>
         <div class="login-subtitle">Controle total dos seus ganhos e metas na palma da mão.</div>
         <div style="width:100%; max-width:400px;">
             <div class="input-group">
@@ -540,7 +542,6 @@
         const DB_KEY = 'app_motorista_BETA_FULL'; 
         const RENT_DB_KEY = 'rent_configs_BETA';
         let tempOffDays = []; 
-        let rentCalendarDate = new Date(); 
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
@@ -549,6 +550,58 @@
             const passInput = document.getElementById('login-pass');
             passInput.type = passInput.type === 'password' ? 'text' : 'password';
         }
+
+        // --- FUNÇÕES DE AUTENTICAÇÃO RESTAURADAS ---
+        function toggleAuthMode() {
+            window.isRegisterMode = !window.isRegisterMode;
+            document.getElementById('btn-main-action').innerText = window.isRegisterMode ? 'CRIAR CONTA' : 'ENTRAR';
+            document.getElementById('txt-toggle').innerText = window.isRegisterMode ? 'Já tem conta?' : 'Não tem conta?';
+            document.getElementById('btn-toggle').innerText = window.isRegisterMode ? 'Fazer Login' : 'Criar agora';
+            document.getElementById('login-title-text').innerText = window.isRegisterMode ? 'NOVA CONTA' : 'PRO BETA FULL';
+        }
+
+        function handleAuthAction() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-main-action');
+            
+            if(!email || !pass) {
+                alert('Por favor, preencha e-mail e senha.');
+                return;
+            }
+
+            btn.innerText = "AGUARDE...";
+            btn.disabled = true;
+
+            if (window.isRegisterMode) {
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(cred => {
+                        return db.collection("users").doc(cred.user.uid).set({
+                            email: email,
+                            autorizado: false,
+                            criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    })
+                    .then(() => {
+                        alert('Conta criada com sucesso! Aguarde a liberação do administrador para acessar o Beta.');
+                        btn.innerText = "CRIAR CONTA";
+                        btn.disabled = false;
+                    })
+                    .catch(error => {
+                        alert('Erro ao criar conta: ' + error.message);
+                        btn.innerText = "CRIAR CONTA";
+                        btn.disabled = false;
+                    });
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .catch(error => {
+                        alert('Erro ao entrar. Verifique seus dados: ' + error.message);
+                        btn.innerText = "ENTRAR";
+                        btn.disabled = false;
+                    });
+            }
+        }
+
         function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); window.history.pushState({modal: 'logout'}, "", ""); }
         function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
         function confirmLogout() { auth.signOut().then(() => { localStorage.clear(); window.location.reload(); }); }
@@ -587,14 +640,12 @@
             document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
             document.getElementById('dash-rent-paid-val').innerText = formatMoney(tRent);
 
-            // ATUALIZAÇÃO DE PORCENTAGENS
             const calcPct = (val) => tRev > 0 ? ((val / tRev) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('dash-profit-pct').innerText = calcPct(profit);
             document.getElementById('dash-exp-pct').innerText = calcPct(tExp);
             document.getElementById('dash-fuel-pct').innerText = calcPct(tFuel);
             document.getElementById('dash-rent-paid-pct').innerText = calcPct(tRent);
 
-            // BARRA DE PROGRESSO ALUGUEL
             const currentMonthConfig = getRentConfigForMonth(m, y);
             const rentTarget = currentMonthConfig.total || 0;
             const rentPct = rentTarget > 0 ? Math.min(100, (tRent / rentTarget) * 100) : 0;
@@ -608,7 +659,123 @@
             document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
         }
 
-        // GRÁFICOS COM AGRUPAMENTO POR SEMANA
+        // --- FUNÇÕES DE META DE ALUGUEL RESTAURADAS ---
+        function openRentConfig() {
+            document.getElementById('modal-rent').classList.remove('hidden');
+            window.history.pushState({modal: 'rent'}, "", "");
+            const conf = getRentConfigForMonth(viewDate.getMonth(), viewDate.getFullYear());
+            document.getElementById('input-total-rent').value = conf.total || '';
+            tempOffDays = conf.offDays || [];
+            renderRentCalendar();
+            updateRentPreview();
+        }
+
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
+        
+        function renderRentCalendar() {
+            const grid = document.getElementById('rent-calendar');
+            grid.innerHTML = '';
+            const m = viewDate.getMonth(), y = viewDate.getFullYear();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            for(let i=1; i<=daysInMonth; i++) {
+                const div = document.createElement('div');
+                div.className = `cal-day ${tempOffDays.includes(i) ? 'off' : 'working'}`;
+                div.innerText = i;
+                div.onclick = () => {
+                    if(tempOffDays.includes(i)) tempOffDays = tempOffDays.filter(d => d !== i);
+                    else tempOffDays.push(i);
+                    renderRentCalendar();
+                    updateRentPreview();
+                };
+                grid.appendChild(div);
+            }
+        }
+
+        function updateRentPreview() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const m = viewDate.getMonth(), y = viewDate.getFullYear();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const workDays = daysInMonth - tempOffDays.length;
+            const perDay = workDays > 0 ? total / workDays : 0;
+            document.getElementById('rent-preview-val').innerText = formatMoney(perDay);
+            
+            let rentPaid = 0;
+            getDB().filter(item => { const p = item.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y; })
+                 .forEach(item => rentPaid += (item.rentPaid||0));
+                 
+            const rem = Math.max(0, total - rentPaid);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(rem);
+        }
+
+        function saveRentConfig() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const configs = getRentConfigs();
+            configs[`${viewDate.getMonth()}-${viewDate.getFullYear()}`] = { total, offDays: tempOffDays };
+            localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
+            closeRentConfig();
+            renderDashboard();
+        }
+
+        // --- HISTÓRICO E DETALHES RESTAURADOS ---
+        function openDayDetail(index) {
+            currentDetailIndex = index;
+            const data = getDB()[index];
+            document.getElementById('detail-day-label').innerText = data.date;
+            const rev = (data.uber||0) + (data.pop||0);
+            const exp = (data.fuel||0) + (data.food||0) + (data.rentPaid||0) + (data.maintenance||0);
+            document.getElementById('day-rev-val').innerText = formatMoney(rev);
+            document.getElementById('day-profit-val').innerText = formatMoney(rev - exp);
+            document.getElementById('day-exp-val').innerText = formatMoney(exp);
+            document.getElementById('day-fuel-val-card').innerText = formatMoney(data.fuel||0);
+            document.getElementById('day-rent-val-card').innerText = formatMoney(data.rentPaid||0);
+            document.getElementById('view-day-detail').classList.remove('hidden');
+            window.history.pushState({modal: 'detail'}, "", "");
+        }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
+        function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            const dbArr = getDB();
+            dbArr.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = "background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
+                const rev = (item.uber||0) + (item.pop||0);
+                div.innerHTML = `
+                    <div onclick="openDayDetail(${index})" style="flex:1;">
+                        <span style="color:var(--primary-color); font-weight:bold; display:block;">${item.date}</span>
+                        <span style="font-size:14px;">${formatMoney(rev)}</span>
+                    </div>
+                    <button class="btn-trash" onclick="openDeleteModal(${index})">🗑️</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function openDeleteModal(idx) {
+            itemToDeleteIndex = idx;
+            document.getElementById('modal-delete').classList.remove('hidden');
+            window.history.pushState({modal: 'delete'}, "", "");
+        }
+        function closeDeleteModal() { document.getElementById('modal-delete').classList.add('hidden'); }
+        function confirmDelete() {
+            const dbArr = getDB();
+            dbArr.splice(itemToDeleteIndex, 1);
+            saveDB(dbArr);
+            closeDeleteModal();
+            renderDashboard();
+            renderHistory();
+        }
+
+        // GRÁFICOS
+        function changePeriodCharts(dir) {
+            viewDate.setMonth(viewDate.getMonth() + dir);
+            document.getElementById('chart-label-month').innerText = monthNames[viewDate.getMonth()].toUpperCase();
+            document.getElementById('chart-label-year').innerText = viewDate.getFullYear();
+            updateChartFilter(document.getElementById('filter-semanal').classList.contains('active') ? 'semanal' : 'mensal');
+        }
+
         function updateChartFilter(type) {
             document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`filter-${type}`).classList.add('active');
@@ -630,7 +797,6 @@
                     if(dayData) { summary.rev += r; summary.fuel += (dayData.fuel||0); summary.hours += (dayData.hours||0); summary.km += (dayData.km||0); }
                 }
             } else {
-                // AGRUPAMENTO MENSAL POR SEMANAS (Destaque V28)
                 const m = viewDate.getMonth(), y = viewDate.getFullYear();
                 const weekMap = { "Sem 1": 0, "Sem 2": 0, "Sem 3": 0, "Sem 4": 0, "Sem 5": 0 };
                 db.filter(d => {
@@ -669,14 +835,20 @@
             `;
         }
 
-        // NAVEGAÇÃO E MODAIS
+        // NAVEGAÇÃO
         function switchTab(tab) {
             document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
             document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
             document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            if(tab === 'home') document.getElementById('nav-home').classList.add('active');
+            if(tab === 'charts') document.getElementById('nav-charts').classList.add('active');
+            if(tab === 'history') document.getElementById('nav-hist').classList.add('active');
+
             if(tab === 'charts') updateChartFilter('semanal');
-            renderDashboard();
+            if(tab === 'history') renderHistory();
+            if(tab === 'home') renderDashboard();
         }
 
         function startWizard(index = null) {
@@ -717,6 +889,7 @@
                 if(editingIndex !== null) db[editingIndex] = tempData; else db.unshift(tempData);
                 saveDB(db); document.getElementById('wizard-overlay').classList.add('hidden');
                 renderDashboard();
+                if(!document.getElementById('view-history').classList.contains('hidden')) renderHistory();
             }
         }
 
@@ -750,11 +923,18 @@
                             renderDashboard();
                         } else document.getElementById('wait-screen').classList.remove('hidden');
                     });
+                } else {
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('wait-screen').classList.add('hidden');
+                    document.getElementById('view-dashboard').classList.add('hidden');
                 }
             });
         }
 
-        window.onload = () => { renderDashboard(); };
+        window.onload = () => { 
+            document.getElementById('chart-label-month').innerText = monthNames[viewDate.getMonth()].toUpperCase();
+            document.getElementById('chart-label-year').innerText = viewDate.getFullYear();
+        };
         window.onpopstate = () => handleBackButton();
     </script>
 </body>
