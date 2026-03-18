@@ -596,11 +596,11 @@
         function getDB() { 
             try { 
                 let data = localStorage.getItem(DB_KEY);
-                if (!data) {
+                if (!data || data === "[]" || data === "null") {
                     data = localStorage.getItem('app_motorista') || localStorage.getItem('motorista_db');
-                    if (data) localStorage.setItem(DB_KEY, data);
+                    if (data && data !== "[]") localStorage.setItem(DB_KEY, data);
                 }
-                return JSON.parse(data) || []; 
+                return (data && data !== "undefined" && data !== "null") ? JSON.parse(data) : []; 
             } catch { return []; } 
         }
         
@@ -612,11 +612,11 @@
         function getRentConfigs() { 
             try { 
                 let data = localStorage.getItem(RENT_DB_KEY);
-                if (!data) {
+                if (!data || data === "{}" || data === "null") {
                     data = localStorage.getItem('rent_configs') || localStorage.getItem('rentConfigsDB');
-                    if (data) localStorage.setItem(RENT_DB_KEY, data);
+                    if (data && data !== "{}") localStorage.setItem(RENT_DB_KEY, data);
                 }
-                return JSON.parse(data) || {}; 
+                return (data && data !== "undefined" && data !== "null") ? JSON.parse(data) : {}; 
             } catch { return {}; } 
         }
         
@@ -644,10 +644,25 @@
                 const doc = await db.collection("users").doc(user.uid).get();
                 if (doc.exists) {
                     const cloudData = doc.data();
-                    if (cloudData.historico) localStorage.setItem(DB_KEY, cloudData.historico);
-                    if (cloudData.config_aluguel) localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                    if (cloudData.historico && cloudData.historico !== "[]") {
+                        localStorage.setItem(DB_KEY, cloudData.historico);
+                    }
+                    if (cloudData.config_aluguel && cloudData.config_aluguel !== "{}") {
+                        localStorage.setItem(RENT_DB_KEY, cloudData.config_aluguel);
+                    }
+                    return true;
                 }
             } catch (e) { console.error("Erro ao baixar dados do cloud:", e); }
+            return false;
+        }
+
+        // Função para atualizar todas as telas
+        function refreshAllViews() {
+            renderDashboard();
+            renderHistory();
+            if (!document.getElementById('view-charts').classList.contains('hidden')) {
+                updateChartFilter(document.getElementById('filter-semanal').classList.contains('active') ? 'semanal' : 'mensal');
+            }
         }
 
         // DASHBOARD LÓGICA
@@ -761,7 +776,7 @@
             localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs));
             window.syncToCloud();
             closeRentConfig();
-            renderDashboard();
+            refreshAllViews();
         }
 
         // --- HISTÓRICO E DETALHES ---
@@ -812,8 +827,7 @@
             dbArr.splice(itemToDeleteIndex, 1);
             saveDB(dbArr);
             closeDeleteModal();
-            renderDashboard();
-            renderHistory();
+            refreshAllViews();
         }
 
         // GRÁFICOS
@@ -828,7 +842,7 @@
             document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`filter-${type}`).classList.add('active');
             
-            const db = getDB();
+            const dbArr = getDB();
             let labels = [], values = [], summary = { rev:0, fuel:0, hours:0, km:0 };
             
             if (type === 'semanal') {
@@ -838,7 +852,7 @@
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(weekStart); d.setDate(d.getDate() + i);
                     const dateStr = d.toLocaleDateString('pt-BR');
-                    const dayData = db.find(item => item.date === dateStr);
+                    const dayData = dbArr.find(item => item.date === dateStr);
                     labels.push(dateStr.substring(0, 5));
                     const r = dayData ? (Number(dayData.uber)||0)+(Number(dayData.pop)||0) : 0;
                     values.push(r);
@@ -850,7 +864,7 @@
             } else {
                 const m = viewDate.getMonth(), y = viewDate.getFullYear();
                 const weekMap = { "Sem 1": 0, "Sem 2": 0, "Sem 3": 0, "Sem 4": 0, "Sem 5": 0 };
-                db.filter(d => {
+                dbArr.filter(d => {
                     const p = d.date.split('/'); return parseInt(p[1])-1 === m && parseInt(p[2]) === y;
                 }).forEach(d => {
                     const dayNum = parseInt(d.date.split('/')[0]);
@@ -861,8 +875,8 @@
                     summary.rev += r; summary.fuel += Number(d.fuel||0); 
                     summary.hours += Number(d.hours||0); summary.km += Number(d.km||0);
                 });
-                labels = Object.keys(weekMap).filter(k => weekMap[k] > 0);
-                values = Object.values(weekMap).filter(v => v > 0);
+                labels = Object.keys(weekMap).filter(k => weekMap[k] > 0 || Object.values(weekMap).some(v => v > 0));
+                values = Object.values(weekMap).filter((v, idx) => labels[idx]);
             }
             renderChart(labels, values);
             renderChartSummary(summary);
@@ -935,14 +949,13 @@
 
             if(currentStep < 9) { currentStep++; renderStep(); }
             else {
-                const db = getDB();
+                const dbArr = getDB();
                 const dParts = tempData.customDate.split('-');
                 tempData.date = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
-                if(editingIndex !== null) db[editingIndex] = tempData; else db.unshift(tempData);
-                saveDB(db); 
+                if(editingIndex !== null) dbArr[editingIndex] = tempData; else dbArr.unshift(tempData);
+                saveDB(dbArr); 
                 document.getElementById('wizard-overlay').classList.add('hidden');
-                renderDashboard();
-                if(!document.getElementById('view-history').classList.contains('hidden')) renderHistory();
+                refreshAllViews();
             }
         }
 
@@ -973,9 +986,8 @@
                         if(doc.exists && doc.data().autorizado) {
                             document.getElementById('wait-screen').classList.add('hidden');
                             document.getElementById('view-dashboard').classList.remove('hidden');
-                            // Baixa os dados da nuvem ao abrir para garantir visibilidade
                             await fetchFromCloud();
-                            renderDashboard();
+                            refreshAllViews();
                         } else document.getElementById('wait-screen').classList.remove('hidden');
                     });
                 } else {
