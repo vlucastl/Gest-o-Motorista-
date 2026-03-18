@@ -53,7 +53,6 @@
         }
         .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
 
-        /* --- TAGS DE PORCENTAGEM --- */
         .pct-tag {
             font-size: 10px;
             font-weight: 800;
@@ -135,7 +134,6 @@
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
         
-        /* --- CARD PRINCIPAL --- */
         .card-main { 
             grid-column: span 2; 
             background: linear-gradient(145deg, #242426 0%, #111112 100%); 
@@ -157,7 +155,6 @@
             backdrop-filter: blur(10px);
         }
 
-        /* --- BARRA DE PROGRESSO MOLA --- */
         .rent-progress-container {
             width: 100%;
             height: 8px;
@@ -213,7 +210,6 @@
             padding-bottom: 90px;
         }
 
-        /* BARRA INFERIOR CENTRALIZADA */
         .bottom-bar {
             position: fixed;
             bottom: 0;
@@ -551,7 +547,6 @@
             passInput.type = passInput.type === 'password' ? 'text' : 'password';
         }
 
-        // --- FUNÇÕES DE AUTENTICAÇÃO RESTAURADAS ---
         function toggleAuthMode() {
             window.isRegisterMode = !window.isRegisterMode;
             document.getElementById('btn-main-action').innerText = window.isRegisterMode ? 'CRIAR CONTA' : 'ENTRAR';
@@ -565,52 +560,65 @@
             const pass = document.getElementById('login-pass').value;
             const btn = document.getElementById('btn-main-action');
             
-            if(!email || !pass) {
-                alert('Por favor, preencha e-mail e senha.');
-                return;
-            }
+            if(!email || !pass) { alert('Por favor, preencha e-mail e senha.'); return; }
 
             btn.innerText = "AGUARDE...";
             btn.disabled = true;
 
             if (window.isRegisterMode) {
                 auth.createUserWithEmailAndPassword(email, pass)
-                    .then(cred => {
-                        return db.collection("users").doc(cred.user.uid).set({
-                            email: email,
-                            autorizado: false,
-                            criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    })
+                    .then(cred => db.collection("users").doc(cred.user.uid).set({ email: email, autorizado: false, criadoEm: firebase.firestore.FieldValue.serverTimestamp() }))
                     .then(() => {
                         alert('Conta criada com sucesso! Aguarde a liberação do administrador para acessar o Beta.');
-                        btn.innerText = "CRIAR CONTA";
-                        btn.disabled = false;
+                        btn.innerText = "CRIAR CONTA"; btn.disabled = false;
                     })
-                    .catch(error => {
-                        alert('Erro ao criar conta: ' + error.message);
-                        btn.innerText = "CRIAR CONTA";
-                        btn.disabled = false;
-                    });
+                    .catch(error => { alert('Erro ao criar conta: ' + error.message); btn.innerText = "CRIAR CONTA"; btn.disabled = false; });
             } else {
-                auth.signInWithEmailAndPassword(email, pass)
-                    .catch(error => {
-                        alert('Erro ao entrar. Verifique seus dados: ' + error.message);
-                        btn.innerText = "ENTRAR";
-                        btn.disabled = false;
-                    });
+                auth.signInWithEmailAndPassword(email, pass).catch(error => {
+                    alert('Erro ao entrar. Verifique seus dados: ' + error.message);
+                    btn.innerText = "ENTRAR"; btn.disabled = false;
+                });
             }
         }
 
         function showLogoutModal() { document.getElementById('modal-logout').classList.remove('hidden'); window.history.pushState({modal: 'logout'}, "", ""); }
         function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
-        function confirmLogout() { auth.signOut().then(() => { localStorage.clear(); window.location.reload(); }); }
+        
+        // CORREÇÃO CRÍTICA AQUI: O botão de sair NÃO limpa mais o localStorage!
+        function confirmLogout() { 
+            auth.signOut().then(() => { 
+                window.location.reload(); 
+            }); 
+        }
+        
         function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
-        // STORAGE
-        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
+        // --- SISTEMA DE RESGATE DE DADOS (STORAGE) ---
+        function getDB() { 
+            try { 
+                let data = localStorage.getItem(DB_KEY);
+                // Se não achar os dados na gaveta nova, procura nas gavetas antigas e faz o resgate
+                if (!data) {
+                    data = localStorage.getItem('app_motorista') || localStorage.getItem('motorista_db') || localStorage.getItem('appMotoristaDB');
+                    if (data) localStorage.setItem(DB_KEY, data); // Salva na chave nova
+                }
+                return JSON.parse(data) || []; 
+            } catch { return []; } 
+        }
+        
         function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); if(window.syncToCloud) window.syncToCloud(); }
-        function getRentConfigs() { try { return JSON.parse(localStorage.getItem(RENT_DB_KEY)) || {}; } catch { return {}; } }
+        
+        function getRentConfigs() { 
+            try { 
+                let data = localStorage.getItem(RENT_DB_KEY);
+                if (!data) {
+                    data = localStorage.getItem('rent_configs') || localStorage.getItem('rentConfigsDB');
+                    if (data) localStorage.setItem(RENT_DB_KEY, data);
+                }
+                return JSON.parse(data) || {}; 
+            } catch { return {}; } 
+        }
+        
         function getRentConfigForMonth(m, y) { return getRentConfigs()[`${m}-${y}`] || { total: 0, offDays: [] }; }
 
         // DASHBOARD LÓGICA
@@ -659,7 +667,7 @@
             document.getElementById('dash-km-val').innerText = formatMoney(tKm > 0 ? tRev / tKm : 0);
         }
 
-        // --- FUNÇÕES DE META DE ALUGUEL RESTAURADAS ---
+        // --- FUNÇÕES DE META DE ALUGUEL ---
         function openRentConfig() {
             document.getElementById('modal-rent').classList.remove('hidden');
             window.history.pushState({modal: 'rent'}, "", "");
@@ -716,7 +724,7 @@
             renderDashboard();
         }
 
-        // --- HISTÓRICO E DETALHES RESTAURADOS ---
+        // --- HISTÓRICO E DETALHES ---
         function openDayDetail(index) {
             currentDetailIndex = index;
             const data = getDB()[index];
