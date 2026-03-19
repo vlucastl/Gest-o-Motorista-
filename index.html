@@ -29,13 +29,14 @@
         .text-blue { color: var(--info-color) !important; }
         .text-purple { color: var(--rent-color) !important; }
 
-        /* Nova classe para as porcentagens integradas */
+        /* Porcentagens integradas centralizadas abaixo do valor */
         .pct-text {
+            display: block;
             font-size: 0.65em;
             opacity: 0.8;
-            margin-left: 4px;
+            margin-top: 4px;
             font-weight: 500;
-            vertical-align: middle;
+            text-align: center;
         }
 
         .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
@@ -62,7 +63,7 @@
         .login-input:focus { border-color: var(--primary-color); background: rgba(28, 28, 30, 1); box-shadow: 0 0 10px rgba(0, 230, 118, 0.1); }
 
         .calendar-wrapper { background: #222; padding: 10px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
-        .calendar-header { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; }
+        .calendar-header { display: flex; justify(center; align-items: center; margin-bottom: 10px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .cal-day { aspect-ratio: 1; background-color: #2c2c2e; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; position: relative; }
         .cal-day.working { background-color: rgba(0, 230, 118, 0.15); color: var(--primary-color); border-color: var(--primary-color); }
@@ -78,14 +79,14 @@
         .month-selector span { font-size: 12px; color: var(--text-gray); }
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
-        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
+        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .card-rent-config { grid-column: span 2; background: rgba(191, 90, 242, 0.1); border: 1px solid var(--rent-color); padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .rent-info-left { display: flex; flex-direction: column; align-items: flex-start; text-align: left; width: 60%; }
         .rent-info-right { text-align: right; width: 40%; }
         .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
         .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 5px 0; }
-        .value-med { font-size: 18px; font-weight: 700; }
+        .value-big { font-size: 36px; font-weight: 800; margin: 5px 0; display: flex; flex-direction: column; align-items: center; }
+        .value-med { font-size: 18px; font-weight: 700; display: flex; flex-direction: column; align-items: center; }
 
         .performance-section { padding: 0 20px; margin-top: 10px; margin-bottom: 20px; }
         .section-title { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; text-transform: uppercase; }
@@ -169,13 +170,15 @@
             </div>
 
             <div class="card-main">
-                <span class="label">Lucro Líquido (Mês)</span>
-                <div class="value-big" id="dash-profit">R$ 0,00</div>
+                <span class="label">Receita Total (Mês)</span>
+                <div class="value-big text-green" id="dash-rev">R$ 0,00</div>
             </div>
 
             <div class="card-small">
-                <span class="label">Receita Total</span>
-                <div class="value-med text-green" id="dash-rev">R$ 0,00</div>
+                <span class="label">Lucro Líquido</span>
+                <div class="value-med">
+                    <span id="dash-profit">R$ 0,00</span><small id="dash-profit-pct" class="pct-text"></small>
+                </div>
             </div>
 
             <div class="card-small">
@@ -263,13 +266,15 @@
             </div>
 
             <div class="card-main">
-                <span class="label">Lucro do Dia</span>
-                <div class="value-big" id="day-profit">R$ 0,00</div>
+                <span class="label">Receita (Dia)</span>
+                <div class="value-big text-green" id="day-rev">R$ 0,00</div>
             </div>
 
             <div class="card-small">
-                <span class="label">Receita</span>
-                <div class="value-med text-green" id="day-rev">R$ 0,00</div>
+                <span class="label">Lucro do Dia</span>
+                <div class="value-med">
+                    <span id="day-profit">R$ 0,00</span><small id="day-profit-pct" class="pct-text"></small>
+                </div>
             </div>
 
             <div class="card-small">
@@ -564,8 +569,16 @@
             const profit = tRev - totalExpenses;
             const calcPct = (val) => tRev > 0 ? `(${(val / tRev * 100).toFixed(1)}%)` : '(0%)';
 
-            document.getElementById('dash-profit').innerText = formatMoney(profit);
+            // Protagonista: Receita
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
+
+            // Lucro Líquido com Cor e Porcentagem
+            const profitEl = document.getElementById('dash-profit');
+            const profitPctEl = document.getElementById('dash-profit-pct');
+            profitEl.innerText = formatMoney(profit);
+            profitPctEl.innerText = calcPct(profit);
+            if (profit >= 0) { profitEl.className = "text-green"; profitPctEl.className = "pct-text text-green"; }
+            else { profitEl.className = "text-red"; profitPctEl.className = "pct-text text-red"; }
             
             document.getElementById('dash-exp').innerText = formatMoney(totalExpenses);
             document.getElementById('dash-exp-pct').innerText = calcPct(totalExpenses);
@@ -604,8 +617,17 @@
             const calcDayPct = (val) => rec > 0 ? `(${(val / rec * 100).toFixed(1)}%)` : '(0%)';
 
             document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
-            document.getElementById('day-profit').innerText = formatMoney(luc);
+            
+            // Protagonista do dia: Receita
             document.getElementById('day-rev').innerText = formatMoney(rec);
+
+            // Lucro do Dia com cor e porcentagem
+            const dayProfitEl = document.getElementById('day-profit');
+            const dayProfitPctEl = document.getElementById('day-profit-pct');
+            dayProfitEl.innerText = formatMoney(luc);
+            dayProfitPctEl.innerText = calcDayPct(luc);
+            if (luc >= 0) { dayProfitEl.className = "text-green"; dayProfitPctEl.className = "pct-text text-green"; }
+            else { dayProfitEl.className = "text-red"; dayProfitPctEl.className = "pct-text text-red"; }
             
             document.getElementById('day-exp').innerText = formatMoney(totalExp);
             document.getElementById('day-exp-pct').innerText = calcDayPct(totalExp);
