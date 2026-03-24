@@ -30,14 +30,13 @@
         .text-blue { color: var(--info-color) !important; }
         .text-purple { color: var(--rent-color) !important; }
 
-        /* ALTERAÇÃO: Porcentagem abaixo da informação */
         .pct-text {
-            display: block;      /* Força a quebra de linha */
+            display: block;
             font-size: 0.65em;
             opacity: 0.8;
-            margin-top: 4px;     /* Espaço entre o valor e a porcentagem */
+            margin-top: 4px;
             font-weight: 500;
-            margin-left: 0;      /* Remove margem lateral */
+            margin-left: 0;
         }
 
         .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
@@ -99,7 +98,6 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 45; overflow-y: auto; padding-bottom: 90px; }
 
-        /* --- ESTILOS DA ABA GRÁFICOS --- */
         .chart-container { background: var(--card-color); padding: 15px; border-radius: 18px; margin: 10px 20px; border: 1px solid #333; height: 300px; position: relative; }
         .filter-bar { display: flex; gap: 10px; padding: 10px 20px; justify-content: center; }
         .filter-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #333; background: #1c1c1e; color: #888; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -178,13 +176,15 @@
             </div>
 
             <div class="card-main">
-                <span class="label">Lucro Líquido (Mês)</span>
-                <div class="value-big" id="dash-profit">R$ 0,00</div>
+                <span class="label">Receita Total (Mês)</span>
+                <div class="value-big text-green" id="dash-rev">R$ 0,00</div>
             </div>
 
             <div class="card-small">
-                <span class="label">Receita Total</span>
-                <div class="value-med text-green" id="dash-rev">R$ 0,00</div>
+                <span class="label">Lucro Líquido</span>
+                <div class="value-med text-green">
+                    <span id="dash-profit">R$ 0,00</span><small id="dash-profit-pct" class="pct-text"></small>
+                </div>
             </div>
 
             <div class="card-small">
@@ -297,13 +297,15 @@
             </div>
 
             <div class="card-main">
-                <span class="label">Lucro do Dia</span>
-                <div class="value-big" id="day-profit">R$ 0,00</div>
+                <span class="label">Receita</span>
+                <div class="value-big text-green" id="day-rev">R$ 0,00</div>
             </div>
 
             <div class="card-small">
-                <span class="label">Receita</span>
-                <div class="value-med text-green" id="day-rev">R$ 0,00</div>
+                <span class="label">Lucro Líquido</span>
+                <div class="value-med text-green">
+                    <span id="day-profit">R$ 0,00</span><small id="day-profit-pct" class="pct-text"></small>
+                </div>
             </div>
 
             <div class="card-small">
@@ -369,14 +371,12 @@
             <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Planejar Aluguel</div>
             <label style="display:block; text-align:left; font-size:12px; color:#aaa; margin-bottom:5px;">Valor TOTAL do Aluguel (Mês)</label>
             <input type="number" id="input-total-rent" class="step-input" style="background: #1c1c1e; border: 1px solid #333; color: #fff; font-size: 18px; padding:10px; width:100%; border-radius:12px; text-align:center; margin-bottom:15px;" placeholder="Ex: 3000" oninput="updateRentPreview()">
-            
             <div class="calendar-wrapper">
                 <div class="calendar-header">
                     <div style="font-size:14px; font-weight:bold; color:#fff; text-transform: uppercase;" id="cal-month-title">Mês Atual</div>
                 </div>
                 <div id="rent-calendar" class="calendar-grid"></div>
             </div>
-
             <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid var(--rent-color); text-align:left;">
                 <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px;">
                     <span style="color:#aaa;">Falta Pagar:</span>
@@ -391,7 +391,6 @@
                     <span style="font-size:20px; font-weight:bold; color:var(--rent-color);" id="rent-preview-val">R$ 0</span>
                 </div>
             </div>
-
             <div class="modal-btns" style="display: flex; gap: 10px; flex-direction: column;">
                 <button class="btn btn-primary" onclick="saveRentConfig()">Salvar</button>
                 <button class="btn btn-text" onclick="closeRentConfig()">Fechar</button>
@@ -475,7 +474,6 @@
         let rentCalendarDate = new Date();
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
-
         let chartInstance = null;
         let chartFilter = 'week'; 
         let chartRefDate = new Date();
@@ -497,9 +495,7 @@
             window.history.pushState({modal: 'logout'}, "", "");
         }
 
-        function closeLogoutModal() {
-            document.getElementById('modal-logout').classList.add('hidden');
-        }
+        function closeLogoutModal() { document.getElementById('modal-logout').classList.add('hidden'); }
 
         function confirmLogout() {
             auth.signOut().then(() => {
@@ -605,8 +601,9 @@
             const profit = tRev - totalExpenses;
             const calcPct = (val) => tRev > 0 ? `(${(val / tRev * 100).toFixed(1)}%)` : '(0%)';
 
-            document.getElementById('dash-profit').innerText = formatMoney(profit);
             document.getElementById('dash-rev').innerText = formatMoney(tRev);
+            document.getElementById('dash-profit').innerText = formatMoney(profit);
+            document.getElementById('dash-profit-pct').innerText = calcPct(profit);
             document.getElementById('dash-exp').innerText = formatMoney(totalExpenses);
             document.getElementById('dash-exp-pct').innerText = calcPct(totalExpenses);
             document.getElementById('dash-fuel-val').innerText = formatMoney(tFuel);
@@ -639,8 +636,9 @@
             const calcDayPct = (val) => rec > 0 ? `(${(val / rec * 100).toFixed(1)}%)` : '(0%)';
 
             document.getElementById('detail-title').innerText = `Detalhes: ${d.date}`;
-            document.getElementById('day-profit').innerText = formatMoney(luc);
             document.getElementById('day-rev').innerText = formatMoney(rec);
+            document.getElementById('day-profit').innerText = formatMoney(luc);
+            document.getElementById('day-profit-pct').innerText = calcDayPct(luc);
             document.getElementById('day-exp').innerText = formatMoney(totalExp);
             document.getElementById('day-exp-pct').innerText = calcDayPct(totalExp);
             document.getElementById('day-fuel-val').innerText = formatMoney(d.fuel||0);
@@ -672,12 +670,10 @@
             document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
             document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
             document.getElementById('view-day-detail').classList.add('hidden');
-            
             document.querySelectorAll('.nav-btn').forEach(b => {
                 const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': 'nav-chart');
                 b.classList.toggle('active', b.id === target);
             });
-
             if(tab==='history') renderHistory(); 
             else if(tab==='charts') renderCharts();
             else renderDashboard();
@@ -717,11 +713,8 @@
         }
 
         function changeChartPeriod(dir) {
-            if(chartFilter === 'week') {
-                chartRefDate.setDate(chartRefDate.getDate() + (dir * 7));
-            } else {
-                chartRefDate.setMonth(chartRefDate.getMonth() + dir);
-            }
+            if(chartFilter === 'week') { chartRefDate.setDate(chartRefDate.getDate() + (dir * 7)); } 
+            else { chartRefDate.setMonth(chartRefDate.getMonth() + dir); }
             renderCharts();
         }
 
@@ -730,7 +723,6 @@
             const canvas = document.getElementById('mainChart');
             if(!canvas) return;
             const ctx = canvas.getContext('2d');
-            
             let labels = [], revenueData = [], expenseData = [];
             let totalRev = 0, totalExp = 0, totalHrs = 0, totalKm = 0, totalFuel = 0, totalFood = 0, totalRent = 0, totalMaint = 0;
 
@@ -738,20 +730,14 @@
                 const startOfWeek = new Date(chartRefDate);
                 startOfWeek.setDate(chartRefDate.getDate() - chartRefDate.getDay());
                 document.getElementById('chart-period-label').innerText = `Semana de ${startOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}`;
-                
                 for (let i = 0; i < 7; i++) {
-                    const d = new Date(startOfWeek);
-                    d.setDate(startOfWeek.getDate() + i);
+                    const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
                     const dateStr = d.toLocaleDateString('pt-BR');
                     const dayData = db.find(item => item.date === dateStr) || {};
-                    
                     labels.push(d.toLocaleDateString('pt-BR', {weekday: 'short'}));
                     const rev = (dayData.uber||0) + (dayData.pop||0);
                     const exp = (dayData.fuel||0) + (dayData.food||0) + (dayData.rentPaid||0) + (dayData.maintenance||0);
-                    
-                    revenueData.push(rev);
-                    expenseData.push(exp);
-
+                    revenueData.push(rev); expenseData.push(exp);
                     totalRev += rev; totalExp += exp; totalKm += (dayData.km||0);
                     totalFuel += (dayData.fuel||0); totalFood += (dayData.food||0);
                     totalRent += (dayData.rentPaid||0); totalMaint += (dayData.maintenance||0);
@@ -763,19 +749,14 @@
                 const m = chartRefDate.getMonth(), y = chartRefDate.getFullYear();
                 document.getElementById('chart-period-label').innerText = `${monthNames[m]} ${y}`;
                 labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
-                revenueData = [0,0,0,0,0];
-                expenseData = [0,0,0,0,0];
-                
+                revenueData = [0,0,0,0,0]; expenseData = [0,0,0,0,0];
                 db.forEach(item => {
                     const [d, mon, yr] = item.date.split('/').map(Number);
                     if(mon-1 === m && yr === y) {
                         const weekNum = Math.min(Math.floor((d - 1) / 7), 4);
                         const rev = (item.uber||0) + (item.pop||0);
                         const exp = (item.fuel||0) + (item.food||0) + (item.rentPaid||0) + (item.maintenance||0);
-                        
-                        revenueData[weekNum] += rev;
-                        expenseData[weekNum] += exp;
-
+                        revenueData[weekNum] += rev; expenseData[weekNum] += exp;
                         totalRev += rev; totalExp += exp; totalKm += (item.km||0);
                         totalFuel += (item.fuel||0); totalFood += (item.food||0);
                         totalRent += (item.rentPaid||0); totalMaint += (item.maintenance||0);
@@ -797,8 +778,7 @@
                     ]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
+                    responsive: true, maintainAspectRatio: false, 
                     plugins: { legend: { display: false } }, 
                     scales: { 
                         y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#888', font: { size: 10 } } }, 
@@ -813,12 +793,12 @@
             document.getElementById('chart-dashboard-summary').innerHTML = `
                 <div class="summary-grid" style="margin-top:20px;">
                     <div class="card-main">
-                        <span class="label">Lucro Líquido (${chartFilter==='week'?'Semana':'Mês'})</span>
-                        <div class="value-big">${formatMoney(profit)}</div>
+                        <span class="label">Receita (${chartFilter==='week'?'Semana':'Mês'})</span>
+                        <div class="value-big text-green">${formatMoney(totalRev)}</div>
                     </div>
                     <div class="card-small">
-                        <span class="label">Receita</span>
-                        <div class="value-med text-green">${formatMoney(totalRev)}</div>
+                        <span class="label">Lucro Líquido</span>
+                        <div class="value-med text-green"><span>${formatMoney(profit)}</span><small class="pct-text">${calcPct(profit)}</small></div>
                     </div>
                     <div class="card-small">
                         <span class="label">Despesas</span>
