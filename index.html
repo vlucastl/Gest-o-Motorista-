@@ -79,11 +79,13 @@
         .month-selector span { font-size: 12px; color: var(--text-gray); }
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
-        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
+        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; transition: transform 0.1s; cursor: pointer; }
+        .card-main:active { transform: scale(0.98); }
         .card-rent-config { grid-column: span 2; background: rgba(191, 90, 242, 0.1); border: 1px solid var(--rent-color); padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .rent-info-left { display: flex; flex-direction: column; align-items: flex-start; text-align: left; width: 60%; }
         .rent-info-right { text-align: right; width: 40%; }
-        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid #333; }
+        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid #333; transition: transform 0.1s; cursor: pointer; }
+        .card-small:active { transform: scale(0.96); }
         .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 5px 0; }
         .value-med { font-size: 18px; font-weight: 700; }
@@ -91,7 +93,8 @@
         .performance-section { padding: 0 20px; margin-top: 10px; margin-bottom: 20px; }
         .section-title { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; text-transform: uppercase; }
         .perf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .card-perf { background: #2c2c2e; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .card-perf { background: #2c2c2e; padding: 12px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.1s; }
+        .card-perf:active { transform: scale(0.95); background: #3a3a3c; }
         .perf-val { font-size: 16px; font-weight: bold; color: #fff; margin-top: 5px; }
         .perf-icon { font-size: 20px; margin-bottom: 5px; }
 
@@ -104,7 +107,6 @@
         .filter-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); }
         .nav-period { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-top: 10px; }
 
-        /* Estilos para o Seletor de Métricas dentro da Aba Gráficos */
         .metric-selector-scroll { display: flex; gap: 10px; padding: 10px 20px; overflow-x: auto; scrollbar-width: none; }
         .metric-selector-scroll::-webkit-scrollbar { display: none; }
         .metric-card-mini { flex-shrink: 0; background: #1c1c1e; border: 1px solid #333; padding: 12px; border-radius: 14px; text-align: center; min-width: 100px; transition: 0.2s; cursor: pointer; }
@@ -183,47 +185,47 @@
                 </div>
             </div>
 
-            <div class="card-main">
+            <div class="card-main" onclick="switchTab('charts'); setChartMetric('revenue')">
                 <span class="label">Receita Total (Mês)</span>
                 <div class="value-big text-green" id="dash-rev">R$ 0,00</div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('profit')">
                 <span class="label">Lucro Líquido</span>
                 <div class="value-med text-green">
                     <span id="dash-profit">R$ 0,00</span><small id="dash-profit-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('expenses')">
                 <span class="label">Despesas Totais</span>
                 <div class="value-med text-red">
                     <span id="dash-exp">R$ 0,00</span><small id="dash-exp-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('fuel')">
                 <span class="label">⛽ Combustível</span>
                 <div class="value-med text-orange">
                     <span id="dash-fuel-val">R$ 0,00</span><small id="dash-fuel-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('food')">
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red">
                     <span id="dash-food-val">R$ 0,00</span><small id="dash-food-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('maintenance')">
                 <span class="label">🛠️ Manutenção</span>
                 <div class="value-med text-red">
                     <span id="dash-maint-val">R$ 0,00</span><small id="dash-maint-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small">
+            <div class="card-small" onclick="switchTab('charts'); setChartMetric('rentPaid')">
                 <span class="label">🟣 Aluguel (Pago)</span>
                 <div class="value-med text-purple">
                     <span id="dash-rent-val">R$ 0,00</span><small id="dash-rent-pct" class="pct-text"></small>
@@ -234,17 +236,17 @@
         <div class="performance-section">
             <div class="section-title">Estatísticas do Mês</div>
             <div class="perf-grid">
-                <div class="card-perf">
+                <div class="card-perf" onclick="switchTab('charts'); setChartMetric('all')">
                     <span class="perf-icon">⏱️</span>
                     <span class="label">Horas/Mês</span>
                     <span class="perf-val" id="dash-hours">0h</span>
                 </div>
-                <div class="card-perf">
+                <div class="card-perf" onclick="switchTab('charts'); setChartMetric('profit')">
                     <span class="perf-icon">💎</span>
                     <span class="label">Ganho/Hora</span>
                     <span class="perf-val text-green" id="dash-hourly">R$ 0</span>
                 </div>
-                <div class="card-perf">
+                <div class="card-perf" onclick="switchTab('charts'); setChartMetric('revenue')">
                     <span class="perf-icon">🛣️</span>
                     <span class="label">R$/KM</span>
                     <span class="perf-val text-blue" id="dash-km-val">R$ 0</span>
@@ -745,26 +747,23 @@
             });
         }
 
-        /* --- LOGICA DE GRAFICOS ATUALIZADA --- */
-
         function setChartMetric(metric) {
             currentChartMetric = metric;
             document.querySelectorAll('.metric-card-mini').forEach(card => {
                 card.classList.toggle('active', card.id === `m-${metric}`);
             });
             
-            // Atualiza o título dinâmico
             const titles = {
                 all: 'Desempenho Geral',
                 revenue: 'Desempenho: Receita',
                 profit: 'Desempenho: Lucro',
+                expenses: 'Desempenho: Despesas',
                 fuel: 'Desempenho: Combustível',
                 food: 'Desempenho: Alimentação',
                 maintenance: 'Desempenho: Manutenção',
                 rentPaid: 'Desempenho: Aluguel'
             };
             document.getElementById('chart-title-dynamic').innerText = titles[metric] || 'Desempenho';
-            
             renderCharts();
         }
 
@@ -821,6 +820,7 @@
                         secondaryData.push(exp);
                     } else if(currentChartMetric === 'revenue') primaryData.push(rev);
                     else if(currentChartMetric === 'profit') primaryData.push(rev - exp);
+                    else if(currentChartMetric === 'expenses') primaryData.push(exp);
                     else primaryData.push(dayData[currentChartMetric] || 0);
 
                     totalRev += rev; totalExp += exp; totalKm += (dayData.km||0);
@@ -847,6 +847,7 @@
                             secondaryData[weekNum] += exp;
                         } else if(currentChartMetric === 'revenue') primaryData[weekNum] += rev;
                         else if(currentChartMetric === 'profit') primaryData[weekNum] += (rev - exp);
+                        else if(currentChartMetric === 'expenses') primaryData[weekNum] += exp;
                         else primaryData[weekNum] += (item[currentChartMetric] || 0);
 
                         totalRev += rev; totalExp += exp; totalKm += (item.km||0);
@@ -895,31 +896,31 @@
             
             document.getElementById('chart-dashboard-summary').innerHTML = `
                 <div class="summary-grid" style="margin-top:20px;">
-                    <div class="card-main">
+                    <div class="card-main" onclick="setChartMetric('revenue')">
                         <span class="label">Receita (${chartFilter==='week'?'Semana':'Mês'})</span>
                         <div class="value-big text-green">${formatMoney(totalRev)}</div>
                     </div>
-                    <div class="card-small">
+                    <div class="card-small" onclick="setChartMetric('profit')">
                         <span class="label">Lucro Líquido</span>
                         <div class="value-med text-green"><span>${formatMoney(profit)}</span><small class="pct-text">${calcPct(profit)}</small></div>
                     </div>
-                    <div class="card-small">
+                    <div class="card-small" onclick="setChartMetric('expenses')">
                         <span class="label">Despesas</span>
                         <div class="value-med text-red"><span>${formatMoney(totalExp)}</span><small class="pct-text">${calcPct(totalExp)}</small></div>
                     </div>
                     <div class="performance-section" style="grid-column: span 2; padding:0; margin-top:10px;">
                         <div class="perf-grid">
-                            <div class="card-perf">
+                            <div class="card-perf" onclick="setChartMetric('all')">
                                 <span class="perf-icon">⏱️</span>
                                 <span class="label">Horas</span>
                                 <span class="perf-val">${totalHrs.toFixed(1)}h</span>
                             </div>
-                            <div class="card-perf">
+                            <div class="card-perf" onclick="setChartMetric('profit')">
                                 <span class="perf-icon">💎</span>
                                 <span class="label">Ganho/h</span>
                                 <span class="perf-val text-green">${formatMoney(totalHrs > 0 ? profit / totalHrs : 0)}</span>
                             </div>
-                            <div class="card-perf">
+                            <div class="card-perf" onclick="setChartMetric('revenue')">
                                 <span class="perf-icon">🛣️</span>
                                 <span class="label">R$/KM</span>
                                 <span class="perf-val text-blue">${formatMoney(totalKm > 0 ? totalRev / totalKm : 0)}</span>
@@ -929,8 +930,6 @@
                 </div>
             `;
         }
-
-        /* --- RESTANTE DAS FUNCOES ORIGINAIS --- */
 
         function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
 
