@@ -30,12 +30,14 @@
         .text-blue { color: var(--info-color) !important; }
         .text-purple { color: var(--rent-color) !important; }
 
+        /* ALTERAÇÃO: Porcentagem abaixo da informação */
         .pct-text {
+            display: block;      /* Força a quebra de linha */
             font-size: 0.65em;
             opacity: 0.8;
-            margin-left: 4px;
+            margin-top: 4px;     /* Espaço entre o valor e a porcentagem */
             font-weight: 500;
-            vertical-align: middle;
+            margin-left: 0;      /* Remove margem lateral */
         }
 
         .btn { border: none; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 16px; width: 100%; cursor: pointer; transition: 0.2s; }
@@ -474,7 +476,6 @@
         let itemToDeleteIndex = null;
         window.isRegisterMode = false;
 
-        // Váriáveis de Gráficos
         let chartInstance = null;
         let chartFilter = 'week'; 
         let chartRefDate = new Date();
@@ -708,7 +709,6 @@
             });
         }
 
-        // --- LÓGICA DE GRÁFICOS ---
         function setChartFilter(f) {
             chartFilter = f;
             document.getElementById('btn-filter-week').classList.toggle('active', f === 'week');
@@ -752,7 +752,6 @@
                     revenueData.push(rev);
                     expenseData.push(exp);
 
-                    // Acumuladores para o dashboard
                     totalRev += rev; totalExp += exp; totalKm += (dayData.km||0);
                     totalFuel += (dayData.fuel||0); totalFood += (dayData.food||0);
                     totalRent += (dayData.rentPaid||0); totalMaint += (dayData.maintenance||0);
@@ -808,7 +807,6 @@
                 }
             });
 
-            // Atualizar Dashboard interno da aba de Gráficos
             const profit = totalRev - totalExp;
             const calcPct = (val) => totalRev > 0 ? `(${(val / totalRev * 100).toFixed(1)}%)` : '(0%)';
             
@@ -824,23 +822,23 @@
                     </div>
                     <div class="card-small">
                         <span class="label">Despesas</span>
-                        <div class="value-med text-red">${formatMoney(totalExp)}<small class="pct-text">${calcPct(totalExp)}</small></div>
+                        <div class="value-med text-red"><span>${formatMoney(totalExp)}</span><small class="pct-text">${calcPct(totalExp)}</small></div>
                     </div>
                     <div class="card-small">
                         <span class="label">⛽ Combustível</span>
-                        <div class="value-med text-orange">${formatMoney(totalFuel)}<small class="pct-text">${calcPct(totalFuel)}</small></div>
+                        <div class="value-med text-orange"><span>${formatMoney(totalFuel)}</span><small class="pct-text">${calcPct(totalFuel)}</small></div>
                     </div>
                     <div class="card-small">
                         <span class="label">🍔 Alimentação</span>
-                        <div class="value-med text-red">${formatMoney(totalFood)}<small class="pct-text">${calcPct(totalFood)}</small></div>
+                        <div class="value-med text-red"><span>${formatMoney(totalFood)}</span><small class="pct-text">${calcPct(totalFood)}</small></div>
                     </div>
                     <div class="card-small">
                         <span class="label">🛠️ Manutenção</span>
-                        <div class="value-med text-red">${formatMoney(totalMaint)}<small class="pct-text">${calcPct(totalMaint)}</small></div>
+                        <div class="value-med text-red"><span>${formatMoney(totalMaint)}</span><small class="pct-text">${calcPct(totalMaint)}</small></div>
                     </div>
                     <div class="card-small">
                         <span class="label">🟣 Aluguel</span>
-                        <div class="value-med text-purple">${formatMoney(totalRent)}<small class="pct-text">${calcPct(totalRent)}</small></div>
+                        <div class="value-med text-purple"><span>${formatMoney(totalRent)}</span><small class="pct-text">${calcPct(totalRent)}</small></div>
                     </div>
                     <div class="performance-section" style="grid-column: span 2; padding:0; margin-top:10px;">
                         <div class="perf-grid">
@@ -865,7 +863,6 @@
             `;
         }
 
-        // --- WIZARD E ENTRADAS ---
         function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
 
         function startWizard(indexToEdit = null) {
