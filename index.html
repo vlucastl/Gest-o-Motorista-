@@ -53,10 +53,6 @@
         .btn-logout-new { background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--danger-color); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
         .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
 
-        /* NOVOS ESTILOS PARA CARDS CLICÁVEIS */
-        .card-main, .card-small { cursor: pointer; transition: transform 0.2s, background 0.2s; border: 1px solid #333; }
-        .card-main:active, .card-small:active { transform: scale(0.97); background: #2c2c2e; }
-
         #login-screen, #wait-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://source.unsplash.com/random/1080x1920/?luxury-car,night,neon'); background-size: cover; background-position: center; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; animation: fadeIn 0.5s ease; }
         .login-logo { font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--primary-color)); animation: float 3s ease-in-out infinite; }
         .login-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
@@ -83,11 +79,11 @@
         .month-selector span { font-size: 12px; color: var(--text-gray); }
 
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px 20px; }
-        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; }
+        .card-main { grid-column: span 2; background: linear-gradient(180deg, #1c1c1e 0%, #111 100%); padding: 24px; border-radius: 18px; text-align: center; border: 1px solid #333; }
         .card-rent-config { grid-column: span 2; background: rgba(191, 90, 242, 0.1); border: 1px solid var(--rent-color); padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .rent-info-left { display: flex; flex-direction: column; align-items: flex-start; text-align: left; width: 60%; }
         .rent-info-right { text-align: right; width: 40%; }
-        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;}
+        .card-small { background: var(--card-color); padding: 16px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid #333; }
         .label { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .value-big { font-size: 36px; font-weight: 800; color: var(--primary-color); margin: 5px 0; }
         .value-med { font-size: 18px; font-weight: 700; }
@@ -102,11 +98,19 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 45; overflow-y: auto; padding-bottom: 90px; }
 
-        .chart-container { background: var(--card-color); padding: 15px; border-radius: 18px; margin: 10px 20px; border: 1px solid #333; height: 300px; position: relative; }
-        .filter-bar { display: flex; gap: 10px; padding: 10px 20px; justify-content: center; }
-        .filter-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #333; background: #1c1c1e; color: #888; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .chart-container { background: var(--card-color); padding: 15px; border-radius: 18px; margin: 10px 20px; border: 1px solid #333; height: 280px; position: relative; }
+        .filter-bar { display: flex; gap: 8px; padding: 10px 20px; justify-content: center; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .filter-btn { flex-shrink: 0; padding: 10px 20px; border-radius: 20px; border: 1px solid #333; background: #1c1c1e; color: #888; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 12px; }
         .filter-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); }
         .nav-period { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-top: 10px; }
+
+        /* Estilos para o Seletor de Métricas dentro da Aba Gráficos */
+        .metric-selector-scroll { display: flex; gap: 10px; padding: 10px 20px; overflow-x: auto; scrollbar-width: none; }
+        .metric-selector-scroll::-webkit-scrollbar { display: none; }
+        .metric-card-mini { flex-shrink: 0; background: #1c1c1e; border: 1px solid #333; padding: 12px; border-radius: 14px; text-align: center; min-width: 100px; transition: 0.2s; cursor: pointer; }
+        .metric-card-mini.active { border-color: var(--primary-color); background: rgba(0, 230, 118, 0.05); }
+        .metric-card-mini .m-label { font-size: 10px; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .metric-card-mini .m-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
@@ -179,47 +183,47 @@
                 </div>
             </div>
 
-            <div class="card-main" onclick="openMetricChart('revenue', 'Receita Total')">
+            <div class="card-main">
                 <span class="label">Receita Total (Mês)</span>
                 <div class="value-big text-green" id="dash-rev">R$ 0,00</div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('profit', 'Lucro Líquido')">
+            <div class="card-small">
                 <span class="label">Lucro Líquido</span>
                 <div class="value-med text-green">
                     <span id="dash-profit">R$ 0,00</span><small id="dash-profit-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('expenses', 'Despesas Totais')">
+            <div class="card-small">
                 <span class="label">Despesas Totais</span>
                 <div class="value-med text-red">
                     <span id="dash-exp">R$ 0,00</span><small id="dash-exp-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('fuel', 'Combustível')">
+            <div class="card-small">
                 <span class="label">⛽ Combustível</span>
                 <div class="value-med text-orange">
                     <span id="dash-fuel-val">R$ 0,00</span><small id="dash-fuel-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('food', 'Alimentação')">
+            <div class="card-small">
                 <span class="label">🍔 Alimentação</span>
                 <div class="value-med text-red">
                     <span id="dash-food-val">R$ 0,00</span><small id="dash-food-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('maintenance', 'Manutenção')">
+            <div class="card-small">
                 <span class="label">🛠️ Manutenção</span>
                 <div class="value-med text-red">
                     <span id="dash-maint-val">R$ 0,00</span><small id="dash-maint-pct" class="pct-text"></small>
                 </div>
             </div>
 
-            <div class="card-small" onclick="openMetricChart('rentPaid', 'Aluguel Pago')">
+            <div class="card-small">
                 <span class="label">🟣 Aluguel (Pago)</span>
                 <div class="value-med text-purple">
                     <span id="dash-rent-val">R$ 0,00</span><small id="dash-rent-pct" class="pct-text"></small>
@@ -260,6 +264,37 @@
     <div id="view-charts" class="hidden">
         <div class="header-simple">
             <h2 id="chart-title-dynamic" style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Desempenho</h2>
+        </div>
+
+        <div class="metric-selector-scroll">
+            <div class="metric-card-mini active" id="m-all" onclick="setChartMetric('all')">
+                <span class="m-icon">📊</span>
+                <span class="m-label">Geral</span>
+            </div>
+            <div class="metric-card-mini" id="m-revenue" onclick="setChartMetric('revenue')">
+                <span class="m-icon">💰</span>
+                <span class="m-label">Receita</span>
+            </div>
+            <div class="metric-card-mini" id="m-profit" onclick="setChartMetric('profit')">
+                <span class="m-icon">📈</span>
+                <span class="m-label">Lucro</span>
+            </div>
+            <div class="metric-card-mini" id="m-fuel" onclick="setChartMetric('fuel')">
+                <span class="m-icon">⛽</span>
+                <span class="m-label">Posto</span>
+            </div>
+            <div class="metric-card-mini" id="m-food" onclick="setChartMetric('food')">
+                <span class="m-icon">🍔</span>
+                <span class="m-label">Comida</span>
+            </div>
+            <div class="metric-card-mini" id="m-maintenance" onclick="setChartMetric('maintenance')">
+                <span class="m-icon">🛠️</span>
+                <span class="m-label">Oficina</span>
+            </div>
+            <div class="metric-card-mini" id="m-rentPaid" onclick="setChartMetric('rentPaid')">
+                <span class="m-icon">🟣</span>
+                <span class="m-label">Aluguel</span>
+            </div>
         </div>
 
         <div class="filter-bar">
@@ -481,7 +516,7 @@
         let chartInstance = null;
         let chartFilter = 'week'; 
         let chartRefDate = new Date();
-        let currentChartMetric = 'all'; // Variável global para controle do gráfico dinâmico
+        let currentChartMetric = 'all'; 
 
         function togglePasswordVisibility() {
             const passInput = document.getElementById('login-pass');
@@ -546,11 +581,7 @@
             if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
             if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
             if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
-            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { 
-                currentChartMetric = 'all'; // Reset da métrica ao voltar
-                switchTab('home'); 
-                return; 
-            }
+            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home'); return; }
         }
 
         function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
@@ -631,12 +662,6 @@
             document.getElementById('dash-rent-target').innerText = formatMoney(currentMonthConfig.total);
         }
 
-        function openMetricChart(metric, label) {
-            currentChartMetric = metric;
-            document.getElementById('chart-title-dynamic').innerText = `Desempenho: ${label}`;
-            switchTab('charts');
-        }
-
         function openDayDetail(index) {
             window.history.pushState({modal: 'detail'}, "", "");
             currentDetailIndex = index;
@@ -689,12 +714,6 @@
                 const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': 'nav-chart');
                 b.classList.toggle('active', b.id === target);
             });
-
-            if(tab !== 'charts' && currentChartMetric !== 'all') {
-                currentChartMetric = 'all';
-                document.getElementById('chart-title-dynamic').innerText = `Desempenho`;
-            }
-
             if(tab==='history') renderHistory(); 
             else if(tab==='charts') renderCharts();
             else renderDashboard();
@@ -726,6 +745,29 @@
             });
         }
 
+        /* --- LOGICA DE GRAFICOS ATUALIZADA --- */
+
+        function setChartMetric(metric) {
+            currentChartMetric = metric;
+            document.querySelectorAll('.metric-card-mini').forEach(card => {
+                card.classList.toggle('active', card.id === `m-${metric}`);
+            });
+            
+            // Atualiza o título dinâmico
+            const titles = {
+                all: 'Desempenho Geral',
+                revenue: 'Desempenho: Receita',
+                profit: 'Desempenho: Lucro',
+                fuel: 'Desempenho: Combustível',
+                food: 'Desempenho: Alimentação',
+                maintenance: 'Desempenho: Manutenção',
+                rentPaid: 'Desempenho: Aluguel'
+            };
+            document.getElementById('chart-title-dynamic').innerText = titles[metric] || 'Desempenho';
+            
+            renderCharts();
+        }
+
         function setChartFilter(f) {
             chartFilter = f;
             document.getElementById('btn-filter-week').classList.toggle('active', f === 'week');
@@ -744,8 +786,9 @@
             const canvas = document.getElementById('mainChart');
             if(!canvas) return;
             const ctx = canvas.getContext('2d');
+            
             let labels = [], primaryData = [], secondaryData = [];
-            let totalRev=0, totalExp=0, totalFuel=0, totalFood=0, totalRent=0, totalMaint=0, totalKm=0, totalHrs=0;
+            let totalRev = 0, totalExp = 0, totalHrs = 0, totalKm = 0, totalFuel = 0, totalFood = 0, totalRent = 0, totalMaint = 0;
 
             const metricConfigs = {
                 all: { label: 'Ganhos', color: '#00E676', secondary: true },
@@ -764,30 +807,27 @@
                 const startOfWeek = new Date(chartRefDate);
                 startOfWeek.setDate(chartRefDate.getDate() - chartRefDate.getDay());
                 document.getElementById('chart-period-label').innerText = `Semana de ${startOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}`;
-                
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
                     const dateStr = d.toLocaleDateString('pt-BR');
-                    const day = db.find(item => item.date === dateStr) || {};
+                    const dayData = db.find(item => item.date === dateStr) || {};
                     labels.push(d.toLocaleDateString('pt-BR', {weekday: 'short'}));
                     
-                    const rev = (day.uber||0) + (day.pop||0);
-                    const exp = (day.fuel||0) + (day.food||0) + (day.rentPaid||0) + (day.maintenance||0);
-                    const prof = rev - exp;
-
+                    const rev = (dayData.uber||0) + (dayData.pop||0);
+                    const exp = (dayData.fuel||0) + (dayData.food||0) + (dayData.rentPaid||0) + (dayData.maintenance||0);
+                    
                     if(currentChartMetric === 'all') {
                         primaryData.push(rev);
                         secondaryData.push(exp);
                     } else if(currentChartMetric === 'revenue') primaryData.push(rev);
-                    else if(currentChartMetric === 'profit') primaryData.push(prof);
-                    else if(currentChartMetric === 'expenses') primaryData.push(exp);
-                    else primaryData.push(day[currentChartMetric] || 0);
+                    else if(currentChartMetric === 'profit') primaryData.push(rev - exp);
+                    else primaryData.push(dayData[currentChartMetric] || 0);
 
-                    totalRev += rev; totalExp += exp; totalKm += (day.km||0);
-                    totalFuel += (day.fuel||0); totalFood += (day.food||0);
-                    totalRent += (day.rentPaid||0); totalMaint += (day.maintenance||0);
-                    let h = day.hours || 0;
-                    if(!h && day.hoursFormatted) { const [hh,mm] = day.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
+                    totalRev += rev; totalExp += exp; totalKm += (dayData.km||0);
+                    totalFuel += (dayData.fuel||0); totalFood += (dayData.food||0);
+                    totalRent += (dayData.rentPaid||0); totalMaint += (dayData.maintenance||0);
+                    let h = dayData.hours || 0;
+                    if(!h && dayData.hoursFormatted) { const [hh,mm] = dayData.hoursFormatted.split(':').map(Number); h = hh + (mm/60); }
                     totalHrs += h;
                 }
             } else {
@@ -795,21 +835,18 @@
                 document.getElementById('chart-period-label').innerText = `${monthNames[m]} ${y}`;
                 labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
                 primaryData = [0,0,0,0,0]; secondaryData = [0,0,0,0,0];
-
                 db.forEach(item => {
                     const [d, mon, yr] = item.date.split('/').map(Number);
                     if(mon-1 === m && yr === y) {
                         const weekNum = Math.min(Math.floor((d - 1) / 7), 4);
                         const rev = (item.uber||0) + (item.pop||0);
                         const exp = (item.fuel||0) + (item.food||0) + (item.rentPaid||0) + (item.maintenance||0);
-                        const prof = rev - exp;
                         
                         if(currentChartMetric === 'all') {
                             primaryData[weekNum] += rev;
                             secondaryData[weekNum] += exp;
                         } else if(currentChartMetric === 'revenue') primaryData[weekNum] += rev;
-                        else if(currentChartMetric === 'profit') primaryData[weekNum] += prof;
-                        else if(currentChartMetric === 'expenses') primaryData[weekNum] += exp;
+                        else if(currentChartMetric === 'profit') primaryData[weekNum] += (rev - exp);
                         else primaryData[weekNum] += (item[currentChartMetric] || 0);
 
                         totalRev += rev; totalExp += exp; totalKm += (item.km||0);
@@ -870,22 +907,6 @@
                         <span class="label">Despesas</span>
                         <div class="value-med text-red"><span>${formatMoney(totalExp)}</span><small class="pct-text">${calcPct(totalExp)}</small></div>
                     </div>
-                    <div class="card-small">
-                        <span class="label">⛽ Combustível</span>
-                        <div class="value-med text-orange"><span>${formatMoney(totalFuel)}</span><small class="pct-text">${calcPct(totalFuel)}</small></div>
-                    </div>
-                    <div class="card-small">
-                        <span class="label">🍔 Alimentação</span>
-                        <div class="value-med text-red"><span>${formatMoney(totalFood)}</span><small class="pct-text">${calcPct(totalFood)}</small></div>
-                    </div>
-                    <div class="card-small">
-                        <span class="label">🛠️ Manutenção</span>
-                        <div class="value-med text-red"><span>${formatMoney(totalMaint)}</span><small class="pct-text">${calcPct(totalMaint)}</small></div>
-                    </div>
-                    <div class="card-small">
-                        <span class="label">🟣 Aluguel</span>
-                        <div class="value-med text-purple"><span>${formatMoney(totalRent)}</span><small class="pct-text">${calcPct(totalRent)}</small></div>
-                    </div>
                     <div class="performance-section" style="grid-column: span 2; padding:0; margin-top:10px;">
                         <div class="perf-grid">
                             <div class="card-perf">
@@ -908,6 +929,8 @@
                 </div>
             `;
         }
+
+        /* --- RESTANTE DAS FUNCOES ORIGINAIS --- */
 
         function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
 
