@@ -53,7 +53,7 @@
         .btn-logout-new { background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--danger-color); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
         .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
 
-        #login-screen, #wait-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://source.unsplash.com/random/1080x1920/?luxury-car,night,neon'); background-size: cover; background-position: center; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; animation: fadeIn 0.5s ease; }
+        #login-screen, #wait-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1000'); background-size: cover; background-position: center; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; animation: fadeIn 0.5s ease; }
         .login-logo { font-size: 60px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--primary-color)); animation: float 3s ease-in-out infinite; }
         .login-title { font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
         .login-subtitle { font-size: 14px; color: #aaa; margin-bottom: 40px; text-align: center; max-width: 80%; }
@@ -107,12 +107,12 @@
         .filter-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); }
         .nav-period { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; margin-top: 10px; }
 
-        .metric-selector-scroll { display: flex; gap: 10px; padding: 10px 20px; overflow-x: auto; scrollbar-width: none; }
-        .metric-selector-scroll::-webkit-scrollbar { display: none; }
-        .metric-card-mini { flex-shrink: 0; background: #1c1c1e; border: 1px solid #333; padding: 12px; border-radius: 14px; text-align: center; min-width: 100px; transition: 0.2s; cursor: pointer; }
-        .metric-card-mini.active { border-color: var(--primary-color); background: rgba(0, 230, 118, 0.05); }
-        .metric-card-mini .m-label { font-size: 10px; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .metric-card-mini .m-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+        /* Estilo para Card Ativo na aba Gráficos */
+        .active-metric-card {
+            border-color: var(--primary-color) !important;
+            background: rgba(0, 230, 118, 0.05) !important;
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.15);
+        }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
@@ -266,37 +266,6 @@
     <div id="view-charts" class="hidden">
         <div class="header-simple">
             <h2 id="chart-title-dynamic" style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Desempenho</h2>
-        </div>
-
-        <div class="metric-selector-scroll">
-            <div class="metric-card-mini active" id="m-all" onclick="setChartMetric('all')">
-                <span class="m-icon">📊</span>
-                <span class="m-label">Geral</span>
-            </div>
-            <div class="metric-card-mini" id="m-revenue" onclick="setChartMetric('revenue')">
-                <span class="m-icon">💰</span>
-                <span class="m-label">Receita</span>
-            </div>
-            <div class="metric-card-mini" id="m-profit" onclick="setChartMetric('profit')">
-                <span class="m-icon">📈</span>
-                <span class="m-label">Lucro</span>
-            </div>
-            <div class="metric-card-mini" id="m-fuel" onclick="setChartMetric('fuel')">
-                <span class="m-icon">⛽</span>
-                <span class="m-label">Posto</span>
-            </div>
-            <div class="metric-card-mini" id="m-food" onclick="setChartMetric('food')">
-                <span class="m-icon">🍔</span>
-                <span class="m-label">Comida</span>
-            </div>
-            <div class="metric-card-mini" id="m-maintenance" onclick="setChartMetric('maintenance')">
-                <span class="m-icon">🛠️</span>
-                <span class="m-label">Oficina</span>
-            </div>
-            <div class="metric-card-mini" id="m-rentPaid" onclick="setChartMetric('rentPaid')">
-                <span class="m-icon">🟣</span>
-                <span class="m-label">Aluguel</span>
-            </div>
         </div>
 
         <div class="filter-bar">
@@ -520,6 +489,8 @@
         let chartRefDate = new Date();
         let currentChartMetric = 'all'; 
 
+        // --- FUNÇÕES DE INTERFACE ---
+
         function togglePasswordVisibility() {
             const passInput = document.getElementById('login-pass');
             const toggleBtn = document.getElementById('toggle-password');
@@ -546,6 +517,30 @@
                 window.location.reload();
             }).catch(e => { console.error(e); alert("Erro ao sair. Tente novamente."); });
         }
+
+        function handleBackButton() {
+            if(!document.getElementById('modal-logout').classList.contains('hidden')) { closeLogoutModal(); return; }
+            if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
+            if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
+            if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
+            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home'); return; }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
+            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
+            document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
+            document.getElementById('view-day-detail').classList.add('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': 'nav-chart');
+                b.classList.toggle('active', b.id === target);
+            });
+            if(tab==='history') renderHistory(); 
+            else if(tab==='charts') renderCharts();
+            else renderDashboard();
+        }
+
+        // --- LÓGICA DE ALUGUEL ---
 
         function getRentConfigs() { try { return JSON.parse(localStorage.getItem(RENT_DB_KEY)) || {}; } catch { return {}; } }
         function saveRentConfigs(configs) { localStorage.setItem(RENT_DB_KEY, JSON.stringify(configs)); if(window.syncToCloud) window.syncToCloud(); }
@@ -577,16 +572,6 @@
             }
             return { target: remainingDaysCount > 0 ? remainingMoney / remainingDaysCount : remainingMoney, remaining: remainingMoney, daysLeft: remainingDaysCount };
         }
-
-        function handleBackButton() {
-            if(!document.getElementById('modal-logout').classList.contains('hidden')) { closeLogoutModal(); return; }
-            if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
-            if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
-            if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
-            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home'); return; }
-        }
-
-        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
 
         function openRentConfig() {
             window.history.pushState({modal: 'rent'}, "", "");
@@ -622,6 +607,25 @@
                 container.appendChild(dayDiv);
             }
         }
+
+        function updateRentPreview() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const res = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
+            document.getElementById('rent-preview-val').innerText = formatMoney(res.target);
+            document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
+            document.getElementById('rent-debug-days').innerText = res.daysLeft;
+        }
+
+        function saveRentConfig() {
+            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
+            const m = rentCalendarDate.getMonth(); const y = rentCalendarDate.getFullYear();
+            const configs = getRentConfigs(); configs[`${m}-${y}`] = { total, offDays: tempOffDays };
+            saveRentConfigs(configs); closeRentConfig(); renderDashboard();
+        }
+
+        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
+
+        // --- DASHBOARD E DETALHES ---
 
         function renderDashboard() {
             const db = getDB();
@@ -702,57 +706,12 @@
             document.getElementById('view-day-detail').classList.remove('hidden');
         }
 
-        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
-        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
-        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+        function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
 
-        function switchTab(tab) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
-            document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
-            document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
-            document.getElementById('view-day-detail').classList.add('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => {
-                const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': 'nav-chart');
-                b.classList.toggle('active', b.id === target);
-            });
-            if(tab==='history') renderHistory(); 
-            else if(tab==='charts') renderCharts();
-            else renderDashboard();
-        }
-
-        function renderHistory() {
-            const db = getDB();
-            const list = document.getElementById('history-list');
-            list.innerHTML = '';
-            const groups = {};
-            db.forEach((item, index) => {
-                const p = item.date.split('/'); const key = `${parseInt(p[1])-1}-${p[2]}`;
-                if(!groups[key]) groups[key] = { label: `${monthNames[parseInt(p[1])-1]} ${p[2]}`, items: [] };
-                item.originalIndex = index; groups[key].items.push(item);
-            });
-            Object.keys(groups).forEach(key => {
-                const g = groups[key];
-                const folder = document.createElement('div'); folder.className = 'month-folder'; folder.style = "background-color: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;";
-                folder.innerHTML = `<span class="folder-title">📂 ${g.label}</span><span>▼</span>`;
-                const itemsDiv = document.createElement('div'); itemsDiv.className = 'days-list'; itemsDiv.style = "display: none; padding-left: 10px; margin-bottom: 20px; border-left: 2px solid #333;";
-                g.items.forEach(d => {
-                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
-                    const div = document.createElement('div'); div.className = 'history-item'; div.style = "background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 8px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent;";
-                    div.innerHTML = `<div onclick="openDayDetail(${d.originalIndex})" style="flex:1;"><div class="date-badge" style="font-weight:bold;">${d.date}</div><div class="sub-info" style="font-size:12px; color:var(--text-gray);">Lucro: ${formatMoney(luc)}</div></div><button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>`;
-                    itemsDiv.appendChild(div);
-                });
-                folder.onclick = () => { itemsDiv.style.display = itemsDiv.style.display === 'none' ? 'block' : 'none'; };
-                list.appendChild(folder); list.appendChild(itemsDiv);
-            });
-        }
+        // --- LÓGICA DE GRÁFICOS (REESTRUTURADA) ---
 
         function setChartMetric(metric) {
             currentChartMetric = metric;
-            document.querySelectorAll('.metric-card-mini').forEach(card => {
-                card.classList.toggle('active', card.id === `m-${metric}`);
-            });
-            
             const titles = {
                 all: 'Desempenho Geral',
                 revenue: 'Desempenho: Receita',
@@ -790,7 +749,7 @@
             let totalRev = 0, totalExp = 0, totalHrs = 0, totalKm = 0, totalFuel = 0, totalFood = 0, totalRent = 0, totalMaint = 0;
 
             const metricConfigs = {
-                all: { label: 'Ganhos', color: '#00E676', secondary: true },
+                all: { label: 'Ganhos', color: '#00E676' },
                 revenue: { label: 'Receita', color: '#00E676' },
                 profit: { label: 'Lucro', color: '#00E676' },
                 expenses: { label: 'Despesas', color: '#ff453a' },
@@ -815,10 +774,8 @@
                     const rev = (dayData.uber||0) + (dayData.pop||0);
                     const exp = (dayData.fuel||0) + (dayData.food||0) + (dayData.rentPaid||0) + (dayData.maintenance||0);
                     
-                    if(currentChartMetric === 'all') {
-                        primaryData.push(rev);
-                        secondaryData.push(exp);
-                    } else if(currentChartMetric === 'revenue') primaryData.push(rev);
+                    if(currentChartMetric === 'all') { primaryData.push(rev); secondaryData.push(exp); } 
+                    else if(currentChartMetric === 'revenue') primaryData.push(rev);
                     else if(currentChartMetric === 'profit') primaryData.push(rev - exp);
                     else if(currentChartMetric === 'expenses') primaryData.push(exp);
                     else primaryData.push(dayData[currentChartMetric] || 0);
@@ -841,15 +798,11 @@
                         const weekNum = Math.min(Math.floor((d - 1) / 7), 4);
                         const rev = (item.uber||0) + (item.pop||0);
                         const exp = (item.fuel||0) + (item.food||0) + (item.rentPaid||0) + (item.maintenance||0);
-                        
-                        if(currentChartMetric === 'all') {
-                            primaryData[weekNum] += rev;
-                            secondaryData[weekNum] += exp;
-                        } else if(currentChartMetric === 'revenue') primaryData[weekNum] += rev;
+                        if(currentChartMetric === 'all') { primaryData[weekNum] += rev; secondaryData[weekNum] += exp; } 
+                        else if(currentChartMetric === 'revenue') primaryData[weekNum] += rev;
                         else if(currentChartMetric === 'profit') primaryData[weekNum] += (rev - exp);
                         else if(currentChartMetric === 'expenses') primaryData[weekNum] += exp;
                         else primaryData[weekNum] += (item[currentChartMetric] || 0);
-
                         totalRev += rev; totalExp += exp; totalKm += (item.km||0);
                         totalFuel += (item.fuel||0); totalFood += (item.food||0);
                         totalRent += (item.rentPaid||0); totalMaint += (item.maintenance||0);
@@ -861,22 +814,8 @@
             }
 
             if(chartInstance) chartInstance.destroy();
-
-            const datasets = [{
-                label: config.label,
-                data: primaryData,
-                backgroundColor: config.color,
-                borderRadius: 5
-            }];
-
-            if(currentChartMetric === 'all') {
-                datasets.push({
-                    label: 'Gastos',
-                    data: secondaryData,
-                    backgroundColor: '#ff453a',
-                    borderRadius: 5
-                });
-            }
+            const datasets = [{ label: config.label, data: primaryData, backgroundColor: config.color, borderRadius: 5 }];
+            if(currentChartMetric === 'all') datasets.push({ label: 'Gastos', data: secondaryData, backgroundColor: '#ff453a', borderRadius: 5 });
 
             chartInstance = new Chart(ctx, {
                 type: 'bar',
@@ -891,36 +830,65 @@
                 }
             });
 
+            // GERAÇÃO DINÂMICA DOS CARDS ABAIXO DO GRÁFICO (IDÊNTICO À HOME)
             const profit = totalRev - totalExp;
             const calcPct = (val) => totalRev > 0 ? `(${(val / totalRev * 100).toFixed(1)}%)` : '(0%)';
-            
+            const isActive = (m) => currentChartMetric === m ? 'active-metric-card' : '';
+
             document.getElementById('chart-dashboard-summary').innerHTML = `
-                <div class="summary-grid" style="margin-top:20px;">
-                    <div class="card-main" onclick="setChartMetric('revenue')">
-                        <span class="label">Receita (${chartFilter==='week'?'Semana':'Mês'})</span>
+                <div class="summary-grid" style="margin-top:20px; padding-bottom: 40px;">
+                    <div class="card-main ${isActive('revenue')}" onclick="setChartMetric('revenue')">
+                        <span class="label">Receita no Período</span>
                         <div class="value-big text-green">${formatMoney(totalRev)}</div>
                     </div>
-                    <div class="card-small" onclick="setChartMetric('profit')">
+
+                    <div class="card-small ${isActive('profit')}" onclick="setChartMetric('profit')">
                         <span class="label">Lucro Líquido</span>
-                        <div class="value-med text-green"><span>${formatMoney(profit)}</span><small class="pct-text">${calcPct(profit)}</small></div>
+                        <div class="value-med text-green">
+                            <span>${formatMoney(profit)}</span><small class="pct-text">${calcPct(profit)}</small>
+                        </div>
                     </div>
-                    <div class="card-small" onclick="setChartMetric('expenses')">
-                        <span class="label">Despesas</span>
-                        <div class="value-med text-red"><span>${formatMoney(totalExp)}</span><small class="pct-text">${calcPct(totalExp)}</small></div>
+
+                    <div class="card-small ${isActive('expenses')}" onclick="setChartMetric('expenses')">
+                        <span class="label">Despesas Totais</span>
+                        <div class="value-med text-red">
+                            <span>${formatMoney(totalExp)}</span><small class="pct-text">${calcPct(totalExp)}</small>
+                        </div>
                     </div>
+
+                    <div class="card-small ${isActive('fuel')}" onclick="setChartMetric('fuel')">
+                        <span class="label">⛽ Combustível</span>
+                        <div class="value-med text-orange">${formatMoney(totalFuel)}</div>
+                    </div>
+
+                    <div class="card-small ${isActive('food')}" onclick="setChartMetric('food')">
+                        <span class="label">🍔 Alimentação</span>
+                        <div class="value-med text-red">${formatMoney(totalFood)}</div>
+                    </div>
+
+                    <div class="card-small ${isActive('maintenance')}" onclick="setChartMetric('maintenance')">
+                        <span class="label">🛠️ Manutenção</span>
+                        <div class="value-med text-red">${formatMoney(totalMaint)}</div>
+                    </div>
+
+                    <div class="card-small ${isActive('rentPaid')}" onclick="setChartMetric('rentPaid')">
+                        <span class="label">🟣 Aluguel Pago</span>
+                        <div class="value-med text-purple">${formatMoney(totalRent)}</div>
+                    </div>
+
                     <div class="performance-section" style="grid-column: span 2; padding:0; margin-top:10px;">
                         <div class="perf-grid">
-                            <div class="card-perf" onclick="setChartMetric('all')">
-                                <span class="perf-icon">⏱️</span>
-                                <span class="label">Horas</span>
+                            <div class="card-perf ${isActive('all')}" onclick="setChartMetric('all')">
+                                <span class="perf-icon">📊</span>
+                                <span class="label">Geral</span>
                                 <span class="perf-val">${totalHrs.toFixed(1)}h</span>
                             </div>
-                            <div class="card-perf" onclick="setChartMetric('profit')">
+                            <div class="card-perf">
                                 <span class="perf-icon">💎</span>
                                 <span class="label">Ganho/h</span>
                                 <span class="perf-val text-green">${formatMoney(totalHrs > 0 ? profit / totalHrs : 0)}</span>
                             </div>
-                            <div class="card-perf" onclick="setChartMetric('revenue')">
+                            <div class="card-perf">
                                 <span class="perf-icon">🛣️</span>
                                 <span class="label">R$/KM</span>
                                 <span class="perf-val text-blue">${formatMoney(totalKm > 0 ? totalRev / totalKm : 0)}</span>
@@ -930,6 +898,41 @@
                 </div>
             `;
         }
+
+        // --- HISTÓRICO E PERSISTÊNCIA ---
+
+        function formatMoney(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function getDB() { try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; } }
+        function saveDB(data) { localStorage.setItem(DB_KEY, JSON.stringify(data)); }
+        function changeMonth(dir) { viewDate.setMonth(viewDate.getMonth() + dir); renderDashboard(); }
+
+        function renderHistory() {
+            const db = getDB();
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            const groups = {};
+            db.forEach((item, index) => {
+                const p = item.date.split('/'); const key = `${parseInt(p[1])-1}-${p[2]}`;
+                if(!groups[key]) groups[key] = { label: `${monthNames[parseInt(p[1])-1]} ${p[2]}`, items: [] };
+                item.originalIndex = index; groups[key].items.push(item);
+            });
+            Object.keys(groups).forEach(key => {
+                const g = groups[key];
+                const folder = document.createElement('div'); folder.className = 'month-folder'; folder.style = "background-color: #2c2c2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;";
+                folder.innerHTML = `<span class="folder-title">📂 ${g.label}</span><span>▼</span>`;
+                const itemsDiv = document.createElement('div'); itemsDiv.className = 'days-list'; itemsDiv.style = "display: none; padding-left: 10px; margin-bottom: 20px; border-left: 2px solid #333;";
+                g.items.forEach(d => {
+                    const rec = (d.uber||0)+(d.pop||0), luc = rec - ((d.fuel||0)+(d.food||0)+(d.rentPaid||0)+(d.maintenance||0));
+                    const div = document.createElement('div'); div.className = 'history-item'; div.style = "background: var(--card-color); padding: 15px; border-radius: 12px; margin-bottom: 8px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent;";
+                    div.innerHTML = `<div onclick="openDayDetail(${d.originalIndex})" style="flex:1;"><div class="date-badge" style="font-weight:bold;">${d.date}</div><div class="sub-info" style="font-size:12px; color:var(--text-gray);">Lucro: ${formatMoney(luc)}</div></div><button onclick="askDelete(${d.originalIndex})" class="btn-trash">🗑️</button>`;
+                    itemsDiv.appendChild(div);
+                });
+                folder.onclick = () => { itemsDiv.style.display = itemsDiv.style.display === 'none' ? 'block' : 'none'; };
+                list.appendChild(folder); list.appendChild(itemsDiv);
+            });
+        }
+
+        // --- WIZARD E ENTRADA DE DADOS ---
 
         function toggleWizard(show) { document.getElementById('wizard-overlay').classList.toggle('hidden', !show); }
 
@@ -973,30 +976,15 @@
         function prevStep() { if(currentStep > 0) { currentStep--; renderStep(); } }
         function editCurrentDay() { closeDayDetail(); startWizard(currentDetailIndex); }
 
-        function updateRentPreview() {
-            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const res = calculateTargetLogic(total, tempOffDays, rentCalendarDate);
-            document.getElementById('rent-preview-val').innerText = formatMoney(res.target);
-            document.getElementById('rent-debug-remaining').innerText = formatMoney(res.remaining);
-            document.getElementById('rent-debug-days').innerText = res.daysLeft;
-        }
-
-        function saveRentConfig() {
-            const total = parseFloat(document.getElementById('input-total-rent').value) || 0;
-            const m = rentCalendarDate.getMonth(); const y = rentCalendarDate.getFullYear();
-            const configs = getRentConfigs(); configs[`${m}-${y}`] = { total, offDays: tempOffDays };
-            saveRentConfigs(configs); closeRentConfig(); renderDashboard();
-        }
-
-        function closeRentConfig() { document.getElementById('modal-rent').classList.add('hidden'); }
         function askDelete(i) { itemToDeleteIndex = i; document.getElementById('modal-delete').classList.remove('hidden'); }
         function closeDeleteModal() { document.getElementById('modal-delete').classList.add('hidden'); }
-
         function confirmDelete() {
             const db = getDB(); db.splice(itemToDeleteIndex,1);
             saveDB(db); if(window.syncToCloud) window.syncToCloud();
             closeDeleteModal(); renderHistory(); renderDashboard(); closeDayDetail();
         }
+
+        // --- AUTENTICAÇÃO E FIREBASE ---
 
         function toggleAuthMode() {
             window.isRegisterMode = !window.isRegisterMode;
