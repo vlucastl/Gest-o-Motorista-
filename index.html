@@ -119,17 +119,108 @@
             box-shadow: 0 0 10px rgba(0, 230, 118, 0.15);
         }
 
+        /* --- NAVEGAÇÃO INFERIOR REESTRUTURADA --- */
         .bottom-bar {
             position: fixed; 
             bottom: 0; 
-            width: 100%; 
-            background: rgba(20, 20, 20, 0.95); 
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(18, 18, 18, 0.95); 
             backdrop-filter: blur(10px); 
-            border-top: 1px solid #333; 
+            border-top: 1px solid #2a2a2a; 
             display: flex; 
+            align-items: center;
             justify-content: space-around; 
-            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
+            padding: 0 8px calc(env(safe-area-inset-bottom)) 8px; 
             z-index: 50;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-btn.active {
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .center-btn-wrapper {
+            position: relative;
+            top: -16px;
+        }
+
+        .add-btn {
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 230, 118, 0.3);
+            border: 4px solid #000000;
+            color: #000000;
+            font-weight: bold;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .add-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --- CARROSSEL HORIZONTAL DE CONTAS --- */
+        .bills-carousel {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            scroll-snap-type: x mandatory;
+            padding: 8px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bills-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bill-card {
+            min-width: 85%;
+            scroll-snap-align: center;
+            background: linear-gradient(135deg, #1c1c1e 0%, #121212 100%);
+            border: 1px solid #333;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .bill-card.overdue {
+            background: linear-gradient(135deg, rgba(255, 69, 58, 0.15) 0%, #1c1c1e 100%);
+            border-color: rgba(255, 69, 58, 0.5);
+        }
+
+        @media (min-width: 640px) {
+            .bill-card {
+                min-width: 300px;
+            }
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -273,6 +364,26 @@
         </div>
     </div>
 
+    <!-- ABA CONTAS (NOVA) -->
+    <div id="view-bills" class="hidden">
+        <div class="header-simple" style="padding: calc(20px + env(safe-area-inset-top)) 20px 10px 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="font-size:24px; font-weight:700;">Contas</h2>
+                <p style="color:#666; font-size:12px;">Gerenciamento de vencimentos</p>
+            </div>
+            <button onclick="openAddBillModal()" style="padding: 8px 16px; background: #2c2c2e; color: var(--primary-color); border: 1px solid #333; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer;">
+                + Nova Conta
+            </button>
+        </div>
+
+        <div style="padding: 10px 20px;">
+            <div class="section-title" style="margin-bottom: 15px;">Próximas Contas</div>
+            <div id="bills-carousel-container" class="bills-carousel">
+                <!-- Cards renderizados dinamicamente via Javascript -->
+            </div>
+        </div>
+    </div>
+
     <div id="view-history" class="hidden">
         <div class="header-simple">
             <h2 style="font-size:24px; font-weight:700; padding: calc(20px + env(safe-area-inset-top)) 20px 0 20px;">Histórico</h2>
@@ -394,6 +505,40 @@
         </div>
     </div>
 
+    <!-- MODAL ADICIONAR CONTA -->
+    <div id="modal-add-bill" class="modal-overlay hidden">
+        <div class="modal-box" style="background: #1c1c1e; width: 85%; max-width: 360px; border-radius: 18px; padding: 25px; border: 1px solid #333; animation: popIn 0.2s ease;">
+            <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 15px; text-align: center;">Adicionar Nova Conta</div>
+            
+            <form onsubmit="handleAddBillSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px;">NOME DA CONTA</label>
+                    <input type="text" id="bill-name" required placeholder="Ex: Aluguel, MEI, Internet" style="background: #2c2c2e; border: 1px solid #333; color: #fff; font-size: 14px; padding: 12px; width: 100%; border-radius: 10px; outline: none;">
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px;">DESCRIÇÃO (OPCIONAL)</label>
+                    <textarea id="bill-description" rows="2" placeholder="Ex: Parcela do carro ou detalhes da conta" style="background: #2c2c2e; border: 1px solid #333; color: #fff; font-size: 14px; padding: 12px; width: 100%; border-radius: 10px; outline: none; resize: none;"></textarea>
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px;">DATA DE VENCIMENTO</label>
+                    <input type="date" id="bill-due-date" required style="background: #2c2c2e; border: 1px solid #333; color: #fff; font-size: 14px; padding: 12px; width: 100%; border-radius: 10px; outline: none;">
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px;">VALOR (R$) - OPCIONAL</label>
+                    <input type="number" id="bill-value" step="0.01" placeholder="0,00" style="background: #2c2c2e; border: 1px solid #333; color: #fff; font-size: 14px; padding: 12px; width: 100%; border-radius: 10px; outline: none;">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddBillModal()" style="flex: 1; padding: 12px;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px;">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modal-rent" class="modal-overlay hidden">
         <div class="modal-box" style="background: #1c1c1e; width: 85%; max-width: 320px; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; animation: popIn 0.2s ease;">
             <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">Planejar Aluguel</div>
@@ -472,18 +617,27 @@
         </div>
     </div>
 
-    <div class="bottom-bar">
-        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')" style="background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center;">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🏠</span>Início
+    <!-- BARRA INFERIOR DE NAVEGAÇÃO ATUALIZADA -->
+    <nav class="bottom-bar">
+        <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+            <span class="nav-icon">🏠</span>Início
         </button>
-        <button class="nav-btn" id="nav-chart" onclick="switchTab('charts')" style="background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center;">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📊</span>Gráficos
+        <button class="nav-btn" id="nav-chart" onclick="switchTab('charts')">
+            <span class="nav-icon">📊</span>Gráficos
         </button>
-        <button class="add-btn" onclick="startWizard()" style="background: var(--primary-color); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; margin-top: -25px; border: 4px solid #000; box-shadow: 0 4px 12px rgba(0,230,118,0.4);">+</button>
-        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')" style="background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center;">
-            <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">📂</span>Histórico
+        
+        <!-- Botão (+) centralizado -->
+        <div class="center-btn-wrapper">
+            <button class="add-btn" onclick="startWizard()">+</button>
+        </div>
+
+        <button class="nav-btn" id="nav-bills" onclick="switchTab('bills')">
+            <span class="nav-icon">🧾</span>Contas
         </button>
-    </div>
+        <button class="nav-btn" id="nav-hist" onclick="switchTab('history')">
+            <span class="nav-icon">📁</span>Histórico
+        </button>
+    </nav>
 
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
@@ -507,6 +661,7 @@
         let currentStep = 0, tempData = {}, viewDate = new Date(), editingIndex = null, currentDetailIndex = null;
         const DB_KEY = 'app_motorista_v22';
         const RENT_DB_KEY = 'rent_configs';
+        const BILLS_DB_KEY = 'bills_data';
         let tempOffDays = [];
         let rentCalendarDate = new Date();
         let itemToDeleteIndex = null;
@@ -541,16 +696,18 @@
             auth.signOut().then(() => {
                 localStorage.removeItem(DB_KEY);
                 localStorage.removeItem(RENT_DB_KEY);
+                localStorage.removeItem(BILLS_DB_KEY);
                 window.location.reload();
             }).catch(e => { console.error(e); alert("Erro ao sair. Tente novamente."); });
         }
 
         function handleBackButton() {
             if(!document.getElementById('modal-logout').classList.contains('hidden')) { closeLogoutModal(); return; }
+            if(!document.getElementById('modal-add-bill').classList.contains('hidden')) { closeAddBillModal(); return; }
             if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
             if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
             if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
-            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home', false); return; }
+            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden') || !document.getElementById('view-bills').classList.contains('hidden')) { switchTab('home', false); return; }
         }
 
         function switchTab(tab, pushHistory = true) {
@@ -560,14 +717,139 @@
             document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
             document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
             document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
+            document.getElementById('view-bills').classList.toggle('hidden', tab !== 'bills');
             document.getElementById('view-day-detail').classList.add('hidden');
+            
             document.querySelectorAll('.nav-btn').forEach(b => {
-                const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': 'nav-chart');
+                const target = (tab==='home'?'nav-home': tab==='history'?'nav-hist': tab==='bills'?'nav-bills':'nav-chart');
                 b.classList.toggle('active', b.id === target);
             });
             if(tab==='history') renderHistory(); 
             else if(tab==='charts') renderCharts();
+            else if(tab==='bills') renderBills();
             else renderDashboard();
+        }
+
+        // --- LÓGICA DE CONTAS E CARROSSEL ---
+
+        function getBillsDB() { 
+            try { return JSON.parse(localStorage.getItem(BILLS_DB_KEY)) || []; } 
+            catch { return []; } 
+        }
+
+        function saveBillsDB(data) { 
+            localStorage.setItem(BILLS_DB_KEY, JSON.stringify(data)); 
+            if(window.syncToCloud) window.syncToCloud(); 
+        }
+
+        function openAddBillModal() {
+            window.history.pushState({modal: 'addBill'}, "", "");
+            document.getElementById('modal-add-bill').classList.remove('hidden');
+        }
+
+        function closeAddBillModal() {
+            document.getElementById('modal-add-bill').classList.add('hidden');
+        }
+
+        function handleAddBillSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('bill-name').value;
+            const description = document.getElementById('bill-description').value;
+            const dueDate = document.getElementById('bill-due-date').value;
+            const value = parseFloat(document.getElementById('bill-value').value) || 0;
+
+            const newBill = {
+                id: Date.now().toString(),
+                name,
+                description,
+                dueDate,
+                value
+            };
+
+            const bills = getBillsDB();
+            bills.push(newBill);
+            
+            // Ordenar da data mais próxima/antiga para a mais futura
+            bills.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+            saveBillsDB(bills);
+            closeAddBillModal();
+            
+            // Reset do Formulário
+            document.getElementById('bill-name').value = '';
+            document.getElementById('bill-description').value = '';
+            document.getElementById('bill-due-date').value = '';
+            document.getElementById('bill-value').value = '';
+
+            renderBills();
+        }
+
+        function deleteBill(id) {
+            let bills = getBillsDB();
+            bills = bills.filter(b => b.id !== id);
+            saveBillsDB(bills);
+            renderBills();
+        }
+
+        function renderBills() {
+            const bills = getBillsDB();
+            const container = document.getElementById('bills-carousel-container');
+            container.innerHTML = '';
+
+            if (bills.length === 0) {
+                container.innerHTML = `
+                    <div style="width: 100%; text-align: center; padding: 40px 10px; color: #666; font-size: 14px;">
+                        Nenhuma conta cadastrada.<br>
+                        <span style="font-size: 12px; color: #444;">Clique no botão "+ Nova Conta" para adicionar.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            bills.forEach((bill) => {
+                const due = new Date(bill.dueDate + 'T00:00:00');
+                const isOverdue = due < today;
+                
+                const card = document.createElement('div');
+                card.className = `bill-card ${isOverdue ? 'overdue' : ''}`;
+                
+                const formattedDate = due.toLocaleDateString('pt-BR');
+
+                card.innerHTML = `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <span style="font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; ${
+                                isOverdue 
+                                    ? 'background: rgba(255, 69, 58, 0.2); color: var(--danger-color); border: 1px solid rgba(255, 69, 58, 0.4);' 
+                                    : 'background: rgba(0, 230, 118, 0.15); color: var(--primary-color); border: 1px solid rgba(0, 230, 118, 0.3);'
+                            }">
+                                ${isOverdue ? 'Atrasada' : 'A Vencer'}
+                            </span>
+                            <button onclick="deleteBill('${bill.id}')" style="background:none; border:none; color:#666; font-size:16px; cursor:pointer;">🗑️</button>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 4px;">${bill.name}</h3>
+                        ${bill.description ? `<p style="font-size: 12px; color: #aaa; margin-bottom: 12px; line-height: 1.3;">${bill.description}</p>` : ''}
+                    </div>
+
+                    <div style="margin-top: 15px; pt-12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <span style="font-size: 10px; color: #666; display: block; text-transform: uppercase;">Vencimento</span>
+                            <span style="font-size: 13px; font-weight: 600; color: #fff;">${formattedDate}</span>
+                        </div>
+                        ${bill.value ? `
+                            <div style="text-align: right;">
+                                <span style="font-size: 10px; color: #666; display: block; text-transform: uppercase;">Valor</span>
+                                <span style="font-size: 18px; font-weight: 800; color: var(--primary-color);">${formatMoney(bill.value)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
         }
 
         // --- LÓGICA DE ALUGUEL ---
@@ -1054,11 +1336,16 @@
                                 if (data.rentConfigs) {
                                     localStorage.setItem(RENT_DB_KEY, JSON.stringify(data.rentConfigs));
                                 }
+                                if (data.billsData) {
+                                    localStorage.setItem(BILLS_DB_KEY, JSON.stringify(data.billsData));
+                                }
                                 
                                 if(!document.getElementById('view-charts').classList.contains('hidden')) {
                                     renderCharts();
                                 } else if(!document.getElementById('view-history').classList.contains('hidden')) {
                                     renderHistory();
+                                } else if(!document.getElementById('view-bills').classList.contains('hidden')) {
+                                    renderBills();
                                 } else {
                                     renderDashboard();
                                 }
@@ -1078,7 +1365,7 @@
             btn.innerText = "Carregando..."; btn.disabled = true;
             if (window.isRegisterMode) {
                 auth.createUserWithEmailAndPassword(email, pass)
-                .then(cred => db.collection("users").doc(cred.user.uid).set({ email, history: [], rentConfigs: {}, autorizado: false }))
+                .then(cred => db.collection("users").doc(cred.user.uid).set({ email, history: [], rentConfigs: {}, billsData: [], autorizado: false }))
                 .catch(e => { alert(e.message); btn.disabled = false; btn.innerText = "CRIAR CONTA"; });
             } else {
                 auth.signInWithEmailAndPassword(email, pass)
@@ -1086,12 +1373,16 @@
             }
         };
 
-        window.syncToCloud = function() { if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs() }, { merge: true }); };
+        window.syncToCloud = function() { 
+            if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs(), billsData: getBillsDB() }, { merge: true }); 
+        };
 
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
                 if (!document.getElementById('view-charts').classList.contains('hidden')) {
                     renderCharts();
+                } else if (!document.getElementById('view-bills').classList.contains('hidden')) {
+                    renderBills();
                 } else if (!document.getElementById('view-dashboard').classList.contains('hidden')) {
                     renderDashboard();
                 }
