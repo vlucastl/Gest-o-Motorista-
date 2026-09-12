@@ -54,6 +54,7 @@
 
         .btn-icon-nav { background: #2c2c2e; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-trash { background: none; border: none; font-size: 18px; cursor: pointer; padding: 10px; color: var(--danger-color); }
+        .btn-edit { background: none; border: none; font-size: 18px; cursor: pointer; padding: 10px; color: var(--info-color); }
 
         .btn-logout-new { background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--danger-color); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
         .btn-logout-new:active { transform: scale(0.95); background: var(--danger-color); color: #fff; }
@@ -478,12 +479,13 @@
         </div>
     </div>
 
-    <!-- MODAL ADICIONAR CONTA -->
+    <!-- MODAL ADICIONAR/EDITAR CONTA -->
     <div id="modal-add-bill" class="modal-overlay hidden">
         <div class="modal-box" style="background: #1c1c1e; width: 85%; max-width: 360px; border-radius: 18px; padding: 25px; border: 1px solid #333; animation: popIn 0.2s ease;">
-            <div class="modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 15px; text-align: center;">Adicionar Nova Conta</div>
+            <div class="modal-title" id="bill-modal-title" style="font-size: 18px; font-weight: bold; margin-bottom: 15px; text-align: center;">Adicionar Nova Conta</div>
             
             <form onsubmit="handleAddBillSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="hidden" id="bill-edit-id">
                 <div>
                     <label style="display:block; font-size:11px; color:#aaa; margin-bottom:4px;">NOME DA CONTA</label>
                     <input type="text" id="bill-name" required placeholder="Ex: Aluguel, MEI, Internet" style="background: #2c2c2e; border: 1px solid #333; color: #fff; font-size: 14px; padding: 12px; width: 100%; border-radius: 10px; outline: none;">
@@ -570,6 +572,19 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMAR EXCLUSÃO DE CONTA -->
+    <div id="modal-delete-bill" class="modal-overlay hidden">
+        <div class="modal-box" style="background: #1c1c1e; border-radius: 18px; padding: 25px; text-align: center; border: 1px solid #333; width: 85%; max-width: 320px;">
+            <div style="font-size:40px; margin-bottom:10px;">🗑️</div>
+            <div class="modal-title" style="margin-bottom:10px; font-size: 18px; font-weight: bold;">Excluir Conta?</div>
+            <p style="color: #8e8e93; font-size: 14px; margin-bottom: 20px;">Tem certeza que deseja excluir esta conta cadastrada?</p>
+            <div class="modal-btns" style="display: flex; gap: 10px; flex-direction: column;">
+                <button class="btn btn-danger" onclick="confirmDeleteBill()">Sim, Excluir</button>
+                <button class="btn btn-text" onclick="closeDeleteBillModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
         <div class="wizard-top" style="padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; display: flex; justify-content: space-between; align-items: center;">
             <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/10</span>
@@ -631,6 +646,7 @@
         let tempOffDays = [];
         let rentCalendarDate = new Date();
         let itemToDeleteIndex = null;
+        let billToDeleteId = null;
         window.isRegisterMode = false;
         let chartInstance = null;
         let chartFilter = 'week'; 
@@ -668,6 +684,7 @@
         function handleBackButton() {
             if(!document.getElementById('modal-logout').classList.contains('hidden')) { closeLogoutModal(); return; }
             if(!document.getElementById('modal-add-bill').classList.contains('hidden')) { closeAddBillModal(); return; }
+            if(!document.getElementById('modal-delete-bill').classList.contains('hidden')) { closeDeleteBillModal(); return; }
             if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
             if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
             if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
@@ -704,8 +721,28 @@
             if(window.syncToCloud) window.syncToCloud(); 
         }
 
-        function openAddBillModal() {
+        function openAddBillModal(id = null) {
             window.history.pushState({modal: 'addBill'}, "", "");
+            const titleEl = document.getElementById('bill-modal-title');
+            if (id) {
+                titleEl.innerText = 'Editar Conta';
+                const bills = getBillsDB();
+                const bill = bills.find(b => b.id === id);
+                if (bill) {
+                    document.getElementById('bill-edit-id').value = bill.id;
+                    document.getElementById('bill-name').value = bill.name;
+                    document.getElementById('bill-description').value = bill.description || '';
+                    document.getElementById('bill-due-date').value = bill.dueDate;
+                    document.getElementById('bill-value').value = bill.value || '';
+                }
+            } else {
+                titleEl.innerText = 'Adicionar Nova Conta';
+                document.getElementById('bill-edit-id').value = '';
+                document.getElementById('bill-name').value = '';
+                document.getElementById('bill-description').value = '';
+                document.getElementById('bill-due-date').value = '';
+                document.getElementById('bill-value').value = '';
+            }
             document.getElementById('modal-add-bill').classList.remove('hidden');
         }
 
@@ -715,39 +752,54 @@
 
         function handleAddBillSubmit(e) {
             e.preventDefault();
+            const editId = document.getElementById('bill-edit-id').value;
             const name = document.getElementById('bill-name').value;
             const description = document.getElementById('bill-description').value;
             const dueDate = document.getElementById('bill-due-date').value;
             const value = parseFloat(document.getElementById('bill-value').value) || 0;
 
-            const newBill = {
-                id: Date.now().toString(),
-                name,
-                description,
-                dueDate,
-                value
-            };
-
             const bills = getBillsDB();
-            bills.push(newBill);
+            if (editId) {
+                const index = bills.findIndex(b => b.id === editId);
+                if (index !== -1) {
+                    bills[index] = { id: editId, name, description, dueDate, value };
+                }
+            } else {
+                const newBill = {
+                    id: Date.now().toString(),
+                    name,
+                    description,
+                    dueDate,
+                    value
+                };
+                bills.push(newBill);
+            }
             bills.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
             saveBillsDB(bills);
             closeAddBillModal();
-            
-            document.getElementById('bill-name').value = '';
-            document.getElementById('bill-description').value = '';
-            document.getElementById('bill-due-date').value = '';
-            document.getElementById('bill-value').value = '';
-
             renderBills();
         }
 
-        function deleteBill(id) {
-            let bills = getBillsDB();
-            bills = bills.filter(b => b.id !== id);
-            saveBillsDB(bills);
-            renderBills();
+        function askDeleteBill(id) {
+            billToDeleteId = id;
+            window.history.pushState({modal: 'deleteBill'}, "", "");
+            document.getElementById('modal-delete-bill').classList.remove('hidden');
+        }
+
+        function closeDeleteBillModal() {
+            document.getElementById('modal-delete-bill').classList.add('hidden');
+            billToDeleteId = null;
+        }
+
+        function confirmDeleteBill() {
+            if (billToDeleteId) {
+                let bills = getBillsDB();
+                bills = bills.filter(b => b.id !== billToDeleteId);
+                saveBillsDB(bills);
+                renderBills();
+            }
+            closeDeleteBillModal();
         }
 
         function renderBills() {
@@ -787,7 +839,10 @@
                             }">
                                 ${isOverdue ? 'Atrasada' : 'A Vencer'}
                             </span>
-                            <button onclick="deleteBill('${bill.id}')" style="background:none; border:none; color:#666; font-size:16px; cursor:pointer;">🗑️</button>
+                            <div style="display: flex; gap: 4px;">
+                                <button onclick="openAddBillModal('${bill.id}')" class="btn-edit">✏️</button>
+                                <button onclick="askDeleteBill('${bill.id}')" class="btn-trash">🗑️</button>
+                            </div>
                         </div>
                         <h3 style="font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 4px;">${bill.name}</h3>
                         ${bill.description ? `<p style="font-size: 12px; color: #aaa; margin-bottom: 12px; line-height: 1.3;">${bill.description}</p>` : ''}
