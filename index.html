@@ -364,7 +364,7 @@
         </div>
     </div>
 
-    <!-- ABA CONTAS (NOVA) -->
+    <!-- ABA CONTAS -->
     <div id="view-bills" class="hidden">
         <div class="header-simple" style="padding: calc(20px + env(safe-area-inset-top)) 20px 10px 20px; display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -379,7 +379,7 @@
         <div style="padding: 10px 20px;">
             <div class="section-title" style="margin-bottom: 15px;">Próximas Contas</div>
             <div id="bills-carousel-container" class="bills-carousel">
-                <!-- Cards renderizados dinamicamente via Javascript -->
+                <!-- Cards renderizados dinamicamente -->
             </div>
         </div>
     </div>
@@ -1259,11 +1259,36 @@
         function startWizard(indexToEdit = null) {
             window.history.pushState({modal: 'wizard'}, "", "");
             let refDate = new Date();
-            if(indexToEdit !== null) { editingIndex = indexToEdit; tempData = {...getDB()[indexToEdit]}; const p = tempData.date.split('/'); refDate = new Date(p[2], p[1]-1, p[0]); } 
-            else { editingIndex = null; tempData = { customDate: new Date().toISOString().split('T')[0] }; const p = tempData.customDate.split('-'); refDate = new Date(p[0], p[1]-1, p[2]); }
-            const res = calculateTargetLogic(getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).total, getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).offDays, refDate);
-            if(editingIndex === null) tempData.rentPaid = res.target;
-            currentStep = 0; toggleWizard(true); renderStep();
+            if(indexToEdit !== null) { 
+                editingIndex = indexToEdit; 
+                tempData = {...getDB()[indexToEdit]}; 
+                const p = tempData.date.split('/'); 
+                refDate = new Date(p[2], p[1]-1, p[0]); 
+            } else { 
+                editingIndex = null; 
+                tempData = { customDate: new Date().toISOString().split('T')[0] }; 
+                const p = tempData.customDate.split('-'); 
+                refDate = new Date(p[0], p[1]-1, p[2]); 
+                
+                const formattedRefDate = `${p[2].padStart(2, '0')}/${p[1].padStart(2, '0')}/${p[0]}`;
+                const db = getDB();
+                const existingRecord = db.find(item => item.date === formattedRefDate);
+
+                if (existingRecord && existingRecord.rentPaid !== undefined) {
+                    tempData.rentPaid = existingRecord.rentPaid;
+                } else {
+                    const res = calculateTargetLogic(
+                        getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).total, 
+                        getRentConfigForMonth(refDate.getMonth(), refDate.getFullYear()).offDays, 
+                        refDate
+                    );
+                    tempData.rentPaid = res.target;
+                }
+            }
+            
+            currentStep = 0; 
+            toggleWizard(true); 
+            renderStep();
         }
 
         function renderStep() {
