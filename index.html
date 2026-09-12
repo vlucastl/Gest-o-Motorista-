@@ -403,6 +403,15 @@
                 <div class="calendar-header">
                     <div style="font-size:14px; font-weight:bold; color:#fff; text-transform: uppercase;" id="cal-month-title">Mês Atual</div>
                 </div>
+                <div class="calendar-grid" style="margin-bottom: 6px; font-size: 11px; font-weight: bold; color: var(--text-gray); text-align: center;">
+                    <div>Dom</div>
+                    <div>Seg</div>
+                    <div>Ter</div>
+                    <div>Qua</div>
+                    <div>Qui</div>
+                    <div>Sex</div>
+                    <div>Sáb</div>
+                </div>
                 <div id="rent-calendar" class="calendar-grid"></div>
             </div>
             <div style="background:#222; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid var(--rent-color); text-align:left;">
@@ -608,11 +617,20 @@
         function renderRentCalendar() {
             const m = rentCalendarDate.getMonth(), y = rentCalendarDate.getFullYear();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const firstDayIndex = new Date(y, m, 1).getDay();
             const container = document.getElementById('rent-calendar');
             const today = new Date(); today.setHours(0,0,0,0);
             document.getElementById('cal-month-title').innerText = `${monthNames[m]} ${y}`;
             container.innerHTML = '';
             const db = getDB();
+
+            for (let x = 0; x < firstDayIndex; x++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'cal-day';
+                emptyDiv.style.visibility = 'hidden';
+                container.appendChild(emptyDiv);
+            }
+
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div'); dayDiv.className = 'cal-day'; dayDiv.innerText = i;
                 const checkDateStr = `${i.toString().padStart(2, '0')}/${(m+1).toString().padStart(2, '0')}/${y}`;
