@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gestão Motorista V28 - Atualizado</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -21,7 +21,12 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; }
 
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; overflow-x: hidden; }
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            padding-bottom: calc(90px + env(safe-area-inset-bottom)); 
+            overflow-x: hidden; 
+        }
 
         .hidden { display: none !important; }
         .text-green { color: var(--primary-color) !important; }
@@ -72,7 +77,7 @@
         .cal-day.past-date { background-color: #1a1a1a; color: #444; border-color: #222; cursor: default; opacity: 0.5; }
         .cal-day.today { border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
 
-        .header-nav { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(20,20,20,0.8); border-bottom: 1px solid #2c2c2e; }
+        .header-nav { padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(20,20,20,0.8); border-bottom: 1px solid #2c2c2e; }
         .date-navigation-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(180deg, rgba(28,28,30,0.5) 0%, transparent 100%); }
         .month-selector { text-align: center; }
         .month-selector h2 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
@@ -99,7 +104,7 @@
         .perf-icon { font-size: 20px; margin-bottom: 5px; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 45; overflow-y: auto; padding-bottom: 90px; }
+        #view-day-detail { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 45; overflow-y: auto; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
 
         .chart-container { background: var(--card-color); padding: 15px; border-radius: 18px; margin: 10px 20px; border: 1px solid #333; height: 280px; position: relative; }
         .filter-bar { display: flex; gap: 8px; padding: 10px 20px; justify-content: center; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -112,6 +117,19 @@
             border-color: var(--primary-color) !important;
             background: rgba(0, 230, 118, 0.05) !important;
             box-shadow: 0 0 10px rgba(0, 230, 118, 0.15);
+        }
+
+        .bottom-bar {
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: rgba(20, 20, 20, 0.95); 
+            backdrop-filter: blur(10px); 
+            border-top: 1px solid #333; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
+            z-index: 50;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -257,7 +275,7 @@
 
     <div id="view-history" class="hidden">
         <div class="header-simple">
-            <h2 style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Histórico</h2>
+            <h2 style="font-size:24px; font-weight:700; padding: calc(20px + env(safe-area-inset-top)) 20px 0 20px;">Histórico</h2>
             <p style="color:#666; font-size:12px; margin-bottom:10px; padding: 0 20px;">Clique num dia para ver detalhes</p>
         </div>
         <div id="history-list" class="history-container" style="padding: 20px;"></div>
@@ -265,7 +283,7 @@
 
     <div id="view-charts" class="hidden">
         <div class="header-simple">
-            <h2 id="chart-title-dynamic" style="font-size:24px; font-weight:700; padding: 20px 20px 0 20px;">Desempenho</h2>
+            <h2 id="chart-title-dynamic" style="font-size:24px; font-weight:700; padding: calc(20px + env(safe-area-inset-top)) 20px 0 20px;">Desempenho</h2>
         </div>
 
         <div class="filter-bar">
@@ -289,7 +307,7 @@
     </div>
 
     <div id="view-day-detail" class="hidden">
-        <div class="detail-header" style="padding: 20px; display: flex; align-items: center; border-bottom: 1px solid #333; background: #111;">
+        <div class="detail-header" style="padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; display: flex; align-items: center; border-bottom: 1px solid #333; background: #111;">
             <button class="btn-back" onclick="handleBackButton()" style="background: none; border: none; font-size: 24px; color: #fff; margin-right: 15px; cursor: pointer;">←</button>
             <h2 id="detail-title">Detalhes do Dia</h2>
             <button class="btn-text" onclick="editCurrentDay()" style="margin-left:auto; color:var(--primary-color);">✏️ Editar</button>
@@ -432,20 +450,20 @@
     </div>
 
     <div id="wizard-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:20000; display:flex; flex-direction:column;">
-        <div class="wizard-top" style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="wizard-top" style="padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; display: flex; justify-content: space-between; align-items: center;">
             <span style="color:#666; font-size:12px;" id="step-counter">ETAPA 1/10</span>
             <button onclick="handleBackButton()" style="background:none; border:none; color:#fff; font-size:24px;">&times;</button>
         </div>
         <div class="progress-track" style="height: 4px; background: #333; margin: 0 20px; border-radius: 2px;"><div class="progress-fill" id="progress-bar" style="height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s; border-radius: 2px;"></div></div>
         <div class="wizard-body" id="wizard-content" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;"></div>
-        <div class="wizard-actions" style="padding: 20px; display: flex; gap: 10px; padding-bottom: 30px;">
+        <div class="wizard-actions" style="padding: 20px; display: flex; gap: 10px; padding-bottom: calc(30px + env(safe-area-inset-bottom));">
             <button class="btn btn-text" style="width:auto;" onclick="prevStep()">Voltar</button>
             <button class="btn btn-outline" onclick="nextStep(true)" id="btn-skip">Pular</button>
             <button class="btn btn-primary" onclick="nextStep(false)" id="btn-next">Próximo</button>
         </div>
     </div>
 
-    <div class="bottom-bar" style="position: fixed; bottom: 0; width: 100%; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #333; display: flex; justify-space-around; padding: 10px; z-index: 50;">
+    <div class="bottom-bar">
         <button class="nav-btn active" id="nav-home" onclick="switchTab('home')" style="background: none; border: none; color: #666; font-size: 10px; display: flex; flex-direction: column; align-items: center;">
             <span class="nav-icon" style="font-size: 20px; margin-bottom: 4px;">🏠</span>Início
         </button>
@@ -523,10 +541,13 @@
             if(!document.getElementById('wizard-overlay').classList.contains('hidden')) { toggleWizard(false); return; }
             if(!document.getElementById('view-day-detail').classList.contains('hidden')) { closeDayDetail(); return; }
             if(!document.getElementById('modal-rent').classList.contains('hidden')) { closeRentConfig(); return; }
-            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home'); return; }
+            if(!document.getElementById('view-history').classList.contains('hidden') || !document.getElementById('view-charts').classList.contains('hidden')) { switchTab('home', false); return; }
         }
 
-        function switchTab(tab) {
+        function switchTab(tab, pushHistory = true) {
+            if(pushHistory) {
+                window.history.pushState({tab: tab}, "", "");
+            }
             document.getElementById('view-dashboard').classList.toggle('hidden', tab !== 'home');
             document.getElementById('view-history').classList.toggle('hidden', tab !== 'history');
             document.getElementById('view-charts').classList.toggle('hidden', tab !== 'charts');
@@ -708,7 +729,7 @@
 
         function closeDayDetail() { document.getElementById('view-day-detail').classList.add('hidden'); }
 
-        // --- LÓGICA DE GRÁFICOS (REESTRUTURADA) ---
+        // --- LÓGICA DE GRÁFICOS ---
 
         function setChartMetric(metric) {
             currentChartMetric = metric;
@@ -830,7 +851,6 @@
                 }
             });
 
-            // GERAÇÃO DINÂMICA DOS CARDS ABAIXO DO GRÁFICO (IDÊNTICO À HOME)
             const profit = totalRev - totalExp;
             const calcPct = (val) => totalRev > 0 ? `(${(val / totalRev * 100).toFixed(1)}%)` : '(0%)';
             const isActive = (m) => currentChartMetric === m ? 'active-metric-card' : '';
@@ -1002,18 +1022,33 @@
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('user-email-display').innerText = user.email.split('@')[0];
+                    document.getElementById('user-email-display').innerText = user.email ? user.email.split('@')[0] : 'Motorista';
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if (doc.exists) {
                             const data = doc.data();
                             if (data.autorizado === true) {
                                 document.getElementById('wait-screen').classList.add('hidden');
                                 document.getElementById('view-dashboard').classList.remove('hidden');
-                                if (data.history) localStorage.setItem(DB_KEY, JSON.stringify(data.history));
-                                if (data.rentConfigs) localStorage.setItem(RENT_DB_KEY, JSON.stringify(data.rentConfigs));
-                                renderDashboard();
+                                
+                                if (data.history && Array.isArray(data.history)) {
+                                    localStorage.setItem(DB_KEY, JSON.stringify(data.history));
+                                }
+                                if (data.rentConfigs) {
+                                    localStorage.setItem(RENT_DB_KEY, JSON.stringify(data.rentConfigs));
+                                }
+                                
+                                if(!document.getElementById('view-charts').classList.contains('hidden')) {
+                                    renderCharts();
+                                } else if(!document.getElementById('view-history').classList.contains('hidden')) {
+                                    renderHistory();
+                                } else {
+                                    renderDashboard();
+                                }
                             } else { document.getElementById('wait-screen').classList.remove('hidden'); }
                         }
+                    }).catch(err => {
+                        console.warn("Erro ao carregar dados do Firestore:", err);
+                        renderDashboard();
                     });
                 } else { document.getElementById('login-screen').style.display = 'flex'; }
             });
@@ -1035,8 +1070,18 @@
 
         window.syncToCloud = function() { if(auth?.currentUser) db.collection("users").doc(auth.currentUser.uid).set({ history: getDB(), rentConfigs: getRentConfigs() }, { merge: true }); };
 
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                if (!document.getElementById('view-charts').classList.contains('hidden')) {
+                    renderCharts();
+                } else if (!document.getElementById('view-dashboard').classList.contains('hidden')) {
+                    renderDashboard();
+                }
+            }
+        });
+
         window.onload = function() {
-            window.history.pushState({page: 'home'}, "", "");
+            window.history.pushState({tab: 'home'}, "", "");
             window.onpopstate = (e) => handleBackButton();
             renderDashboard();
         };
